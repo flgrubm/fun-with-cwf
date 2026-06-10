@@ -2,13 +2,7 @@ module CCwF.Base where
 
 open import Cubical.Foundations.Prelude
 open import Cubical.Foundations.HLevels
-open import Cubical.Foundations.Equiv
-open import Cubical.Foundations.Transport
 open import Cubical.Foundations.Isomorphism
-
-open import Cubical.Functions.FunExtEquiv
-
-open import Cubical.Data.Sigma
 
 open import Cubical.Categories.Category
 open import Cubical.Categories.Limits.Terminal
@@ -34,7 +28,6 @@ module Categorical {ℓOb ℓHom : Level} (C : Category ℓOb ℓHom) where
   private variable
     Θ Δ Γ : Ctx
 
-  -- More categorical definition of CwF
   record CwF (ℓTy ℓTm : Level) :
              Type (ℓ-suc (ℓ-max ℓOb (ℓ-max ℓHom (ℓ-max ℓTy  ℓTm)))) where
     field
@@ -46,7 +39,7 @@ module Categorical {ℓOb ℓHom : Level} (C : Category ℓOb ℓHom) where
 
       ctxExt : Functor (∫ Ty) C
 
-    -- Some nicer notations
+    -- Some nice notations
     Ty[_] : (Γ : Ctx) → Type ℓTy
     Ty[ Γ ] = Ty .F-ob Γ .fst
 
@@ -70,11 +63,12 @@ module Categorical {ℓOb ℓHom : Level} (C : Category ℓOb ℓHom) where
       ctxExtIso : (A : Ty[ Γ ])
                 → Iso (Δ ⟶ Γ ⋆ A) (Σ[ σ ∈ Δ ⟶ Γ ] Tm[ Δ , A [ σ ]Ty ])
 
-
     -- TODO: what is a good name for this?
     drop : (A : Ty[ Γ ]) (τ : Δ ⟶ Γ ⋆ A) → Δ ⟶ Γ
     drop A τ = ctxExtIso A .fun τ .fst
 
+
+    -- TODO: settle for the minimal set of fields below which are equivalent to ACwF and makes the proof as easy as possible
     field
       -- This is redundant and doesn't seem to make instantiation easier...
       coerceFun : (A : Ty[ Γ ]) (σ : Δ ⟶ Γ ⋆ A) (τ : Θ ⟶ Δ)

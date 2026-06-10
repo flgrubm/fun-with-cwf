@@ -57,7 +57,6 @@ module Algebraic {ℓOb ℓHom : Level} (C : Category ℓOb ℓHom) where
 
       Tm : (Γ : Ctx) (A : Ty Γ) → Type ℓTm
 
-      -- TODO: is this really needed?
       isSetTm : (Γ : Ctx) (A : Ty Γ) → isSet (Tm Γ A)
 
       _[_]Tm : {A : Ty Γ} (a : Tm Γ A) (σ : Δ ⟶ Γ)
@@ -82,42 +81,13 @@ module Algebraic {ℓOb ℓHom : Level} (C : Category ℓOb ℓHom) where
 
       q : {A : Ty Γ} → Tm (Γ ⋆ A) (A [ p ]Ty)
 
-      -- ⟨_,_⟩ : {A : Ty Γ} (σ : Δ ⟶ Γ) (a : Tm Δ (A [ σ ]Ty))
-      --       → ---------------------------------------------
-      --         Δ ⟶ Γ ⋆ A
-
-      -- p⟨⟩ : {A : Ty Γ} (σ : Δ ⟶ Γ) (a : Tm Δ (A [ σ ]Ty))
-      --     → ---------------------------------------------
-      --       p ∘ ⟨ σ , a ⟩ ≡ σ
-
-      -- -- This is redundant, but makes instantiating easier
-      -- coerce : {A : Ty Γ} (σ : Δ ⟶ Γ)
-      --         (a : Tm Δ (A [ σ ]Ty))
-      --       → A [ p ]Ty [ ⟨ σ , a ⟩ ]Ty ≡ A [ σ ]Ty
-
-      -- q⟨⟩ : {A : Ty Γ} (σ : Δ ⟶ Γ)
-      --       (a : Tm Δ (A [ σ ]Ty))
-      --     → -----------------------------------------------
-      --       PathP (λ i → Tm Δ (coerce σ a i)) ( q [ ⟨ σ , a ⟩ ]Tm) a
-
-      -- ⟨⟩∘ : {A : Ty Γ} (σ' : Θ ⟶ Δ) (σ : Δ ⟶ Γ) (a : Tm Δ (A [ σ ]Ty))
-
-      --       -- Used to present a[σ'] so that we don't need subst/transport
-      --       {a' : Tm Θ (A [ σ ∘ σ' ]Ty)}
-      --       (pa' : PathP (λ i → Tm Θ ([][]Ty A σ' σ i)) a' (a [ σ' ]Tm))
-      --     → ----------------------------------------------------------------
-      --       ⟨ σ , a ⟩ ∘ σ' ≡ ⟨ σ ∘ σ' , a' ⟩
-
-      -- ⟨p,q⟩ : (A : Ty Γ)
-      --       → ------------------------
-      --         ⟨ p {A = A} , q ⟩ ≡ id
-
     infix  40 _[_]Ty
     infix  40 _[_]Tm
     infixl 30 _⋆_
 
     field
       _⁺ : {A : Ty Γ} (σ : Δ ⟶ Γ) →  (Δ ⋆ A [ σ ]Ty) ⟶ (Γ ⋆ A)
+
       ⟨_⟩ : {A : Ty Γ} (a : Tm Γ A) → (Γ ⟶ (Γ ⋆ A)) -- ⟨ id , a ⟩
     -- ⟨⟩-∘ : (a : Tm Γ A) (γ : Sub Δ Γ) → ⟨ a ⟩ ∘ γ ≡ γ ⁺ ∘ ⟨ a [ γ ]ᵗ ⟩
     -- ▹-η : id {Γ ▹ A} ≡ p ⁺ ∘ ⟨ q ⟩

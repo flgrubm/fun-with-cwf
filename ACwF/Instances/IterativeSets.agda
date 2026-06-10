@@ -3,28 +3,22 @@ module ACwF.Instances.IterativeSets  where
 
 open import Cubical.Foundations.Prelude
 open import Cubical.Foundations.HLevels
-open import Cubical.Foundations.Equiv
-open import Cubical.Foundations.Transport
 open import Cubical.Foundations.Isomorphism
 
-open import Cubical.Functions.FunExtEquiv
-
 open import Cubical.Data.Sigma
+open import Cubical.Data.Unit
 
 open import Cubical.Categories.Category
-open import Cubical.Categories.Limits.Terminal
 
 open import ACwF.Base
 open import ACwF.Sigma
 
 open import Cubical.Data.IterativeSets.Base renaming (V⁰ to V ; El⁰ to El ; isSetEl⁰ to isSetEl)
 open import Cubical.Data.IterativeSets.Sigma
-open import Cubical.Data.IterativeSets.Pi
+-- open import Cubical.Data.IterativeSets.Pi
 open import Cubical.Data.IterativeSets.Unit
-open import Agda.Builtin.Unit
 
 open Category
-
 
 module _ {ℓ : Level} where
   VCat : Category (ℓ-suc ℓ) ℓ
@@ -35,7 +29,7 @@ module _ {ℓ : Level} where
   VCat .⋆IdL     = λ _ → refl
   VCat .⋆IdR     = λ _ → refl
   VCat .⋆Assoc   = λ _ _ _ → refl
-  VCat .isSetHom {y = y} = isSet→ (isSetEl y)
+  VCat .isSetHom = isSet→ (isSetEl _)
 
   open Algebraic
   open CwF
@@ -66,12 +60,13 @@ module _ {ℓHom : Level} where
   open Algebraic
   open CwF {ℓHom = ℓHom} VCwF
 
-  V-Σ-Structure : Σ-Structure-CwF VCat VCwF
-  V-Σ-Structure .Σ-Structure-CwF.ΣTy A B x = Σ⁰ (A x) (λ y → B (x , y))
-  V-Σ-Structure .Σ-Structure-CwF.ΣTyNat A B σ = refl
-  V-Σ-Structure .Σ-Structure-CwF.ΣTmIso A B = Σ-Π-Iso
-  V-Σ-Structure .Σ-Structure-CwF.coerce A B a σ = refl
-  V-Σ-Structure .Σ-Structure-CwF.ΣTmIsoInvNat {Δ = Δ} _ _ _ b σ =
-    funExt λ x → ΣPathP (
-      refl ,
-      sym ((cong (λ M → M x)) (substRefl {B = Tm Δ} ((λ x₁ → b (σ x₁))))))
+  open Σ-Structure
+
+  V-Σ-Structure : Σ-Structure VCat VCwF
+  V-Σ-Structure .ΣTy A B x              = Σ⁰ (A x) (λ y → B (x , y))
+  V-Σ-Structure .ΣTyNat A B σ           = refl
+  V-Σ-Structure .ΣTmIso A B             = Σ-Π-Iso
+  V-Σ-Structure .coerce A B a σ         = refl
+  V-Σ-Structure .ΣTmIsoInvNat _ _ _ b σ =
+    funExt λ x → ΣPathP (refl , sym (funExt⁻ (substRefl {B = Tm _} _) _))
+

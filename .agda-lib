@@ -1,0 +1,4 @@
+name: FunWithCwf
+include: .
+depend: cubical
+flags: --safe --cubical --no-import-sorts -WnoUnsupportedIndexedMatch --guardedness

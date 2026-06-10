@@ -36,24 +36,34 @@ module _ {ℓ : Level} where
   open Iso
 
   VCwF : CwF VCat (ℓ-suc ℓ) ℓ
-  VCwF .⟨⟩                 = unit⁰ , λ _ → (λ _ → lift tt) , λ _ _ _ → lift tt
-  VCwF .Ty Γ               = El Γ → V {ℓ}
-  VCwF .isSetTy Γ          = isSet→ isSetV⁰
-  VCwF ._[_]Ty A σ x       = A (σ x)
-  VCwF .[id]Ty _           = refl
-  VCwF .[][]Ty _ _ _       = refl
-  VCwF .Tm Γ A             = (x : El Γ) → El (A x)
-  VCwF .isSetTm Γ A        = isSetΠ (λ _ → isSetEl _)
-  VCwF ._[_]Tm a σ x       = a (σ x)
-  VCwF .[id]Tm _           = refl
-  VCwF .[][]Tm _ _ _       = refl
-  VCwF ._⋆_                = Σ⁰
-  VCwF .p                  = fst
-  VCwF .q                  = snd
-  VCwF ._⁺ σ (x , _) .fst  = σ x
-  VCwF ._⁺ _ (_ , y) .snd  = y
-  VCwF .⟨_⟩ _ x .fst        = x
-  VCwF .⟨_⟩ a x .snd        = a x
+  VCwF .⟨⟩                = unit⁰ , λ _ → (λ _ → lift tt) , λ _ _ _ → lift tt
+  VCwF .Ty Γ              = El Γ → V {ℓ}
+  VCwF .isSetTy Γ         = isSet→ isSetV⁰
+  VCwF ._[_]Ty A σ x      = A (σ x)
+  VCwF .[id]Ty _          = refl
+  VCwF .[][]Ty _ _ _      = refl
+  VCwF .Tm Γ A            = (x : El Γ) → El (A x)
+  VCwF .isSetTm Γ A       = isSetΠ (λ _ → isSetEl _)
+  VCwF ._[_]Tm a σ x      = a (σ x)
+  VCwF .[id]Tm _          = refl
+  VCwF .[][]Tm _ _ _      = refl
+  VCwF ._⋆_               = Σ⁰
+  VCwF .p                 = fst
+  VCwF .q                 = snd
+  VCwF ._⁺ σ (x , _) .fst = σ x
+  VCwF ._⁺ _ (_ , y) .snd = y
+  VCwF .⟨_⟩ _ x .fst      = x
+  VCwF .⟨_⟩ a x .snd      = a x
+  VCwF .⟨⟩∘ a σ           = refl
+  VCwF .p⁺∘⟨q⟩≡id         = refl
+  VCwF .∘⁺ σ' σ           = refl
+  VCwF .id⁺               = refl
+  VCwF .p∘⁺ σ             = refl
+  VCwF .[p][⁺]Ty B σ      = refl
+  VCwF .q[⁺]Tm σ          = refl
+  VCwF .p∘⟨⟩≡id a         = refl
+  VCwF .[p][⟨⟩]Ty B a     = refl
+  VCwF .q[⟨⟩]Tm a         = refl
 
 module _ {ℓHom : Level} where
 

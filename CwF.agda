@@ -226,8 +226,8 @@ module Algebraic {ℓOb ℓHom : Level} (C : Category ℓOb ℓHom) where
 -- -- Now we define a more categorical version
 open import Cubical.Categories.Presheaf
 open import Cubical.Categories.Functor
-import Cubical.Categories.Constructions.Elements as Els
-open Els.Contravariant renaming (∫ᴾ_ to ∫_)
+import Cubical.Categories.Instances.Elements as Els
+open Els.Contravariant
 -- open import Cubical.Categories.Instances.BinProduct
 -- open import Cubical.Categories.Functors.HomFunctor
 

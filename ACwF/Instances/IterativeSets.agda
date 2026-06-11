@@ -12,10 +12,11 @@ open import Cubical.Categories.Category
 
 open import ACwF.Base
 open import ACwF.Sigma
+open import ACwF.Pi
 
 open import Cubical.Data.IterativeSets.Base renaming (V⁰ to V ; El⁰ to El ; isSetEl⁰ to isSetEl)
 open import Cubical.Data.IterativeSets.Sigma
--- open import Cubical.Data.IterativeSets.Pi
+open import Cubical.Data.IterativeSets.Pi
 open import Cubical.Data.IterativeSets.Unit
 
 open Category
@@ -80,3 +81,15 @@ module _ {ℓHom : Level} where
   V-Σ-Structure .ΣTmIsoInvNat _ _ _ b σ =
     funExt λ x → ΣPathP (refl , sym (funExt⁻ (substRefl {B = Tm _} _) _))
 
+module _ {ℓHom : Level} where
+
+  open Algebraic
+  open CwF {ℓHom = ℓHom} VCwF
+
+  open Π-Structure
+
+  V-Π-Structure : Π-Structure {ℓHom = ℓHom} VCat VCwF
+  V-Π-Structure .ΠTy {Γ = Γ} A B x    = Π⁰ (A x) λ y → B (x , y)
+  V-Π-Structure .ΠTyNat _ _ _         = refl
+  V-Π-Structure .ΠTmIso _ _           = invIso curryIso
+  V-Π-Structure .ΠTmIsoInvNat _ _ _ _ = refl

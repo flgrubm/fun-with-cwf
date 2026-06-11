@@ -66,21 +66,39 @@ module _ {ℓU ℓEl : Level}
     UCwF .q {Γ = Γ} {A = A} s = SigIso Γ A .fun s .snd
     UCwF ._⁺ {Γ = Γ} {Δ = Δ} {A = A} σ s = SigIso Γ A .inv ((σ (SigIso Δ (UCwF ._[_]Ty A σ) .fun s .fst)) , SigIso Δ (UCwF ._[_]Ty A σ) .fun s .snd)
     UCwF .⟨_⟩ {Γ = Γ} {A = A} a x = SigIso Γ A .inv (x , (a x))
+    UCwF .⟨⟩∘ {Γ = Γ} {Δ = Δ} {A = A} a σ = funExt (λ x → cong (λ m → SigIso Γ A .inv (σ (m .fst) , m .snd)) (sym (SigIso Δ (λ y → A (σ y)) .sec (x , a (σ x)))))
+    UCwF .p⁺∘⟨q⟩≡id {Γ = Γ} {A = A} =
+      funExt (λ x → cong (λ m → SigIso Γ A .inv m)
+                         (cong (λ m → SigIso Γ A .fun (m .fst) .fst , m .snd) (SigIso (Sig Γ A) (λ x₁ → A (fun (SigIso Γ A) x₁ .fst)) .sec (x , fun (SigIso Γ A) x .snd)))
+                         ∙ SigIso Γ A .ret x)
+    UCwF .∘⁺ {Γ = Γ} {Θ = Θ} {Δ = Δ} {A = A} σ τ =
+      funExt (λ x → cong (λ m → SigIso Γ A .inv ((τ (m .fst)) , (m .snd)))
+                         (sym (SigIso Δ (λ y → A (τ y)) .sec
+                                (σ (fun (SigIso Θ (λ x₁ → A (τ (σ x₁)))) x .fst) , fun (SigIso Θ (λ x₁ → A (τ (σ x₁)))) x .snd))))
+    UCwF .id⁺ {Γ = Γ} {A = A} = funExt (λ x → SigIso Γ A .ret x)
+    UCwF .p∘⁺ {Γ = Γ} {Δ = Δ} {A = A} σ = funExt (λ x → cong fst (SigIso Γ A .sec (σ (fun (SigIso Δ ((UCwF [ A ]Ty) σ)) x .fst) ,
+                                                                                   fun (SigIso Δ ((UCwF [ A ]Ty) σ)) x .snd)))
+    UCwF .[p][⁺]Ty {Γ = Γ} {Δ = Δ} {A = A} B σ = funExt (λ x → cong (λ m → B (m .fst)) (SigIso Γ A .sec (σ (fun (SigIso Δ ((UCwF [ A ]Ty) σ)) x .fst) ,
+                                                                                                         fun (SigIso Δ ((UCwF [ A ]Ty) σ)) x .snd)))
+    UCwF .q[⁺]Tm {Γ = Γ} {Δ = Δ} {A = A} σ = funExt (λ x → {!SigIso Γ A .sec!})
+    UCwF .p∘⟨⟩≡id {Γ = Γ} {A = A} a = funExt (λ x → cong fst (SigIso Γ A .sec (x , a x)))
+    UCwF .[p][⟨⟩]Ty = {!!}
+    UCwF .q[⟨⟩]Tm = {!!}
 
   open Algebraic
   open CwF UCwF
 
-  U-Σ-Structure : Σ-Structure-CwF UCat UCwF
-  U-Σ-Structure .Σ-Structure-CwF.ΣTy {Γ = Γ} A B x = Sig (A x) λ y → B (SigIso Γ A .inv (x , y))
-  U-Σ-Structure .Σ-Structure-CwF.ΣTyNat {Γ = Γ} {Δ = Δ} A B σ =
+  U-Σ-Structure : Σ-Structure UCat UCwF
+  U-Σ-Structure .Σ-Structure.ΣTy {Γ = Γ} A B x = Sig (A x) λ y → B (SigIso Γ A .inv (x , y))
+  U-Σ-Structure .Σ-Structure.ΣTyNat {Γ = Γ} {Δ = Δ} A B σ =
     funExt (λ x → cong (Sig (A (σ x)))
                        (funExt (λ y → cong (λ m → B (SigIso Γ A .inv (σ (m .fst) , m .snd)))
                                            (sym (SigIso Δ (λ y → A (σ y)) .sec (x , y))))))
-  U-Σ-Structure .Σ-Structure-CwF.ΣTmIso {Γ = Γ} A B = compIso (codomainIsoDep (λ x → SigIso (A x) (λ y → B (inv (SigIso Γ A) (x , y))))) Σ-Π-Iso
-  U-Σ-Structure .Σ-Structure-CwF.coerce {Γ = Γ} {Δ = Δ} A B a σ =
+  U-Σ-Structure .Σ-Structure.ΣTmIso {Γ = Γ} A B = compIso (codomainIsoDep (λ x → SigIso (A x) (λ y → B (inv (SigIso Γ A) (x , y))))) Σ-Π-Iso
+  U-Σ-Structure .Σ-Structure.coerce {Γ = Γ} {Δ = Δ} A B a σ =
     funExt (λ x → cong (λ m → B (SigIso Γ A .inv (σ (m .fst) , m .snd)))
                        (sym (SigIso Δ (λ y → A (σ y)) .sec (x , a (σ x)))))
-  U-Σ-Structure .Σ-Structure-CwF.ΣTmIsoInvNat {Γ = Γ} A B a b σ = funExt (λ x →
+  U-Σ-Structure .Σ-Structure.ΣTmIsoInvNat {Γ = Γ} A B a b σ = funExt (λ x →
     let
       goal : PathP
               (λ z →

@@ -7,7 +7,7 @@ open import Cubical.Data.IterativeSets.Base renaming (V⁰ to V ; El⁰ to El ; 
 
 open Category
 
-module _ {ℓ : Level} where
+module _ (ℓ : Level) where
   VCat : Category (ℓ-suc ℓ) ℓ
   VCat .ob       = V
   VCat .Hom[_,_] = λ Δ Γ → El Δ → El Γ

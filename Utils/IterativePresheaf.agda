@@ -13,11 +13,12 @@ open import Utils.VCat
 open Category
 open Functor
 
-module _ {ℓob ℓhom ℓV : Level} (C : Category ℓob ℓhom) where
-  PresheafV = Functor (C ^op) (VCat {ℓ = ℓV})
-  PRESHEAFV = FUNCTOR (C ^op) (VCat {ℓ = ℓV})
+module _ {ℓob ℓhom : Level} (C : Category ℓob ℓhom) (ℓV : Level) where
+  PresheafV = Functor (C ^op) (VCat ℓV)
+  PRESHEAFV = FUNCTOR (C ^op) (VCat ℓV)
 
-  module Base (F : PresheafV) where
+module _ {ℓob ℓhom : Level} {C : Category ℓob ℓhom} {ℓV : Level} where
+  module Base (F : PresheafV C ℓV) where
 
     private
       ∫ob : Type (ℓ-max ℓob ℓV)
@@ -52,7 +53,7 @@ module _ {ℓob ℓhom ℓV : Level} (C : Category ℓob ℓhom) where
   open Base public
 
   module Properties where
-    ∫V-hom : {Γ Δ : PresheafV} → NatTrans Δ Γ → Functor (∫V Δ) (∫V Γ)
+    ∫V-hom : {Γ Δ : PresheafV C ℓV} → NatTrans Δ Γ → Functor (∫V Δ) (∫V Γ)
     ∫V-hom {Γ} {Δ} η .F-ob (I , x) = I , η . NatTrans.N-ob I x
     ∫V-hom {Γ} {Δ} η .F-hom {I , x} {J , y} (f , p) = f , proof
       where
@@ -67,13 +68,13 @@ module _ {ℓob ℓhom ℓV : Level} (C : Category ℓob ℓhom) where
     ∫V-hom {Γ} {Δ} η .F-id {c , _} = ΣPathP ( refl , isSetEl (Γ ⟅ c ⟆) _ _ _ _)
     ∫V-hom {Γ} {Δ} η .F-seq {z = c , _} f g = ΣPathP ( refl , isSetEl (Γ ⟅ c ⟆) _ _ _ _)
 
-    ∫V-id : {Γ : PresheafV} → ∫V-hom (idTrans Γ) ≡ Id
+    ∫V-id : {Γ : PresheafV C ℓV} → ∫V-hom (idTrans Γ) ≡ Id
     ∫V-id {Γ} = Functor≡
       (λ _ → refl)
       (λ {_} {c'} (f , p) → ΣPathP (refl , isSetEl (Γ .F-ob (c' .fst)) _ _ _ _))
 
-    ∫V-seq : {Γ Δ Ε : PresheafV } {f : NatTrans Γ Δ} {g : NatTrans Δ Ε}
-      → ∫V-hom (f ⋆⟨ PRESHEAFV ⟩ g) ≡ (∫V-hom g) ∘F (∫V-hom f)
+    ∫V-seq : {Γ Δ Ε : PresheafV C ℓV } {f : NatTrans Γ Δ} {g : NatTrans Δ Ε}
+      → ∫V-hom (f ⋆⟨ PRESHEAFV C ℓV ⟩ g) ≡ (∫V-hom g) ∘F (∫V-hom f)
     ∫V-seq {_} {_} {Ε}= Functor≡
       (λ _ → refl)
       (λ {_} {c'} (f , p) → ΣPathP (refl , isSetEl (Ε .F-ob (c' .fst)) _ _ _ _))

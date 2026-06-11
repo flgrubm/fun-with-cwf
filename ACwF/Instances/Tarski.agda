@@ -17,6 +17,7 @@ open import Cubical.Categories.Limits.Terminal
 
 open import ACwF.Base
 open import ACwF.Sigma
+open import ACwF.Pi
 
 open import Agda.Builtin.Unit
 
@@ -92,27 +93,46 @@ module _ {ℓU ℓEl : Level}
     UCwF .[p][⟨⟩]Ty B a    = funExt λ x → cong B (fstPairSig _ _)
     UCwF .q[⟨⟩]Tm a        = funExt λ x → sndPairSig _ _
 
-  open Algebraic
-  open CwF UCwF
+  -- open Algebraic
+  -- open CwF UCwF
 
-  U-Σ-Structure : Σ-Structure UCat UCwF
-  U-Σ-Structure .Σ-Structure.ΣTy A B x = Sig (A x) λ y → B (pairSig x y)
-  U-Σ-Structure .Σ-Structure.ΣTyNat A B σ = funExt λ x → cong (Sig (A (σ x))) (funExt λ y → cong B (cong₂ pairSig (cong σ (sym (fstPairSig _ _))) (symP (sndPairSig _ _))))
-  U-Σ-Structure .Σ-Structure.ΣTmIso A B = compIso (codomainIsoDep (λ _ → PairIso)) Σ-Π-Iso
-  U-Σ-Structure .Σ-Structure.coerce A B a σ = funExt λ x → cong B (cong₂ pairSig (cong σ (sym (fstPairSig _ _))) (symP (sndPairSig _ _)))
-  U-Σ-Structure .Σ-Structure.ΣTmIsoInvNat {Γ} {Δ} A B a b σ = funExt λ x → congP (λ _ z → uncurry pairSig (a (σ x) , z)) (symP (toPathP (let
-    -- don't look at this
-    goal :
-      transp (λ i → El (B (pairSig (σ (fstPairSig {B = λ v → A (σ v)} x (a (σ x)) i)) (sndPairSig {B = λ v → A (σ v)} x (a (σ x)) i))))
-      i0
-      (transp (λ i → El (B (pairSig (σ (fstPairSig {B = λ v → A (σ v)} (transp (λ j → El Δ) i x) (a (σ (transp (λ j → El Δ) i x))) (~ i))) (sndPairSig {B = λ v → A (σ v)} (transp (λ j → El Δ) i x) (a (σ (transp (λ j → El Δ) i x))) (~ i)))))
-       i0
-       (b (σ (transp (λ j → El Δ) i0 x))))
-      ≡
-        b (σ x)
-    goal j = transp (λ i → El (B (pairSig (σ (fstPairSig {B = λ v → A (σ v)} x (a (σ x)) (i ∨ j))) (sndPairSig {B = λ v → A (σ v)} x (a (σ x)) (i ∨ j)))))
-      j
-      (transp (λ i → El (B (pairSig (σ (fstPairSig {B = λ v → A (σ v)} (transp (λ _ → El Δ) (i ∨ j) x) (a (σ (transp (λ _ → El Δ) (i ∨ j) x))) (~ i ∨ j))) (sndPairSig {B = λ v → A (σ v)} (transp (λ j → El Δ) (i ∨ j) x) (a (σ (transp (λ _ → El Δ) (i ∨ j) x))) (~ i ∨ j)))))
-      j
-       (b (σ (transp (λ _ → El Δ) j x))))
-    in goal)))
+  -- U-Σ-Structure : Σ-Structure UCat UCwF
+  -- U-Σ-Structure .Σ-Structure.ΣTy A B x = Sig (A x) λ y → B (pairSig x y)
+  -- U-Σ-Structure .Σ-Structure.ΣTyNat A B σ = funExt λ x → cong (Sig (A (σ x))) (funExt λ y → cong B (cong₂ pairSig (cong σ (sym (fstPairSig _ _))) (symP (sndPairSig _ _))))
+  -- U-Σ-Structure .Σ-Structure.ΣTmIso A B = compIso (codomainIsoDep (λ _ → PairIso)) Σ-Π-Iso
+  -- U-Σ-Structure .Σ-Structure.coerce A B a σ = funExt λ x → cong B (cong₂ pairSig (cong σ (sym (fstPairSig _ _))) (symP (sndPairSig _ _)))
+  -- U-Σ-Structure .Σ-Structure.ΣTmIsoInvNat {Γ} {Δ} A B a b σ = funExt λ x → congP (λ _ z → uncurry pairSig (a (σ x) , z)) (symP (toPathP (let
+  --   -- don't look at this
+  --   goal :
+  --     transp (λ i → El (B (pairSig (σ (fstPairSig {B = λ v → A (σ v)} x (a (σ x)) i)) (sndPairSig {B = λ v → A (σ v)} x (a (σ x)) i))))
+  --     i0
+  --     (transp (λ i → El (B (pairSig (σ (fstPairSig {B = λ v → A (σ v)} (transp (λ j → El Δ) i x) (a (σ (transp (λ j → El Δ) i x))) (~ i))) (sndPairSig {B = λ v → A (σ v)} (transp (λ j → El Δ) i x) (a (σ (transp (λ j → El Δ) i x))) (~ i)))))
+  --      i0
+  --      (b (σ (transp (λ j → El Δ) i0 x))))
+  --     ≡
+  --       b (σ x)
+  --   goal j = transp (λ i → El (B (pairSig (σ (fstPairSig {B = λ v → A (σ v)} x (a (σ x)) (i ∨ j))) (sndPairSig {B = λ v → A (σ v)} x (a (σ x)) (i ∨ j)))))
+  --     j
+  --     (transp (λ i → El (B (pairSig (σ (fstPairSig {B = λ v → A (σ v)} (transp (λ _ → El Δ) (i ∨ j) x) (a (σ (transp (λ _ → El Δ) (i ∨ j) x))) (~ i ∨ j))) (sndPairSig {B = λ v → A (σ v)} (transp (λ j → El Δ) (i ∨ j) x) (a (σ (transp (λ _ → El Δ) (i ∨ j) x))) (~ i ∨ j)))))
+  --     j
+  --      (b (σ (transp (λ _ → El Δ) j x))))
+  --   in goal)))
+
+  module U-Π (Pi : (A : U) → (El A → U) → U)
+             (app : {A : U} (B : El A → U) (f : El (Pi A B)) (x : El A) → El (B x))
+             (lam : {A : U} (B : El A → U) → ((x : El A) → El (B x)) → El (Pi A B))
+             (β : {A : U} (B : El A → U) (f : (x : El A) → El (B x)) → app B (lam B f) ≡ f)
+             (η : {A : U} (B : El A → U) (f : El (Pi A B)) → lam B (app B f) ≡ f)
+    where
+    open Algebraic
+    open CwF UCwF
+
+    U-Π-Structure : Π-Structure UCat UCwF
+    U-Π-Structure .Π-Structure.ΠTy A B x = Pi (A x) (λ y → B (pairSig x y))
+    U-Π-Structure .Π-Structure.ΠTyNat A B σ = funExt (λ x → cong (Pi (A (σ x))) (funExt (λ y → cong B (cong₂ pairSig (cong σ (sym (fstPairSig x y))) (symP (sndPairSig x y))))))
+    U-Π-Structure .Π-Structure.ΠTmIso A B .fun f x = subst⁻ (λ m → El (B m)) (sym (ηSig x)) (app (λ y → B (pairSig (fstSig x) y)) (f (fstSig x)) (sndSig x))
+    U-Π-Structure .Π-Structure.ΠTmIso A B .inv f x = lam (λ y → B (pairSig x y)) (λ y → f (pairSig x y))
+    U-Π-Structure .Π-Structure.ΠTmIso A B .sec = {!!}
+    U-Π-Structure .Π-Structure.ΠTmIso A B .ret = {!!}
+    U-Π-Structure .Π-Structure.ΠTmIsoInvNat = {!!}
+  

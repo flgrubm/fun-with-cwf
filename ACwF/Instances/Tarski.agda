@@ -6,6 +6,7 @@ open import Cubical.Foundations.HLevels
 open import Cubical.Foundations.Equiv
 open import Cubical.Foundations.Transport
 open import Cubical.Foundations.Isomorphism
+open import Cubical.Foundations.Equiv.Properties
 open import Cubical.Foundations.Function
 
 open import Cubical.Functions.FunExtEquiv
@@ -93,30 +94,33 @@ module _ {ℓU ℓEl : Level}
     UCwF .[p][⟨⟩]Ty B a    = funExt λ x → cong B (fstPairSig _ _)
     UCwF .q[⟨⟩]Tm a        = funExt λ x → sndPairSig _ _
 
-  -- open Algebraic
-  -- open CwF UCwF
+  module U-Σ
+    where
 
-  -- U-Σ-Structure : Σ-Structure UCat UCwF
-  -- U-Σ-Structure .Σ-Structure.ΣTy A B x = Sig (A x) λ y → B (pairSig x y)
-  -- U-Σ-Structure .Σ-Structure.ΣTyNat A B σ = funExt λ x → cong (Sig (A (σ x))) (funExt λ y → cong B (cong₂ pairSig (cong σ (sym (fstPairSig _ _))) (symP (sndPairSig _ _))))
-  -- U-Σ-Structure .Σ-Structure.ΣTmIso A B = compIso (codomainIsoDep (λ _ → PairIso)) Σ-Π-Iso
-  -- U-Σ-Structure .Σ-Structure.coerce A B a σ = funExt λ x → cong B (cong₂ pairSig (cong σ (sym (fstPairSig _ _))) (symP (sndPairSig _ _)))
-  -- U-Σ-Structure .Σ-Structure.ΣTmIsoInvNat {Γ} {Δ} A B a b σ = funExt λ x → congP (λ _ z → uncurry pairSig (a (σ x) , z)) (symP (toPathP (let
-  --   -- don't look at this
-  --   goal :
-  --     transp (λ i → El (B (pairSig (σ (fstPairSig {B = λ v → A (σ v)} x (a (σ x)) i)) (sndPairSig {B = λ v → A (σ v)} x (a (σ x)) i))))
-  --     i0
-  --     (transp (λ i → El (B (pairSig (σ (fstPairSig {B = λ v → A (σ v)} (transp (λ j → El Δ) i x) (a (σ (transp (λ j → El Δ) i x))) (~ i))) (sndPairSig {B = λ v → A (σ v)} (transp (λ j → El Δ) i x) (a (σ (transp (λ j → El Δ) i x))) (~ i)))))
-  --      i0
-  --      (b (σ (transp (λ j → El Δ) i0 x))))
-  --     ≡
-  --       b (σ x)
-  --   goal j = transp (λ i → El (B (pairSig (σ (fstPairSig {B = λ v → A (σ v)} x (a (σ x)) (i ∨ j))) (sndPairSig {B = λ v → A (σ v)} x (a (σ x)) (i ∨ j)))))
-  --     j
-  --     (transp (λ i → El (B (pairSig (σ (fstPairSig {B = λ v → A (σ v)} (transp (λ _ → El Δ) (i ∨ j) x) (a (σ (transp (λ _ → El Δ) (i ∨ j) x))) (~ i ∨ j))) (sndPairSig {B = λ v → A (σ v)} (transp (λ j → El Δ) (i ∨ j) x) (a (σ (transp (λ _ → El Δ) (i ∨ j) x))) (~ i ∨ j)))))
-  --     j
-  --      (b (σ (transp (λ _ → El Δ) j x))))
-  --   in goal)))
+    open Algebraic
+    open CwF UCwF
+
+    U-Σ-Structure : Σ-Structure UCat UCwF
+    U-Σ-Structure .Σ-Structure.ΣTy A B x = Sig (A x) λ y → B (pairSig x y)
+    U-Σ-Structure .Σ-Structure.ΣTyNat A B σ = funExt λ x → cong (Sig (A (σ x))) (funExt λ y → cong B (cong₂ pairSig (cong σ (sym (fstPairSig _ _))) (symP (sndPairSig _ _))))
+    U-Σ-Structure .Σ-Structure.ΣTmIso A B = compIso (codomainIsoDep (λ _ → PairIso)) Σ-Π-Iso
+    U-Σ-Structure .Σ-Structure.coerce A B a σ = funExt λ x → cong B (cong₂ pairSig (cong σ (sym (fstPairSig _ _))) (symP (sndPairSig _ _)))
+    U-Σ-Structure .Σ-Structure.ΣTmIsoInvNat {Γ} {Δ} A B a b σ = funExt λ x → congP (λ _ z → uncurry pairSig (a (σ x) , z)) (symP (toPathP (let
+      -- don't look at this
+      goal :
+        transp (λ i → El (B (pairSig (σ (fstPairSig {B = λ v → A (σ v)} x (a (σ x)) i)) (sndPairSig {B = λ v → A (σ v)} x (a (σ x)) i))))
+        i0
+        (transp (λ i → El (B (pairSig (σ (fstPairSig {B = λ v → A (σ v)} (transp (λ j → El Δ) i x) (a (σ (transp (λ j → El Δ) i x))) (~ i))) (sndPairSig {B = λ v → A (σ v)} (transp (λ j → El Δ) i x) (a (σ (transp (λ j → El Δ) i x))) (~ i)))))
+         i0
+         (b (σ (transp (λ j → El Δ) i0 x))))
+        ≡
+          b (σ x)
+      goal j = transp (λ i → El (B (pairSig (σ (fstPairSig {B = λ v → A (σ v)} x (a (σ x)) (i ∨ j))) (sndPairSig {B = λ v → A (σ v)} x (a (σ x)) (i ∨ j)))))
+        j
+        (transp (λ i → El (B (pairSig (σ (fstPairSig {B = λ v → A (σ v)} (transp (λ _ → El Δ) (i ∨ j) x) (a (σ (transp (λ _ → El Δ) (i ∨ j) x))) (~ i ∨ j))) (sndPairSig {B = λ v → A (σ v)} (transp (λ j → El Δ) (i ∨ j) x) (a (σ (transp (λ _ → El Δ) (i ∨ j) x))) (~ i ∨ j)))))
+        j
+         (b (σ (transp (λ _ → El Δ) j x))))
+      in goal)))
 
   module U-Π (Pi : (A : U) → (El A → U) → U)
              (app : {A : U} (B : El A → U) (f : El (Pi A B)) (x : El A) → El (B x))
@@ -127,12 +131,21 @@ module _ {ℓU ℓEl : Level}
     open Algebraic
     open CwF UCwF
 
+    PiIso : ∀ A B → Iso (El (Pi A B)) ((a : El A) → El (B a))
+    PiIso A B .fun = app B
+    PiIso A B .inv = lam B
+    PiIso A B .sec = β B
+    PiIso A B .ret = η B
+
     U-Π-Structure : Π-Structure UCat UCwF
     U-Π-Structure .Π-Structure.ΠTy A B x = Pi (A x) (λ y → B (pairSig x y))
     U-Π-Structure .Π-Structure.ΠTyNat A B σ = funExt (λ x → cong (Pi (A (σ x))) (funExt (λ y → cong B (cong₂ pairSig (cong σ (sym (fstPairSig x y))) (symP (sndPairSig x y))))))
-    U-Π-Structure .Π-Structure.ΠTmIso A B .fun f x = subst⁻ (λ m → El (B m)) (sym (ηSig x)) (app (λ y → B (pairSig (fstSig x) y)) (f (fstSig x)) (sndSig x))
-    U-Π-Structure .Π-Structure.ΠTmIso A B .inv f x = lam (λ y → B (pairSig x y)) (λ y → f (pairSig x y))
-    U-Π-Structure .Π-Structure.ΠTmIso A B .sec = {!!}
-    U-Π-Structure .Π-Structure.ΠTmIso A B .ret = {!!}
-    U-Π-Structure .Π-Structure.ΠTmIsoInvNat = {!!}
-  
+    U-Π-Structure .Π-Structure.ΠTmIso {Γ} A B =
+      ((a : El Γ) → El (Pi (A a) (λ y → B (pairSig a y))))           Iso⟨ codomainIsoDep (λ x → PiIso (A x) (λ y → B (pairSig x y))) ⟩
+      (∀ a b → El (B (pairSig a b)))                                 Iso⟨ invIso curryIso ⟩
+      (((a , b) : Σ (El Γ) (λ z → El (A z))) → El (B (pairSig a b))) Iso⟨ invIso (domIsoDep (invIso PairIso)) ⟩
+      (((x : El (Sig Γ A)) → El (B x)))                              ∎Iso
+    U-Π-Structure .Π-Structure.ΠTmIsoInvNat {Γ = Γ} {Δ = Δ} A B M σ i x =
+      lam
+        (λ y → B (pairSig (σ (fstPairSig x y (~ i))) (sndPairSig {B = A [ σ ]Ty} x y (~ i))))
+        (λ y → M (pairSig (σ (fstPairSig x y (~ i))) (sndPairSig {B = A [ σ ]Ty} x y (~ i))))

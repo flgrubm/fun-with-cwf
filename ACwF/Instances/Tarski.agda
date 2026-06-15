@@ -78,7 +78,7 @@ module _ {ℓU ℓEl : Level}
     UCwF ._[_]Tm a σ x     = a (σ x)
     UCwF .[id]Tm _         = refl
     UCwF .[][]Tm _ _ _     = refl
-    UCwF ._⋆_              = Sig
+    UCwF ._✦_              = Sig
     UCwF .p                = fstSig
     UCwF .q                = sndSig
     UCwF ._⁺ σ s           = pairSig (σ (fstSig s)) (sndSig s)

@@ -50,6 +50,9 @@ module _ {ℓob ℓhom : Level} {C : Category ℓob ℓhom} {ℓV : Level} where
     ∫V .isSetHom {a} {b} =
       isSetΣSndProp (C .isSetHom) λ f → isSetEl (F-ob F (b .fst)) _ _
 
+    ∫V-Hom≡ : {x y : ∫ob} (f g : ∫Hom[ x , y ]) → f .fst ≡ g .fst → f ≡ g
+    ∫V-Hom≡ f g = ∫Hom≡
+
   open Base public
 
   module Properties where

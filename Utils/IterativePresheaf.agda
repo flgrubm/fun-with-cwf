@@ -36,6 +36,12 @@ module _ {ℓob ℓhom : Level} {C : Category ℓob ℓhom} {ℓV : Level} where
       ∫Hom≡ : {x y : ∫ob} {f g : ∫Hom[ x , y ]} → f .fst ≡ g .fst → f ≡ g
       ∫Hom≡ {x} {y} {f = (f , p)} {g = (g , q)} eq =
         ΣPathP (eq , (isProp→PathP (λ i → isSetEl (F-ob F (y .fst)) _ _) p q))
+      ∫HomPathP : ∀ {x} {x'} {y} {y'} (f : ∫Hom[ x , y ]) (g : ∫Hom[ x' , y' ])
+        → (x≡x' : x ≡ x') → (y≡y' : y ≡ y')
+        → PathP (λ i → C [ y≡y' i .fst , x≡x' i .fst ]) (f .fst) (g .fst)
+        → PathP (λ i → ∫Hom[ x≡x' i , y≡y' i ]) f g
+      ∫HomPathP {y = y} f g x≡x' y≡y' path =
+        ΣPathP (path , isProp→PathP (λ j → isSetEl (F .F-ob (y≡y' j .fst)) _ _) (f .snd) (g .snd))
 
     ∫V : Category _ _
     ∫V .ob = ∫ob
@@ -50,8 +56,11 @@ module _ {ℓob ℓhom : Level} {C : Category ℓob ℓhom} {ℓV : Level} where
     ∫V .isSetHom {a} {b} =
       isSetΣSndProp (C .isSetHom) λ f → isSetEl (F-ob F (b .fst)) _ _
 
-    ∫V-Hom≡ : {x y : ∫ob} (f g : ∫Hom[ x , y ]) → f .fst ≡ g .fst → f ≡ g
-    ∫V-Hom≡ f g = ∫Hom≡
+    ∫V-Hom-PathP : ∀ {x} {x'} {y} {y'} (f : ∫V [ x , y ]) (g : ∫V [ x' , y' ])
+      → (x≡x' : x ≡ x') → (y≡y' : y ≡ y')
+      → PathP (λ i → C [ y≡y' i .fst , x≡x' i .fst ]) (f .fst) (g .fst)
+      → PathP (λ i → ∫V [ x≡x' i , y≡y' i ]) f g
+    ∫V-Hom-PathP = ∫HomPathP
 
   open Base public
 

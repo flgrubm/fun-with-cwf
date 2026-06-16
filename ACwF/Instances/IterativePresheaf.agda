@@ -87,49 +87,42 @@ module _ {ℓob ℓhom ℓV : Level} (C : Category ℓob ℓhom) where
         PathP (λ i → El (A .F-ob (I , (Γ .F-id i (x .fst)))))
           (A .F-hom (id C , refl) (x .snd))
           (A .F-hom (∫V Γ .id) (x .snd))
-      goal x i = A .F-hom ((C .id) , (isSet→isSet' (isSetEl⁰ (Γ .F-ob I)) refl (funExt⁻ (Γ .F-id) (x .fst)) refl (funExt⁻ (Γ .F-id) (x .fst)) i)) (x .snd)
-      -- goal x i = A .F-hom (∫V-Hom-PathP Γ (id C , _) (id C , _) {!!} {!!} refl i) (x .snd)
+      goal x =
+        funExt⁻ (F-hom-PathP A (id C , refl) (id C , _) refl (λ i → I , Γ .F-id i (x .fst)) refl) (x .snd)
   Psh-CwF .CwF._✦_ Γ A .F-seq {I} {J} {K} f g = funExt λ x → ΣPathP ((funExt⁻ (Γ .F-seq f g) (x .fst)) , goal x)
     where
       goal : ∀ x →
         PathP (λ i → El (A .F-ob (K , funExt⁻ (Γ .F-seq f g) (x .fst) i)))
           (A .F-hom (g ⋆⟨ C ⟩ f , refl) (x .snd))
           (A .F-hom (g , refl) (A .F-hom (f , refl) (x .snd)))
-      goal x = {!!} ▷ funExt⁻ (A .F-seq (f , refl) (g , refl)) (x .snd)
       goal' : ∀ x →
         PathP (λ i → El (A .F-ob (K , funExt⁻ (Γ .F-seq f g) (x .fst) i)))
           (A .F-hom (g ⋆⟨ C ⟩ f , refl) (x .snd))
           (A .F-hom ((f , refl) ⋆⟨ ∫V Γ ⟩ (g , refl)) (x .snd))
-      goal' x i =
-        A .F-hom (∫V-Hom-PathP Γ ((g ⋆⟨ C ⟩ f , refl)) (((f , refl) ⋆⟨ ∫V Γ ⟩ (g , refl))) {!!} {!!} refl i) (x .snd)
-        -- A .F-hom (g ⋆⟨ C ⟩ f , isSet→isSet' (isSetEl⁰ (Γ .F-ob K)) refl {!!} refl {!!} i) (x .snd)
-        -- Goal: (Γ ⟪ seq' C g f ⟫) (x .fst) ≡ funExt⁻ (Γ .F-seq f g) (x .fst) i
-        -- ———— Boundary (wanted) —————————————————————————————————————
-        -- i = i0 ⊢ refl
-        -- i = i1 ⊢ funExt⁻ (F-seq Γ f g) (x .fst) ∙ refl ∙ refl
-        -- ————————————————————————————————————————————————————————————
-        where
-          path₀ = funExt⁻ (Γ .F-seq f g) (x .fst)
-          path₁ = funExt⁻ (Γ .F-seq f g) (x .fst) ∙ refl ∙ refl
+      goal' x =
+        funExt⁻ (F-hom-PathP A (seq' C g f , refl)
+                  (seq' (∫V Γ) (f , refl) (g , refl)) refl (λ i → K , Γ .F-seq f g i (x .fst)) refl) (x .snd)
+      goal x = goal' x ▷ funExt⁻ (A .F-seq (f , refl) (g , refl)) (x .snd)
   Psh-CwF .CwF.p .N-ob I x = x .fst
   Psh-CwF .CwF.p .N-hom f = refl
   Psh-CwF .CwF.q .fst I = snd
   Psh-CwF .CwF.q {Γ} {A} .snd {I} {J} {x} {y} u = {!!}
   Psh-CwF .CwF._⁺ σ .N-ob I x = (σ .N-ob I (x .fst)) , (x .snd)
-  Psh-CwF .CwF._⁺ {Γ} {Δ} {A} σ .N-hom {I} {J} f = {!!}
+  Psh-CwF .CwF._⁺ {Γ} {Δ} {A} σ .N-hom {I} {J} f = funExt goal
     where
-      -- path = {!!}
-      -- tyx = El ((Δ ✦ A [ σ ]Ty) .F-ob I)
-      -- fst≡ : ∀ (x : tyx) → N-ob σ J (F-hom Δ f (x .fst)) ≡ F-hom Γ f (N-ob σ I (x .fst))
-      -- snd≡ : ∀ x → PathP (λ i → El (A .F-ob (J , fst≡ x i)))
-      --               (A .F-hom (f , path ) ?)
-      --               (A .F-hom (f , refl) ?)
-      -- snd≡ x i = A .F-hom {!!} {!!}
-      -- tygoal = (x : El ((Δ ✦ A [ σ ]Ty) .F-ob I)) →
-      --         N-ob (σ ⁺) J ((Δ ✦ A [ σ ]Ty) .F-hom f x) ≡
-      --         (Γ ✦ A) .F-hom f (N-ob (σ ⁺) I x)
-      -- goal : tygoal
-      -- goal x = ΣPathP (fst≡ x , snd≡ x)
+      fst≡ : ∀ x → N-ob σ J (F-hom Δ f (x .fst)) ≡ F-hom Γ f (N-ob σ I (x .fst))
+      fst≡ x = funExt⁻ (σ .N-hom f) (x .fst)
+      snd≡ : ∀ x → PathP
+                    (λ i → El (A .F-ob (J , fst≡ x i)))
+                    (F-hom A (f , _) (x .snd))
+                    (A .F-hom (f , refl) (x .snd))
+      snd≡ x = funExt⁻ (F-hom-PathP A (f , _) (f , refl) refl (λ i → J , fst≡ x i) refl) (x .snd)
+      goal : ∀ x → (N-ob σ J (F-hom Δ f (x .fst)) ,
+                     F-hom A (f , _) (x .snd))
+                    ≡
+                    (F-hom Γ f (N-ob σ I (x .fst)) ,
+                     A .F-hom (f , refl) (x .snd))
+      goal x = ΣPathP (fst≡ x , snd≡ x)
 
   Psh-CwF .CwF.⟨_⟩ = {!!}
   Psh-CwF .CwF.⟨⟩∘ = {!!}

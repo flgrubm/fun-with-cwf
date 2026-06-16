@@ -22,8 +22,6 @@ open NatTrans
 
 module _ {ℓob ℓhom ℓV : Level} (C : Category ℓob ℓhom) where
   open Algebraic (PRESHEAFV C ℓV)
-  open CwF
-
   private
     PSH-TerminalObject : PresheafV C ℓV
     PSH-TerminalObject .F-ob x = unit⁰
@@ -51,38 +49,47 @@ module _ {ℓob ℓhom ℓV : Level} (C : Category ℓob ℓhom) where
     -isSetTm : isSet -Tm
     -isSetTm = isSetΣSndProp (isSetΠ λ I → isSetΠ λ x → isSetEl⁰ (A .F-ob (I , x))) isProp-isTm
 
+  -- lemma : ∀  {Γ : PresheafV C ℓV} {A : Functor (∫V Γ) (VCat ℓV)} {I} {J} (f : C [ J , I ]) (x x' : El (Γ .F-ob I)) y p
+  --   → x ≡ x'
+  --   →
+  --     (x , A .F-hom {x = I , x} {y = J , F-hom Γ f _} (f , p) y)
+  --   ≡
+  --     (x' , A .F-hom (f , refl) y)
+  -- lemma {Γ} {A} {I} {J} f x x' y p fst≡ = ΣPathP (fst≡ , (cong (λ F → A .F-hom F y) (∫V-Hom≡ Γ (f , p) (f , refl) refl)))
+
   Psh-CwF : CwF (ℓ-max (ℓ-max ℓob ℓhom) (ℓ-suc ℓV)) (ℓ-max (ℓ-max ℓob ℓhom) ℓV)
   open CwF Psh-CwF
-  Psh-CwF .⟨⟩ = PSH-Terminal
-  Psh-CwF .Ty Γ = Functor (∫V Γ) (VCat ℓV)
-  Psh-CwF .isSetTy Γ = isSetFunctor isSetV⁰
-  Psh-CwF ._[_]Ty A σ = A ∘F ∫V-hom σ
-  Psh-CwF .[id]Ty A =
+  Psh-CwF .CwF.⟨⟩ = PSH-Terminal
+  Psh-CwF .CwF.Ty Γ = Functor (∫V Γ) (VCat ℓV)
+  Psh-CwF .CwF.isSetTy Γ = isSetFunctor isSetV⁰
+  Psh-CwF .CwF._[_]Ty A σ = A ∘F ∫V-hom σ
+  Psh-CwF .CwF.[id]Ty A =
     A ∘F ∫V-hom (id (PRESHEAFV C ℓV)) ≡⟨ cong (λ F → A ∘F F) ∫V-id ⟩
     A ∘F Id                           ≡⟨ F-lUnit ⟩
     A                                 ∎
-  Psh-CwF .[][]Ty A σ' σ =
+  Psh-CwF .CwF.[][]Ty A σ' σ =
     A ∘F ∫V-hom ((PRESHEAFV C ℓV ∘ σ) σ') ≡⟨ cong (λ F → A ∘F F) ∫V-seq ⟩
     A ∘F ((∫V-hom σ) ∘F (∫V-hom σ'))      ≡⟨ F-assoc ⟩
     (A ∘F ∫V-hom σ) ∘F ∫V-hom σ'          ∎
-  Psh-CwF .Tm Γ A = -Tm Γ A
-  Psh-CwF .isSetTm = -isSetTm
-  Psh-CwF ._[_]Tm M σ .fst = λ I x → M .fst I (σ .N-ob I x)
-  Psh-CwF ._[_]Tm {Γ} {Δ} {A} M σ .snd {I} {J} {x} {y} (f , p) =
+  Psh-CwF .CwF.Tm Γ A = -Tm Γ A
+  Psh-CwF .CwF.isSetTm = -isSetTm
+  Psh-CwF .CwF._[_]Tm M σ .fst = λ I x → M .fst I (σ .N-ob I x)
+  Psh-CwF .CwF._[_]Tm {Γ} {Δ} {A} M σ .snd {I} {J} {x} {y} (f , p) =
     (A ∘F ∫V-hom σ) .F-hom (f , p) (M .fst J (σ .N-ob J y)) ≡⟨ {!!} ⟩
     M .fst I (σ .N-ob I x)                                  ∎
-  Psh-CwF .[id]Tm {Γ} {A} M = {!!}
-  Psh-CwF .[][]Tm = {!!}
-  Psh-CwF ._✦_ Γ A .F-ob I = Σ⁰ (Γ .F-ob I) (λ x → A .F-ob (I , x))
-  Psh-CwF ._✦_ Γ A .F-hom {I} {J} f (x , y) = (Γ .F-hom f x) , A .F-hom (f , refl) y
-  Psh-CwF ._✦_ Γ A .F-id {I} = funExt λ x → ΣPathP (funExt⁻ (Γ .F-id) (x .fst) , (goal x ▷ funExt⁻ (A .F-id) (x .snd)))
+  Psh-CwF .CwF.[id]Tm {Γ} {A} M = {!!}
+  Psh-CwF .CwF.[][]Tm = {!!}
+  Psh-CwF .CwF._✦_ Γ A .F-ob I = Σ⁰ (Γ .F-ob I) (λ x → A .F-ob (I , x))
+  Psh-CwF .CwF._✦_ Γ A .F-hom {I} {J} f (x , y) = (Γ .F-hom f x) , A .F-hom (f , refl) y
+  Psh-CwF .CwF._✦_ Γ A .F-id {I} = funExt λ x → ΣPathP (funExt⁻ (Γ .F-id) (x .fst) , (goal x ▷ funExt⁻ (A .F-id) (x .snd)))
     where
       goal : ∀ x →
         PathP (λ i → El (A .F-ob (I , (Γ .F-id i (x .fst)))))
           (A .F-hom (id C , refl) (x .snd))
           (A .F-hom (∫V Γ .id) (x .snd))
       goal x i = A .F-hom ((C .id) , (isSet→isSet' (isSetEl⁰ (Γ .F-ob I)) refl (funExt⁻ (Γ .F-id) (x .fst)) refl (funExt⁻ (Γ .F-id) (x .fst)) i)) (x .snd)
-  Psh-CwF ._✦_ Γ A .F-seq {I} {J} {K} f g = funExt λ x → ΣPathP ((funExt⁻ (Γ .F-seq f g) (x .fst)) , goal x)
+      -- goal x i = A .F-hom (∫V-Hom-PathP Γ (id C , _) (id C , _) {!!} {!!} refl i) (x .snd)
+  Psh-CwF .CwF._✦_ Γ A .F-seq {I} {J} {K} f g = funExt λ x → ΣPathP ((funExt⁻ (Γ .F-seq f g) (x .fst)) , goal x)
     where
       goal : ∀ x →
         PathP (λ i → El (A .F-ob (K , funExt⁻ (Γ .F-seq f g) (x .fst) i)))
@@ -93,7 +100,9 @@ module _ {ℓob ℓhom ℓV : Level} (C : Category ℓob ℓhom) where
         PathP (λ i → El (A .F-ob (K , funExt⁻ (Γ .F-seq f g) (x .fst) i)))
           (A .F-hom (g ⋆⟨ C ⟩ f , refl) (x .snd))
           (A .F-hom ((f , refl) ⋆⟨ ∫V Γ ⟩ (g , refl)) (x .snd))
-      goal' x i = A .F-hom (g ⋆⟨ C ⟩ f , isSet→isSet' (isSetEl⁰ (Γ .F-ob K)) refl {!!} refl {!!} i) (x .snd)
+      goal' x i =
+        A .F-hom (∫V-Hom-PathP Γ ((g ⋆⟨ C ⟩ f , refl)) (((f , refl) ⋆⟨ ∫V Γ ⟩ (g , refl))) {!!} {!!} refl i) (x .snd)
+        -- A .F-hom (g ⋆⟨ C ⟩ f , isSet→isSet' (isSetEl⁰ (Γ .F-ob K)) refl {!!} refl {!!} i) (x .snd)
         -- Goal: (Γ ⟪ seq' C g f ⟫) (x .fst) ≡ funExt⁻ (Γ .F-seq f g) (x .fst) i
         -- ———— Boundary (wanted) —————————————————————————————————————
         -- i = i0 ⊢ refl
@@ -102,34 +111,34 @@ module _ {ℓob ℓhom ℓV : Level} (C : Category ℓob ℓhom) where
         where
           path₀ = funExt⁻ (Γ .F-seq f g) (x .fst)
           path₁ = funExt⁻ (Γ .F-seq f g) (x .fst) ∙ refl ∙ refl
-  Psh-CwF .p .N-ob I x = x .fst
-  Psh-CwF .p .N-hom f = refl
-  Psh-CwF .q .fst I = snd
-  Psh-CwF .q {Γ} {A} .snd {I} {J} {x} {y} u = {!!}
-  (Psh-CwF ⁺) σ .N-ob I x = (σ .N-ob I (x .fst)) , (x .snd)
-  Psh-CwF ._⁺ σ .N-hom f = funExt goal
+  Psh-CwF .CwF.p .N-ob I x = x .fst
+  Psh-CwF .CwF.p .N-hom f = refl
+  Psh-CwF .CwF.q .fst I = snd
+  Psh-CwF .CwF.q {Γ} {A} .snd {I} {J} {x} {y} u = {!!}
+  Psh-CwF .CwF._⁺ σ .N-ob I x = (σ .N-ob I (x .fst)) , (x .snd)
+  Psh-CwF .CwF._⁺ {Γ} {Δ} {A} σ .N-hom {I} {J} f = {!!}
     where
-      fst≡ : ∀ x → N-ob σ _ (_ .F-hom f (x .fst)) ≡ _ .F-hom f (N-ob σ _ (x .fst))
-      fst≡ x = funExt⁻ (σ .N-hom f) (x .fst)
-      snd≡ : ∀ x → {!PathP (λ i → El (_ .F-ob (_ , fst≡ x i)))
-                    ((_ ⋆ _ [ σ ]Ty) .F-hom f x .snd)
-                    (_ .F-hom (f , (λ _ → F-hom _ f (N-ob ((Psh-CwF ⁺) σ) _ x .fst)))
-                     (N-ob ((Psh-CwF ⁺) σ) _ x .snd))!}
-      goal : ∀ x →
-                 (N-ob σ _ (_ .F-hom f (x .fst)) ,
-                 F-hom _ (f , _) (x .snd))
-              ≡
-                 (_ .F-hom f (N-ob σ _ (x .fst)) ,
-                 _ .F-hom (f , (λ _ → F-hom _ f (N-ob σ _ (x .fst)))) (x .snd))
-      goal x = ΣPathP (fst≡ x , snd≡ x)
-  Psh-CwF .⟨_⟩ = {!!}
-  Psh-CwF .⟨⟩∘ = {!!}
-  Psh-CwF .p⁺∘⟨q⟩≡id = {!!}
-  Psh-CwF .∘⁺ = {!!}
-  Psh-CwF .id⁺ = {!!}
-  Psh-CwF .p∘⁺ = {!!}
-  Psh-CwF .[p][⁺]Ty = {!!}
-  Psh-CwF .q[⁺]Tm = {!!}
-  Psh-CwF .p∘⟨⟩≡id = {!!}
-  Psh-CwF .[p][⟨⟩]Ty = {!!}
-  Psh-CwF .q[⟨⟩]Tm = {!!}
+      -- path = {!!}
+      -- tyx = El ((Δ ✦ A [ σ ]Ty) .F-ob I)
+      -- fst≡ : ∀ (x : tyx) → N-ob σ J (F-hom Δ f (x .fst)) ≡ F-hom Γ f (N-ob σ I (x .fst))
+      -- snd≡ : ∀ x → PathP (λ i → El (A .F-ob (J , fst≡ x i)))
+      --               (A .F-hom (f , path ) ?)
+      --               (A .F-hom (f , refl) ?)
+      -- snd≡ x i = A .F-hom {!!} {!!}
+      -- tygoal = (x : El ((Δ ✦ A [ σ ]Ty) .F-ob I)) →
+      --         N-ob (σ ⁺) J ((Δ ✦ A [ σ ]Ty) .F-hom f x) ≡
+      --         (Γ ✦ A) .F-hom f (N-ob (σ ⁺) I x)
+      -- goal : tygoal
+      -- goal x = ΣPathP (fst≡ x , snd≡ x)
+
+  Psh-CwF .CwF.⟨_⟩ = {!!}
+  Psh-CwF .CwF.⟨⟩∘ = {!!}
+  Psh-CwF .CwF.p⁺∘⟨q⟩≡id = {!!}
+  Psh-CwF .CwF.∘⁺ = {!!}
+  Psh-CwF .CwF.id⁺ = {!!}
+  Psh-CwF .CwF.p∘⁺ = {!!}
+  Psh-CwF .CwF.[p][⁺]Ty = {!!}
+  Psh-CwF .CwF.q[⁺]Tm = {!!}
+  Psh-CwF .CwF.p∘⟨⟩≡id = {!!}
+  Psh-CwF .CwF.[p][⟨⟩]Ty = {!!}
+  Psh-CwF .CwF.q[⟨⟩]Tm = {!!}

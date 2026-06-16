@@ -64,9 +64,10 @@ module _ {ℓob ℓhom ℓV : Level} (C : Category ℓob ℓhom) where
   Psh-CwF .CwF.isSetTy Γ = isSetFunctor isSetV⁰
   Psh-CwF .CwF._[_]Ty A σ = A ∘F ∫V-hom σ
   Psh-CwF .CwF.[id]Ty A =
-    A ∘F ∫V-hom (id (PRESHEAFV C ℓV)) ≡⟨ cong (λ F → A ∘F F) ∫V-id ⟩
-    A ∘F Id                           ≡⟨ F-lUnit ⟩
-    A                                 ∎
+    -- A ∘F ∫V-hom (id (PRESHEAFV C ℓV)) ≡⟨ cong (λ F → A ∘F F) ∫V-id ⟩
+    -- A ∘F Id                           ≡⟨ F-lUnit ⟩
+    -- A                                 ∎
+    cong (A ∘F_) ∫V-id ∙ F-lUnit
   Psh-CwF .CwF.[][]Ty A σ' σ =
     A ∘F ∫V-hom ((PRESHEAFV C ℓV ∘ σ) σ') ≡⟨ cong (λ F → A ∘F F) ∫V-seq ⟩
     A ∘F ((∫V-hom σ) ∘F (∫V-hom σ'))      ≡⟨ F-assoc ⟩
@@ -128,7 +129,7 @@ module _ {ℓob ℓhom ℓV : Level} (C : Category ℓob ℓhom) where
   Psh-CwF .CwF.⟨⟩∘ = {!!}
   Psh-CwF .CwF.p⁺∘⟨q⟩≡id = {!!}
   Psh-CwF .CwF.∘⁺ = {!!}
-  Psh-CwF .CwF.id⁺ = {!!}
+  Psh-CwF .CwF.id⁺ {Γ} {A} = {!!}
   Psh-CwF .CwF.p∘⁺ = {!!}
   Psh-CwF .CwF.[p][⁺]Ty = {!!}
   Psh-CwF .CwF.q[⁺]Tm = {!!}

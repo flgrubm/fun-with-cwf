@@ -92,3 +92,15 @@ module _ {ℓob ℓhom : Level} {C : Category ℓob ℓhom} {ℓV : Level} where
       (λ {_} {c'} (f , p) → ΣPathP (refl , isSetEl (Ε .F-ob (c' .fst)) _ _ _ _))
 
   open Properties public
+
+module _ {ℓob ℓhom ℓV : Level} {C : Category ℓob ℓhom} {Γ : PresheafV C ℓV}
+         (A : Functor (∫V Γ) (VCat ℓV)) where
+
+  -- A.F-hom depends only on the C-morphism, not the proof in ∫V Γ
+  F-hom-PathP : {x x' y y' : (∫V Γ) .ob}
+              → (f : ∫V Γ [ x , y ]) (g : ∫V Γ [ x' , y' ])
+              → (x≡x' : x ≡ x') (y≡y' : y ≡ y')
+              → PathP (λ i → Hom[ C , y≡y' i .fst ] (x≡x' i .fst)) (f .fst) (g .fst)   -- always refl when same C-arrow
+              → PathP (λ i → El (A .F-ob (x≡x' i)) → El (A .F-ob (y≡y' i)))
+                      (A .F-hom f) (A .F-hom g)
+  F-hom-PathP f g x≡x' y≡y' p i = A .F-hom (∫V-Hom-PathP Γ f g x≡x' y≡y' p i)

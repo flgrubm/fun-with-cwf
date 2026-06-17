@@ -75,24 +75,24 @@ module Algebraic {ℓOb ℓHom : Level} (C : Category ℓOb ℓHom) where
 
       -- | Context extension
 
-      _✦_ : (Γ : Ctx) (A : Ty Γ) → Ctx
+      _▹_ : (Γ : Ctx) (A : Ty Γ) → Ctx
 
-      p : {A : Ty Γ} → Γ ✦ A ⟶ Γ
+      p : {A : Ty Γ} → Γ ▹ A ⟶ Γ
 
-      q : {A : Ty Γ} → Tm (Γ ✦ A) (A [ p ]Ty)
+      q : {A : Ty Γ} → Tm (Γ ▹ A) (A [ p ]Ty)
 
     infix  40 _[_]Ty
     infix  40 _[_]Tm
-    infixl 30 _✦_
+    infixl 30 _▹_
 
     field
       _⁺ : {A : Ty Γ} (σ : Δ ⟶ Γ)
          → ----------------------
-           Δ ✦ A [ σ ]Ty ⟶ Γ ✦ A
+           Δ ▹ A [ σ ]Ty ⟶ Γ ▹ A
 
       ⟨_⟩ : {A : Ty Γ} (a : Tm Γ A)
           → -----------------------
-            Γ ⟶ (Γ ✦ A)
+            Γ ⟶ (Γ ▹ A)
 
       ⟨⟩∘ : {A : Ty Γ} (a : Tm Γ A) (σ : Δ ⟶ Γ)
           → -----------------------------------
@@ -100,15 +100,15 @@ module Algebraic {ℓOb ℓHom : Level} (C : Category ℓOb ℓHom) where
 
       p⁺∘⟨q⟩≡id : {A : Ty Γ}
                 → ------------------------
-                  p ⁺ ∘ ⟨ q ⟩ ≡ id {Γ ✦ A}
+                  p ⁺ ∘ ⟨ q ⟩ ≡ id {Γ ▹ A}
 
       ∘⁺ : {A : Ty Γ} (σ' : Θ ⟶ Δ) (σ : Δ ⟶ Γ)
          → -------------------------------------------------------------------
-           PathP (λ i → Θ ✦ [][]Ty A σ' σ i ⟶ Γ ✦ A) ((σ ∘ σ') ⁺) (σ ⁺ ∘ σ' ⁺)
+           PathP (λ i → Θ ▹ [][]Ty A σ' σ i ⟶ Γ ▹ A) ((σ ∘ σ') ⁺) (σ ⁺ ∘ σ' ⁺)
 
       id⁺ : {A : Ty Γ}
           → ----------------------------------------------
-            PathP (λ i → Γ ✦ [id]Ty A i ⟶ Γ ✦ A) (id ⁺) id
+            PathP (λ i → Γ ▹ [id]Ty A i ⟶ Γ ▹ A) (id ⁺) id
 
       p∘⁺ : {A : Ty Γ} (σ : Δ ⟶ Γ)
           → -----------------------
@@ -120,7 +120,7 @@ module Algebraic {ℓOb ℓHom : Level} (C : Category ℓOb ℓHom) where
 
       q[⁺]Tm : {A : Ty Γ} (σ : Δ ⟶ Γ)
              → -----------------------------------------------------------------
-               PathP (λ i → Tm (Δ ✦ A [ σ ]Ty) ([p][⁺]Ty A σ i)) (q [ σ ⁺ ]Tm) q
+               PathP (λ i → Tm (Δ ▹ A [ σ ]Ty) ([p][⁺]Ty A σ i)) (q [ σ ⁺ ]Tm) q
 
       p∘⟨⟩≡id : {A : Ty Γ} (a : Tm Γ A)
               → -----------------------

@@ -48,7 +48,7 @@ module _ {ℓ : Level} where
   VCwF ._[_]Tm a σ x      = a (σ x)
   VCwF .[id]Tm _          = refl
   VCwF .[][]Tm _ _ _      = refl
-  VCwF ._✦_               = Σ⁰
+  VCwF ._▹_               = Σ⁰
   VCwF .p                 = fst
   VCwF .q                 = snd
   VCwF ._⁺ σ (x , _) .fst = σ x

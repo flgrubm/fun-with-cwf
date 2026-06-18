@@ -43,21 +43,6 @@ module _ {ℓob ℓhom ℓV : Level} (C : Category ℓob ℓhom) where
     PSH-Terminal .snd _ .fst .NatTrans.N-hom _ = refl
     PSH-Terminal .snd _ .snd η = makeNatTransPath (funExt (λ I → funExt λ x → isContrUnit* .snd (η .NatTrans.N-ob I x)))
 
-  -- module _ (Γ : PresheafV C ℓV) (A : Functor (∫V Γ) (VCat ℓV)) where
-  --   abstract
-  --   preTm : Type (ℓ-max ℓob ℓV)
-  --   preTm = (I : C .Category.ob) (x : El (Γ ⟅ I ⟆)) → El (A ⟅ I , x ⟆)
-  --   isTm : preTm → Type (ℓ-max (ℓ-max ℓob ℓhom) ℓV)
-  --   isTm M = {I J : C .Category.ob} {x : El (Γ ⟅ I ⟆)} {y : El (Γ ⟅ J ⟆)}
-  --       → (u : (∫V Γ) [ (J , y) , (I , x) ])
-  --       → A .F-hom u (M J y) ≡ M I x
-  --   -Tm : Type (ℓ-max (ℓ-max ℓob ℓhom) ℓV)
-  --   -Tm = Σ preTm isTm
-  --   isProp-isTm : (M : preTm) → isProp (isTm M)
-  --   isProp-isTm M p1 p2 i {I} {J} {x} {y} u = isSetEl⁰ (A .F-ob (I , x)) _ _ (p1 u) (p2 u) i
-  --   -isSetTm : isSet -Tm
-  --   -isSetTm = isSetΣSndProp (isSetΠ λ I → isSetΠ λ x → isSetEl⁰ (A .F-ob (I , x))) isProp-isTm
-
   module _ (Γ : PresheafV C ℓV) (A : Functor (∫V Γ) (VCat ℓV)) where
     NullType : Functor (∫V Γ) (VCat ℓV)
     NullType = Constant _ _ unit⁰

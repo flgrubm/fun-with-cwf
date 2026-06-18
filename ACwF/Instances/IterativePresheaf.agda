@@ -61,6 +61,22 @@ module _ {ℓob ℓhom ℓV : Level} (C : Category ℓob ℓhom) where
     Tm-categorical-isSet : isSet (Tm-categorical)
     Tm-categorical-isSet = isSetNatTrans
 
+
+  []Tm :
+    ∀ Γ Δ
+    → (A : Functor (∫V Γ) (VCat ℓV))
+    → (σ : NatTrans Δ Γ)
+    → Tm-categorical Γ A
+    → Tm-categorical Δ (A ∘F ∫V-hom σ)
+  []Tm Γ Δ A σ M = fn'
+    where
+      fn : NatTrans (NullType Γ A ∘F ∫V-hom σ) (A ∘F ∫V-hom σ)
+      fn = M ∘ˡ ∫V-hom σ
+      p : NullType Γ A ∘F ∫V-hom σ ≡ NullType Δ (A ∘F ∫V-hom σ)
+      p = Functor≡ (λ c → refl) λ f → refl
+      fn' : Tm-categorical Δ (A ∘F ∫V-hom σ)
+      fn' = transport (λ i → NatTrans (p i) _) fn
+
   Psh-CwF : CwF (ℓ-max (ℓ-max ℓob ℓhom) (ℓ-suc ℓV)) (ℓ-max (ℓ-max ℓob ℓhom) ℓV)
   open CwF Psh-CwF
   Psh-CwF .CwF.⟨⟩ = PSH-Terminal
@@ -82,8 +98,7 @@ module _ {ℓob ℓhom ℓV : Level} (C : Category ℓob ℓhom) where
     -- cong (λ F → A ∘F F) ∫V-seq ∙ F-assoc
   Psh-CwF .CwF.Tm Γ A = Tm-categorical Γ A
   Psh-CwF .CwF.isSetTm = Tm-categorical-isSet
-  Psh-CwF .CwF._[_]Tm M σ .N-ob (I , x) t = {! ∫V-hom σ .F-ob!}
-  Psh-CwF .CwF._[_]Tm M σ .N-hom f = {!!}
+  Psh-CwF .CwF._[_]Tm M σ = []Tm _ _ _ σ M
   Psh-CwF .CwF.[id]Tm {Γ} {A} M = {!!}
   Psh-CwF .CwF.[][]Tm = {!!}
   Psh-CwF .CwF._▹_ Γ A .F-ob I = Σ⁰ (Γ .F-ob I) (λ x → A .F-ob (I , x))

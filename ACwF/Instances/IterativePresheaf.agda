@@ -86,9 +86,9 @@ module _ {ℓob ℓhom ℓV : Level} (C : Category ℓob ℓhom) where
   Psh-CwF .CwF._[_]Tm M σ .N-hom f = {!!}
   Psh-CwF .CwF.[id]Tm {Γ} {A} M = {!!}
   Psh-CwF .CwF.[][]Tm = {!!}
-  Psh-CwF .CwF._✦_ Γ A .F-ob I = Σ⁰ (Γ .F-ob I) (λ x → A .F-ob (I , x))
-  Psh-CwF .CwF._✦_ Γ A .F-hom {I} {J} f (x , y) = (Γ .F-hom f x) , A .F-hom (f , refl) y
-  Psh-CwF .CwF._✦_ Γ A .F-id {I} = funExt λ x → ΣPathP (funExt⁻ (Γ .F-id) (x .fst) , (goal x ▷ funExt⁻ (A .F-id) (x .snd)))
+  Psh-CwF .CwF._▹_ Γ A .F-ob I = Σ⁰ (Γ .F-ob I) (λ x → A .F-ob (I , x))
+  Psh-CwF .CwF._▹_ Γ A .F-hom {I} {J} f (x , y) = (Γ .F-hom f x) , A .F-hom (f , refl) y
+  Psh-CwF .CwF._▹_ Γ A .F-id {I} = funExt λ x → ΣPathP (funExt⁻ (Γ .F-id) (x .fst) , (goal x ▷ funExt⁻ (A .F-id) (x .snd)))
     where
       goal : ∀ x →
         PathP (λ i → El (A .F-ob (I , (Γ .F-id i (x .fst)))))
@@ -96,7 +96,7 @@ module _ {ℓob ℓhom ℓV : Level} (C : Category ℓob ℓhom) where
           (A .F-hom (∫V Γ .id) (x .snd))
       goal x =
         funExt⁻ (F-hom-PathP A (id C , refl) (id C , _) refl (λ i → I , Γ .F-id i (x .fst)) refl) (x .snd)
-  Psh-CwF .CwF._✦_ Γ A .F-seq {I} {J} {K} f g = funExt λ x → ΣPathP ((funExt⁻ (Γ .F-seq f g) (x .fst)) , goal x)
+  Psh-CwF .CwF._▹_ Γ A .F-seq {I} {J} {K} f g = funExt λ x → ΣPathP ((funExt⁻ (Γ .F-seq f g) (x .fst)) , goal x)
     where
       goal : ∀ x →
         PathP (λ i → El (A .F-ob (K , funExt⁻ (Γ .F-seq f g) (x .fst) i)))
@@ -135,9 +135,9 @@ module _ {ℓob ℓhom ℓV : Level} (C : Category ℓob ℓhom) where
   Psh-CwF .CwF.⟨⟩∘ = {!!}
   Psh-CwF .CwF.p⁺∘⟨q⟩≡id = {!!}
   Psh-CwF .CwF.∘⁺ {Γ} {Δ} {Θ} {A} σ' σ =
-    makeNatTransPathP (cong (Δ ✦_) ([][]Ty A σ' σ)) refl refl
+    makeNatTransPathP (cong (Δ ▹_) ([][]Ty A σ' σ)) refl refl
   Psh-CwF .CwF.id⁺ {Γ} {A} =
-    makeNatTransPathP (cong (Γ ✦_) ([id]Ty A)) refl refl
+    makeNatTransPathP (cong (Γ ▹_) ([id]Ty A)) refl refl
   Psh-CwF .CwF.p∘⁺ σ = makeNatTransPath refl
   Psh-CwF .CwF.[p][⁺]Ty {Γ} {Δ} B σ = Functor≡ (λ c → refl) (λ f → cong (B .F-hom) (ΣPathP (refl , isSetEl⁰ (Γ .F-ob _) _ _ _ _)))
   Psh-CwF .CwF.q[⁺]Tm = {!!}

@@ -23,6 +23,11 @@ open Category
 open Functor
 open NatTrans
 
+ConstComp : ∀ {ℓ ℓ' ℓ'' ℓ'''} {C E : Category ℓ ℓ'} {D : Category ℓ'' ℓ'''}
+            (G : Functor C E) (x : D .ob)
+          → Constant E D x ∘F G ≡ Constant C D x
+ConstComp G x = Functor≡ (λ c → refl) (λ f → refl)
+
 module _ {ℓob ℓhom ℓV : Level} (C : Category ℓob ℓhom) where
   open Algebraic (PRESHEAFV C ℓV)
   private abstract
@@ -61,21 +66,21 @@ module _ {ℓob ℓhom ℓV : Level} (C : Category ℓob ℓhom) where
     Tm-categorical-isSet : isSet (Tm-categorical)
     Tm-categorical-isSet = isSetNatTrans
 
-
-  []Tm :
-    ∀ Γ Δ
-    → (A : Functor (∫V Γ) (VCat ℓV))
-    → (σ : NatTrans Δ Γ)
-    → Tm-categorical Γ A
-    → Tm-categorical Δ (A ∘F ∫V-hom σ)
-  []Tm Γ Δ A σ M = fn'
-    where
-      fn : NatTrans (NullType Γ A ∘F ∫V-hom σ) (A ∘F ∫V-hom σ)
-      fn = M ∘ˡ ∫V-hom σ
-      p : NullType Γ A ∘F ∫V-hom σ ≡ NullType Δ (A ∘F ∫V-hom σ)
-      p = Functor≡ (λ c → refl) λ f → refl
-      fn' : Tm-categorical Δ (A ∘F ∫V-hom σ)
-      fn' = transport (λ i → NatTrans (p i) _) fn
+  abstract
+    []Tm :
+      ∀ Γ Δ
+      → (A : Functor (∫V Γ) (VCat ℓV))
+      → (σ : NatTrans Δ Γ)
+      → Tm-categorical Γ A
+      → Tm-categorical Δ (A ∘F ∫V-hom σ)
+    []Tm Γ Δ A σ M = fn'
+      where
+        fn : NatTrans (NullType Γ A ∘F ∫V-hom σ) (A ∘F ∫V-hom σ)
+        fn = M ∘ˡ ∫V-hom σ
+        p : NullType Γ A ∘F ∫V-hom σ ≡ NullType Δ (A ∘F ∫V-hom σ)
+        p = ConstComp (∫V-hom σ) unit⁰
+        fn' : Tm-categorical Δ (A ∘F ∫V-hom σ)
+        fn' = transport (λ i → NatTrans (p i) (A ∘F ∫V-hom σ)) fn
 
   Psh-CwF : CwF (ℓ-max (ℓ-max ℓob ℓhom) (ℓ-suc ℓV)) (ℓ-max (ℓ-max ℓob ℓhom) ℓV)
   open CwF Psh-CwF

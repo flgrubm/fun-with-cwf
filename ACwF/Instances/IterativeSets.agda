@@ -28,7 +28,7 @@ module _ {ℓ : Level} where
   open CwF
   open Iso
 
-  VCwF : CwF VCat (ℓ-suc ℓ) ℓ
+  VCwF : CwF (VCat _) (ℓ-suc ℓ) ℓ
   VCwF .⟨⟩                = unit⁰ , λ _ → (λ _ → lift tt) , λ _ _ _ → lift tt
   VCwF .Ty Γ              = El Γ → V {ℓ}
   VCwF .isSetTy Γ         = isSet→ isSetV⁰
@@ -65,7 +65,7 @@ module _ {ℓHom : Level} where
 
   open Σ-Structure
 
-  V-Σ-Structure : Σ-Structure VCat VCwF
+  V-Σ-Structure : Σ-Structure (VCat _) VCwF
   V-Σ-Structure .ΣTy A B x              = Σ⁰ (A x) (λ y → B (x , y))
   V-Σ-Structure .ΣTyNat A B σ           = refl
   V-Σ-Structure .ΣTmIso A B             = Σ-Π-Iso
@@ -80,7 +80,7 @@ module _ {ℓHom : Level} where
 
   open Π-Structure
 
-  V-Π-Structure : Π-Structure {ℓHom = ℓHom} VCat VCwF
+  V-Π-Structure : Π-Structure {ℓHom = ℓHom} (VCat _) VCwF
   V-Π-Structure .ΠTy {Γ = Γ} A B x    = Π⁰ (A x) λ y → B (x , y)
   V-Π-Structure .ΠTyNat _ _ _         = refl
   V-Π-Structure .ΠTmIso _ _           = invIso curryIso

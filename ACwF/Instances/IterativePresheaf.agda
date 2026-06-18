@@ -7,9 +7,12 @@ open import Cubical.Data.Unit
 open import Cubical.Data.Sigma
 open import Cubical.Categories.Category
 open import Cubical.Categories.Functor
+open import Cubical.Categories.Instances.Functors
+open import Cubical.Categories.Functors.Constant
 open import Cubical.Categories.NaturalTransformation
 open import Cubical.Categories.Limits.Terminal
 open import Cubical.Data.IterativeSets.Base renaming (V⁰ to V ; El⁰ to El)
+open import Cubical.Data.IterativeSets.Empty
 open import Cubical.Data.IterativeSets.Unit
 open import Cubical.Data.IterativeSets.Sigma
 open import Utils.IterativePresheaf
@@ -22,7 +25,7 @@ open NatTrans
 
 module _ {ℓob ℓhom ℓV : Level} (C : Category ℓob ℓhom) where
   open Algebraic (PRESHEAFV C ℓV)
-  private
+  private abstract
     PSH-TerminalObject : PresheafV C ℓV
     PSH-TerminalObject .F-ob x = unit⁰
     PSH-TerminalObject .F-hom _ x = x
@@ -35,27 +38,28 @@ module _ {ℓob ℓhom ℓV : Level} (C : Category ℓob ℓhom) where
     PSH-Terminal .snd _ .fst .NatTrans.N-hom _ = refl
     PSH-Terminal .snd _ .snd η = makeNatTransPath (funExt (λ I → funExt λ x → isContrUnit* .snd (η .NatTrans.N-ob I x)))
 
-  module _ (Γ : PresheafV C ℓV) (A : Functor (∫V Γ) (VCat ℓV)) where
-    preTm : Type (ℓ-max ℓob ℓV)
-    preTm = (I : C .Category.ob) (x : El (Γ ⟅ I ⟆)) → El (A ⟅ I , x ⟆)
-    isTm : preTm → Type (ℓ-max (ℓ-max ℓob ℓhom) ℓV)
-    isTm M = {I J : C .Category.ob} {x : El (Γ ⟅ I ⟆)} {y : El (Γ ⟅ J ⟆)}
-        → (u : (∫V Γ) [ (J , y) , (I , x) ])
-        → A .F-hom u (M J y) ≡ M I x
-    -Tm : Type (ℓ-max (ℓ-max ℓob ℓhom) ℓV)
-    -Tm = Σ preTm isTm
-    isProp-isTm : (M : preTm) → isProp (isTm M)
-    isProp-isTm M p1 p2 i {I} {J} {x} {y} u = isSetEl⁰ (A .F-ob (I , x)) _ _ (p1 u) (p2 u) i
-    -isSetTm : isSet -Tm
-    -isSetTm = isSetΣSndProp (isSetΠ λ I → isSetΠ λ x → isSetEl⁰ (A .F-ob (I , x))) isProp-isTm
+  -- module _ (Γ : PresheafV C ℓV) (A : Functor (∫V Γ) (VCat ℓV)) where
+  --   abstract
+  --   preTm : Type (ℓ-max ℓob ℓV)
+  --   preTm = (I : C .Category.ob) (x : El (Γ ⟅ I ⟆)) → El (A ⟅ I , x ⟆)
+  --   isTm : preTm → Type (ℓ-max (ℓ-max ℓob ℓhom) ℓV)
+  --   isTm M = {I J : C .Category.ob} {x : El (Γ ⟅ I ⟆)} {y : El (Γ ⟅ J ⟆)}
+  --       → (u : (∫V Γ) [ (J , y) , (I , x) ])
+  --       → A .F-hom u (M J y) ≡ M I x
+  --   -Tm : Type (ℓ-max (ℓ-max ℓob ℓhom) ℓV)
+  --   -Tm = Σ preTm isTm
+  --   isProp-isTm : (M : preTm) → isProp (isTm M)
+  --   isProp-isTm M p1 p2 i {I} {J} {x} {y} u = isSetEl⁰ (A .F-ob (I , x)) _ _ (p1 u) (p2 u) i
+  --   -isSetTm : isSet -Tm
+  --   -isSetTm = isSetΣSndProp (isSetΠ λ I → isSetΠ λ x → isSetEl⁰ (A .F-ob (I , x))) isProp-isTm
 
-  -- lemma : ∀  {Γ : PresheafV C ℓV} {A : Functor (∫V Γ) (VCat ℓV)} {I} {J} (f : C [ J , I ]) (x x' : El (Γ .F-ob I)) y p
-  --   → x ≡ x'
-  --   →
-  --     (x , A .F-hom {x = I , x} {y = J , F-hom Γ f _} (f , p) y)
-  --   ≡
-  --     (x' , A .F-hom (f , refl) y)
-  -- lemma {Γ} {A} {I} {J} f x x' y p fst≡ = ΣPathP (fst≡ , (cong (λ F → A .F-hom F y) (∫V-Hom≡ Γ (f , p) (f , refl) refl)))
+  module _ (Γ : PresheafV C ℓV) (A : Functor (∫V Γ) (VCat ℓV)) where
+    NullType : Functor (∫V Γ) (VCat ℓV)
+    NullType = Constant _ _ unit⁰
+    Tm-categorical : Type (ℓ-max (ℓ-max ℓob ℓhom) ℓV)
+    Tm-categorical = FUNCTOR (∫V Γ) (VCat ℓV) [ NullType , A ]
+    Tm-categorical-isSet : isSet (Tm-categorical)
+    Tm-categorical-isSet = isSetNatTrans
 
   Psh-CwF : CwF (ℓ-max (ℓ-max ℓob ℓhom) (ℓ-suc ℓV)) (ℓ-max (ℓ-max ℓob ℓhom) ℓV)
   open CwF Psh-CwF
@@ -74,14 +78,12 @@ module _ {ℓob ℓhom ℓV : Level} (C : Category ℓob ℓhom) where
     -- cong (A ∘F_) ∫V-id ∙ F-lUnit
   Psh-CwF .CwF.[][]Ty {Γ = Γ} A σ' σ =
     Functor≡ (λ c → refl) λ f → cong (A .F-hom) (ΣPathP (refl , isSetEl⁰ (Γ .F-ob _) _ _ _ _))
-    -- same as above, I changed to a Functor≡ to get more definitional equalities
+             -- same as above, I changed to a Functor≡ to get more definitional equalities
     -- cong (λ F → A ∘F F) ∫V-seq ∙ F-assoc
-  Psh-CwF .CwF.Tm Γ A = -Tm Γ A
-  Psh-CwF .CwF.isSetTm = -isSetTm
-  Psh-CwF .CwF._[_]Tm M σ .fst = λ I x → M .fst I (σ .N-ob I x)
-  Psh-CwF .CwF._[_]Tm {Γ} {Δ} {A} M σ .snd {I} {J} {x} {y} (f , p) =
-    (A ∘F ∫V-hom σ) .F-hom (f , p) (M .fst J (σ .N-ob J y)) ≡⟨ {!!} ⟩
-    M .fst I (σ .N-ob I x)                                  ∎
+  Psh-CwF .CwF.Tm Γ A = Tm-categorical Γ A
+  Psh-CwF .CwF.isSetTm = Tm-categorical-isSet
+  Psh-CwF .CwF._[_]Tm M σ .N-ob (I , x) t = {! ∫V-hom σ .F-ob!}
+  Psh-CwF .CwF._[_]Tm M σ .N-hom f = {!!}
   Psh-CwF .CwF.[id]Tm {Γ} {A} M = {!!}
   Psh-CwF .CwF.[][]Tm = {!!}
   Psh-CwF .CwF._✦_ Γ A .F-ob I = Σ⁰ (Γ .F-ob I) (λ x → A .F-ob (I , x))
@@ -110,8 +112,8 @@ module _ {ℓob ℓhom ℓV : Level} (C : Category ℓob ℓhom) where
       goal x = goal' x ▷ funExt⁻ (A .F-seq (f , refl) (g , refl)) (x .snd)
   Psh-CwF .CwF.p .N-ob I x = x .fst
   Psh-CwF .CwF.p .N-hom f = refl
-  Psh-CwF .CwF.q .fst I = snd
-  Psh-CwF .CwF.q {Γ} {A} .snd {I} {J} {x} {y} u = {!!}
+  Psh-CwF .CwF.q .N-ob x = {!!}
+  Psh-CwF .CwF.q .N-hom = {!!}
   Psh-CwF .CwF._⁺ σ .N-ob I x = (σ .N-ob I (x .fst)) , (x .snd)
   Psh-CwF .CwF._⁺ {Γ} {Δ} {A} σ .N-hom {I} {J} f = funExt goal
     where

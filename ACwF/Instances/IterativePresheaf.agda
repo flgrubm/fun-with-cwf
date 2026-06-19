@@ -119,8 +119,17 @@ module _ {ℓob ℓhom ℓV : Level} (C : Category ℓob ℓhom) where
       goal x = goal' x ▷ funExt⁻ (A .F-seq (f , refl) (g , refl)) (x .snd)
   Psh-CwF .CwF.p .N-ob I x = x .fst
   Psh-CwF .CwF.p .N-hom f = refl
-  Psh-CwF .CwF.q .N-ob x = {!!}
-  Psh-CwF .CwF.q .N-hom = {!!}
+  Psh-CwF .CwF.q .N-ob x _ = x .snd .snd
+  Psh-CwF .CwF.q {Γ} {A} .N-hom {x} {y} (f , p) = funExt λ _ →
+      y .snd .snd                                                                            ≡⟨ sym (fromPathP (λ i → p i .snd)) ⟩
+      transport (λ i → El (A .F-ob (y .fst , p i .fst))) (A .F-hom (f , refl) (x .snd .snd)) ≡⟨ fromPathP
+                                                                                                  (funExt⁻ (F-hom-PathP A (f , refl) (f , λ i → p i .fst) refl
+                                                                                                    (ΣPathP (refl , λ i → p i .fst)) refl) (x .snd .snd)) ⟩
+      A .F-hom (f , λ i → p i .fst) (x .snd .snd)                                            ≡⟨ sym (funExt⁻
+                                                                                                      (F-hom-PathP A (∫V-hom (Psh-CwF .CwF.p {Γ} {A}) .F-hom (f , p))
+                                                                                                        (f , λ i → p i .fst) refl refl refl)
+                                                                                                      (x .snd .snd)) ⟩
+      A .F-hom (∫V-hom (Psh-CwF .CwF.p {Γ} {A}) .F-hom (f , p)) (x .snd .snd)                ∎
   Psh-CwF .CwF._⁺ σ .N-ob I x = (σ .N-ob I (x .fst)) , (x .snd)
   Psh-CwF .CwF._⁺ {Γ} {Δ} {A} σ .N-hom {I} {J} f = funExt goal
     where

@@ -28,6 +28,11 @@ ConstComp : ∀ {ℓ ℓ' ℓ'' ℓ'''} {C E : Category ℓ ℓ'} {D : Category 
           → Constant E D x ∘F G ≡ Constant C D x
 ConstComp G x = Functor≡ (λ c → refl) (λ f → refl)
 
+-- this is needed to prevent Agda from reducing to much and getting stuck
+opaque
+  unit⁰-opaque : ∀ {ℓV} → V {ℓV}
+  unit⁰-opaque = unit⁰
+
 module _ {ℓob ℓhom ℓV : Level} (C : Category ℓob ℓhom) where
   open Algebraic (PRESHEAFV C ℓV)
   private abstract
@@ -45,7 +50,7 @@ module _ {ℓob ℓhom ℓV : Level} (C : Category ℓob ℓhom) where
 
   module _ (Γ : PresheafV C ℓV) (A : Functor (∫V Γ) (VCat ℓV)) where
     NullType : Functor (∫V Γ) (VCat ℓV)
-    NullType = Constant _ _ unit⁰
+    NullType = Constant _ _ unit⁰-opaque
     Tm-categorical : Type (ℓ-max (ℓ-max ℓob ℓhom) ℓV)
     Tm-categorical = FUNCTOR (∫V Γ) (VCat ℓV) [ NullType , A ]
     Tm-categorical-isSet : isSet (Tm-categorical)
@@ -58,14 +63,8 @@ module _ {ℓob ℓhom ℓV : Level} (C : Category ℓob ℓhom) where
       → (σ : NatTrans Δ Γ)
       → Tm-categorical Γ A
       → Tm-categorical Δ (A ∘F ∫V-hom σ)
-    []Tm Γ Δ A σ M = fn'
-      where
-        fn : NatTrans (NullType Γ A ∘F ∫V-hom σ) (A ∘F ∫V-hom σ)
-        fn = M ∘ˡ ∫V-hom σ
-        p : NullType Γ A ∘F ∫V-hom σ ≡ NullType Δ (A ∘F ∫V-hom σ)
-        p = ConstComp (∫V-hom σ) unit⁰
-        fn' : Tm-categorical Δ (A ∘F ∫V-hom σ)
-        fn' = transport (λ i → NatTrans (p i) (A ∘F ∫V-hom σ)) fn
+    []Tm Γ Δ A σ M .N-ob x = M .N-ob (∫V-hom σ .F-ob x)
+    []Tm Γ Δ A σ M .N-hom f = (M .N-hom) _
 
   Psh-CwF : CwF (ℓ-max (ℓ-max ℓob ℓhom) (ℓ-suc ℓV)) (ℓ-max (ℓ-max ℓob ℓhom) ℓV)
   open CwF Psh-CwF

@@ -34,6 +34,8 @@ opaque
   unit⁰-opaque = unit⁰
   tt-opaque : ∀ {ℓV} → El (unit⁰-opaque {ℓV})
   tt-opaque = tt*
+  unit⁰-opaque-contr : ∀ {ℓ} x → x ≡ tt-opaque {ℓ}
+  unit⁰-opaque-contr x = isPropUnit* x tt-opaque
 
 module _ {ℓob ℓhom ℓV : Level} (C : Category ℓob ℓhom) where
   open Algebraic (PRESHEAFV C ℓV)
@@ -149,4 +151,4 @@ module _ {ℓob ℓhom ℓV : Level} (C : Category ℓob ℓhom) where
   Psh-CwF .CwF.q[⁺]Tm σ = {!!}
   Psh-CwF .CwF.p∘⟨⟩≡id M = makeNatTransPath refl
   Psh-CwF .CwF.[p][⟨⟩]Ty B a = Functor≡ (λ c → refl) (λ f → F-hom-PathP B _ _ refl refl refl)
-  Psh-CwF .CwF.q[⟨⟩]Tm = {!!}
+  Psh-CwF .CwF.q[⟨⟩]Tm {A = A} M = makeNatTransPathP refl ([p][⟨⟩]Ty A M) (λ i x u → M .N-ob x (unit⁰-opaque-contr u (~ i)))

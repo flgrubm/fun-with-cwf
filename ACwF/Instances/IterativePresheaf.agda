@@ -148,7 +148,7 @@ module _ {ℓob ℓhom ℓV : Level} (C : Category ℓob ℓhom) where
     makeNatTransPathP (cong (Γ ▹_) ([id]Ty A)) refl refl
   Psh-CwF .CwF.p∘⁺ σ = makeNatTransPath refl
   Psh-CwF .CwF.[p][⁺]Ty {Γ} {Δ} B σ = Functor≡ (λ c → refl) (λ f → F-hom-PathP B _ _ refl refl refl)
-  Psh-CwF .CwF.q[⁺]Tm σ = {!!}
+  Psh-CwF .CwF.q[⁺]Tm σ = makeNatTransPathP refl ([p][⁺]Ty _ σ) refl
   Psh-CwF .CwF.p∘⟨⟩≡id M = makeNatTransPath refl
   Psh-CwF .CwF.[p][⟨⟩]Ty B a = Functor≡ (λ c → refl) (λ f → F-hom-PathP B _ _ refl refl refl)
   Psh-CwF .CwF.q[⟨⟩]Tm {A = A} M = makeNatTransPathP refl ([p][⟨⟩]Ty A M) (λ i x u → M .N-ob x (unit⁰-opaque-contr u (~ i)))

@@ -32,6 +32,8 @@ ConstComp G x = Functor≡ (λ c → refl) (λ f → refl)
 opaque
   unit⁰-opaque : ∀ {ℓV} → V {ℓV}
   unit⁰-opaque = unit⁰
+  tt-opaque : ∀ {ℓV} → El (unit⁰-opaque {ℓV})
+  tt-opaque = tt*
 
 module _ {ℓob ℓhom ℓV : Level} (C : Category ℓob ℓhom) where
   open Algebraic (PRESHEAFV C ℓV)
@@ -134,7 +136,8 @@ module _ {ℓob ℓhom ℓV : Level} (C : Category ℓob ℓhom) where
                      A .F-hom (f , refl) (x .snd))
       goal x = ΣPathP (fst≡ x , snd≡ x)
 
-  Psh-CwF .CwF.⟨_⟩ = {!!}
+  Psh-CwF .CwF.⟨_⟩ M .N-ob I x = x , M .N-ob (I , x) tt-opaque
+  Psh-CwF .CwF.⟨_⟩ {Γ} {A} M .N-hom {I} {J} f = funExt (λ x → ΣPathP (refl , funExt⁻ (M .N-hom _) tt-opaque))
   Psh-CwF .CwF.⟨⟩∘ = {!!}
   Psh-CwF .CwF.p⁺∘⟨q⟩≡id = {!!}
   Psh-CwF .CwF.∘⁺ {Γ} {Δ} {Θ} {A} σ' σ =

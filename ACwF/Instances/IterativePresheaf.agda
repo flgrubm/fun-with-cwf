@@ -23,13 +23,8 @@ open Category
 open Functor
 open NatTrans
 
-ConstComp : ∀ {ℓ ℓ' ℓ'' ℓ'''} {C E : Category ℓ ℓ'} {D : Category ℓ'' ℓ'''}
-            (G : Functor C E) (x : D .ob)
-          → Constant E D x ∘F G ≡ Constant C D x
-ConstComp G x = Functor≡ (λ c → refl) (λ f → refl)
-
--- this is needed to prevent Agda from reducing to much and getting stuck
-opaque
+-- this is needed to prevent Agda from reducing too much and getting stuck
+private opaque
   unit⁰-opaque : ∀ {ℓV} → V {ℓV}
   unit⁰-opaque = unit⁰
   tt-opaque : ∀ {ℓV} → El (unit⁰-opaque {ℓV})
@@ -40,6 +35,7 @@ opaque
 module _ {ℓob ℓhom ℓV : Level} (C : Category ℓob ℓhom) where
   open Algebraic (PRESHEAFV C ℓV)
   private abstract
+    -- The empty context
     PSH-TerminalObject : PresheafV C ℓV
     PSH-TerminalObject .F-ob x = unit⁰
     PSH-TerminalObject .F-hom _ x = x
@@ -52,49 +48,55 @@ module _ {ℓob ℓhom ℓV : Level} (C : Category ℓob ℓhom) where
     PSH-Terminal .snd _ .fst .NatTrans.N-hom _ = refl
     PSH-Terminal .snd _ .snd η = makeNatTransPath (funExt (λ I → funExt λ x → isContrUnit* .snd (η .NatTrans.N-ob I x)))
 
-  module _ (Γ : PresheafV C ℓV) (A : Functor (∫V Γ) (VCat ℓV)) where
-    NullType : Functor (∫V Γ) (VCat ℓV)
-    NullType = Constant _ _ unit⁰-opaque
-    Tm-categorical : Type (ℓ-max (ℓ-max ℓob ℓhom) ℓV)
-    Tm-categorical = FUNCTOR (∫V Γ) (VCat ℓV) [ NullType , A ]
-    Tm-categorical-isSet : isSet (Tm-categorical)
-    Tm-categorical-isSet = isSetNatTrans
+  -- the unit type
+  Psh-UnitType : {Γ : PresheafV C ℓV} → Functor (∫V Γ) (VCat ℓV)
+  Psh-UnitType = Constant _ _ unit⁰-opaque
 
-  []Tm :
-    ∀ Γ Δ
-    → (A : Functor (∫V Γ) (VCat ℓV))
-    → (σ : NatTrans Δ Γ)
-    → Tm-categorical Γ A
-    → Tm-categorical Δ (A ∘F ∫V-hom σ)
-  []Tm Γ Δ A σ M .N-ob x = M .N-ob (∫V-hom σ .F-ob x)
-  []Tm Γ Δ A σ M .N-hom f = (M .N-hom) _
+  -- elements of A (terms) can be seen as natural transformations from the unit type to A
+  private module _ (Γ : PresheafV C ℓV) (A : Functor (∫V Γ) (VCat ℓV)) where
+    Psh-Tm : Type (ℓ-max (ℓ-max ℓob ℓhom) ℓV)
+    Psh-Tm = FUNCTOR (∫V Γ) (VCat ℓV) [ Psh-UnitType , A ]
+    Psh-Tm-isSet : isSet (Psh-Tm)
+    Psh-Tm-isSet = isSetNatTrans
+
+  private
+    []Tm : ∀ Γ Δ
+      → (A : Functor (∫V Γ) (VCat ℓV))
+      → (σ : NatTrans Δ Γ)
+      → Psh-Tm Γ A
+      → Psh-Tm Δ (A ∘F ∫V-hom σ)
+    []Tm Γ Δ A σ M .N-ob x = M .N-ob (∫V-hom σ .F-ob x)
+    []Tm Γ Δ A σ M .N-hom f = (M .N-hom) _
 
   Psh-CwF : CwF (ℓ-max (ℓ-max ℓob ℓhom) (ℓ-suc ℓV)) (ℓ-max (ℓ-max ℓob ℓhom) ℓV)
   open CwF Psh-CwF
   Psh-CwF .CwF.⟨⟩ = PSH-Terminal
+
   Psh-CwF .CwF.Ty Γ = Functor (∫V Γ) (VCat ℓV)
   Psh-CwF .CwF.isSetTy Γ = isSetFunctor isSetV⁰
   Psh-CwF .CwF._[_]Ty A σ = A ∘F ∫V-hom σ
   Psh-CwF .CwF.[id]Ty {Γ} A =
-    -- I changed to this less nice proof because it makes more things definitional
     Functor≡
       (λ c → refl)
       (λ f → cong (A .F-hom) (ΣPathP (refl , isSetEl⁰ (Γ .F-ob _) _ _ _ _)))
+    -- alternative proof, more readable but with less definitional equalities
     -- A ∘F ∫V-hom (id (PRESHEAFV C ℓV)) ≡⟨ cong (λ F → A ∘F F) ∫V-id ⟩
     -- A ∘F Id                           ≡⟨ F-lUnit ⟩
     -- A                                 ∎
-    -- cong (A ∘F_) ∫V-id ∙ F-lUnit
   Psh-CwF .CwF.[][]Ty {Γ = Γ} A σ' σ =
     Functor≡ (λ c → refl) λ f → cong (A .F-hom) (ΣPathP (refl , isSetEl⁰ (Γ .F-ob _) _ _ _ _))
-             -- same as above, I changed to a Functor≡ to get more definitional equalities
+    -- alternative proof, more readable but with less definitional equalities
     -- cong (λ F → A ∘F F) ∫V-seq ∙ F-assoc
-  Psh-CwF .CwF.Tm Γ A = Tm-categorical Γ A
-  Psh-CwF .CwF.isSetTm = Tm-categorical-isSet
+
+  Psh-CwF .CwF.Tm Γ A = Psh-Tm Γ A
+  Psh-CwF .CwF.isSetTm = Psh-Tm-isSet
   Psh-CwF .CwF._[_]Tm M σ = []Tm _ _ _ σ M
   Psh-CwF .CwF.[id]Tm M = makeNatTransPathP refl ([id]Ty _) refl
   Psh-CwF .CwF.[][]Tm M σ' σ = makeNatTransPathP refl ([][]Ty _ _ _) refl
+
   Psh-CwF .CwF._▹_ Γ A .F-ob I = Σ⁰ (Γ .F-ob I) (λ x → A .F-ob (I , x))
   Psh-CwF .CwF._▹_ Γ A .F-hom {I} {J} f (x , y) = (Γ .F-hom f x) , A .F-hom (f , refl) y
+  -- the proofs of the functoriality of the extended context could perhaps be simplified?
   Psh-CwF .CwF._▹_ Γ A .F-id {I} = funExt λ x → ΣPathP (funExt⁻ (Γ .F-id) (x .fst) , (goal x ▷ funExt⁻ (A .F-id) (x .snd)))
     where
       goal : ∀ x →
@@ -117,8 +119,10 @@ module _ {ℓob ℓhom ℓV : Level} (C : Category ℓob ℓhom) where
         funExt⁻ (F-hom-PathP A (seq' C g f , refl)
                   (seq' (∫V Γ) (f , refl) (g , refl)) refl (λ i → K , Γ .F-seq f g i (x .fst)) refl) (x .snd)
       goal x = goal' x ▷ funExt⁻ (A .F-seq (f , refl) (g , refl)) (x .snd)
+
   Psh-CwF .CwF.p .N-ob I x = x .fst
   Psh-CwF .CwF.p .N-hom f = refl
+
   Psh-CwF .CwF.q .N-ob x _ = x .snd .snd
   Psh-CwF .CwF.q {Γ} {A} .N-hom {x} {y} (f , p) = funExt λ _ →
       y .snd .snd                                                                            ≡⟨ sym (fromPathP (λ i → p i .snd)) ⟩
@@ -147,6 +151,7 @@ module _ {ℓob ℓhom ℓV : Level} (C : Category ℓob ℓhom) where
                      A .F-hom (f , refl) (x .snd))
       goal x = ΣPathP (fst≡ x , snd≡ x)
 
+  -- finally, all the properties are fairly trivial
   Psh-CwF .CwF.⟨_⟩ M .N-ob I x = x , M .N-ob (I , x) tt-opaque
   Psh-CwF .CwF.⟨_⟩ {Γ} {A} M .N-hom {I} {J} f = funExt (λ x → ΣPathP (refl , funExt⁻ (M .N-hom _) tt-opaque))
   Psh-CwF .CwF.⟨⟩∘ M σ = makeNatTransPath refl

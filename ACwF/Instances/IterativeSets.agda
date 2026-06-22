@@ -90,6 +90,7 @@ module _ {ℓHom : Level} where
 
   V-Π-Structure : Π-Structure {ℓHom = ℓHom} VCat VCwF
   V-Π-Structure .ΠTy {Γ = Γ} A B x    = Π⁰ (A x) λ y → B (x , y)
+
   V-Π-Structure .ΠTyNat _ _ _         = refl
   V-Π-Structure .ΠTmIso _ _           = invIso curryIso
   V-Π-Structure .ΠTmIsoInvNat _ _ _ _ = refl

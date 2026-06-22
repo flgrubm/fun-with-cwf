@@ -89,20 +89,9 @@ module _ {ℓU ℓEl : Level} (TU : TarskiUniverse ℓU ℓEl) where
          (b (σ (transp (λ _ → El Δ) j x))))
       in goal)))
 
-  module U-Π (Pi : (A : U) → (El A → U) → U)
-             (app : {A : U} (B : El A → U) (f : El (Pi A B)) (x : El A) → El (B x))
-             (lam : {A : U} (B : El A → U) → ((x : El A) → El (B x)) → El (Pi A B))
-             (β : {A : U} (B : El A → U) (f : (x : El A) → El (B x)) → app B (lam B f) ≡ f)
-             (η : {A : U} (B : El A → U) (f : El (Pi A B)) → lam B (app B f) ≡ f)
-    where
+  module U-Π where
     open Algebraic
     open CwF UCwF
-
-    PiIso : ∀ A B → Iso (El (Pi A B)) ((a : El A) → El (B a))
-    PiIso A B .fun = app B
-    PiIso A B .inv = lam B
-    PiIso A B .sec = β B
-    PiIso A B .ret = η B
 
     U-Π-Structure : Π-Structure (UCat TU) UCwF
     U-Π-Structure .Π-Structure.ΠTy A B x                = Pi (A x) (λ y → B (pairSig x y))
@@ -113,6 +102,5 @@ module _ {ℓU ℓEl : Level} (TU : TarskiUniverse ℓU ℓEl) where
       (((a , b) : Σ (El Γ) (λ z → El (A z))) → El (B (pairSig a b))) Iso⟨ invIso (domIsoDep (invIso (SigIso _ _))) ⟩
       (((x : El (Sig Γ A)) → El (B x)))                              ∎Iso
     U-Π-Structure .Π-Structure.ΠTmIsoInvNat A B M σ i x =
-      lam
-        (λ y → B (pairSig (σ (fstPairSig x y (~ i))) (sndPairSig {B = A [ σ ]Ty} x y (~ i))))
+      lamPi
         (λ y → M (pairSig (σ (fstPairSig x y (~ i))) (sndPairSig {B = A [ σ ]Ty} x y (~ i))))

@@ -1,5 +1,4 @@
-{-# OPTIONS --lossy-unification #-}
-module ACwF.Instances.Tarski where
+module ACwF.Instances.TarskiUniverse where
 
 open import Cubical.Foundations.Prelude
 open import Cubical.Foundations.HLevels
@@ -8,66 +7,34 @@ open import Cubical.Foundations.Transport
 open import Cubical.Foundations.Isomorphism
 open import Cubical.Foundations.Equiv.Properties
 open import Cubical.Foundations.Function
-
-open import Cubical.Functions.FunExtEquiv
-
 open import Cubical.Data.Sigma
 
 open import Cubical.Categories.Category
-open import Cubical.Categories.Limits.Terminal
 
 open import ACwF.Base
 open import ACwF.Sigma
 open import ACwF.Pi
+
+open import TarskiUniverse.Base
+open import TarskiUniverse.Properties
 
 open import Agda.Builtin.Unit
 
 open Iso
 open Category
 
-module _ {ℓU ℓEl : Level}
-         (U : Type ℓU)
-         (isSetU : isSet U)
-         (El : U → Type ℓEl)
-         (isSetEl : (Γ : U) → isSet (El Γ))
-         (Unit : U)
-         (isTerminalUnit : isContr (El Unit))
-         (Sig : (A : U) → (El A → U) → U)
-         -- (SigIso : (A : U) (B : El A → U) → Iso (El (Sig A B)) (Σ[ x ∈ El A ] El (B x)))
-         (fstSig : {A : U} {B : El A → U} → El (Sig A B) → El A)
-         (sndSig : {A : U} {B : El A → U} (p : El (Sig A B)) → El (B (fstSig p)))
-         (pairSig : {A : U} {B : El A → U} (x : El A) → (El (B x)) → El (Sig A B))
-         (ηSig : {A : U} {B : El A → U} (p : El (Sig A B)) → pairSig (fstSig p) (sndSig p) ≡ p)
-         (fstPairSig : {A : U} {B : El A → U} (x : El A) (y : El (B x)) → fstSig (pairSig {B = B} x y) ≡ x)
-         (sndPairSig : {A : U} {B : El A → U} (x : El A) (y : El (B x)) → PathP (λ i → El (B (fstPairSig {B = B} x y i))) (sndSig (pairSig {B = B} x y)) y)
-  where
-
-  PairIso : {A : U} {B : El A → U} → Iso (El (Sig A B)) (Σ[ x ∈ El A ] El (B x))
-  PairIso .fun p .fst = fstSig p
-  PairIso .fun p .snd = sndSig p
-  PairIso .inv = uncurry pairSig
-  PairIso .sec (x , y) = ΣPathP ((fstPairSig x y) , sndPairSig x y)
-  PairIso .ret = ηSig
-  
-  UCat : Category ℓU ℓEl
-  UCat .ob = U
-  UCat .Hom[_,_] Δ Γ = El Δ → El Γ
-  UCat .id x = x
-  UCat ._⋆_ f g x = g (f x)
-  UCat .⋆IdL _ = refl
-  UCat .⋆IdR _ = refl
-  UCat .⋆Assoc _ _ _ = refl
-  UCat .isSetHom {y = y} = isSet→ (isSetEl y)
+module _ {ℓU ℓEl : Level} (TU : TarskiUniverse ℓU ℓEl) where
 
   open Algebraic
+  open TarskiUniverse TU
 
   module _ where
     open CwF
 
-    UCwF : CwF UCat (ℓ-max ℓU ℓEl) ℓEl
+    UCwF : CwF (UCat TU) (ℓ-max ℓU ℓEl) ℓEl
     UCwF .⟨⟩ .fst          = Unit
-    UCwF .⟨⟩ .snd _ .fst _ = isTerminalUnit .fst
-    UCwF .⟨⟩ .snd Γ .snd σ = funExt (λ x → isTerminalUnit .snd (σ x))
+    UCwF .⟨⟩ .snd _ .fst _ = isContrElUnit .fst
+    UCwF .⟨⟩ .snd Γ .snd σ = funExt (λ x → isContrElUnit .snd (σ x))
     UCwF .Ty Γ             = El Γ → U
     UCwF .isSetTy Γ        = isSet→ isSetU
     UCwF ._[_]Ty A σ x     = A (σ x)
@@ -100,10 +67,10 @@ module _ {ℓU ℓEl : Level}
     open Algebraic
     open CwF UCwF
 
-    U-Σ-Structure : Σ-Structure UCat UCwF
+    U-Σ-Structure : Σ-Structure (UCat TU) UCwF
     U-Σ-Structure .Σ-Structure.ΣTy A B x                      = Sig (A x) λ y → B (pairSig x y)
     U-Σ-Structure .Σ-Structure.ΣTyNat A B σ                   = funExt λ x → cong (Sig (A (σ x))) (funExt λ y → cong B (cong₂ pairSig (cong σ (sym (fstPairSig _ _))) (symP (sndPairSig _ _))))
-    U-Σ-Structure .Σ-Structure.ΣTmIso A B                     = compIso (codomainIsoDep (λ _ → PairIso)) Σ-Π-Iso
+    U-Σ-Structure .Σ-Structure.ΣTmIso A B                     = compIso (codomainIsoDep (λ _ → SigIso _ _)) Σ-Π-Iso
     U-Σ-Structure .Σ-Structure.coerce A B a σ                 = funExt λ x → cong B (cong₂ pairSig (cong σ (sym (fstPairSig _ _))) (symP (sndPairSig _ _)))
     U-Σ-Structure .Σ-Structure.ΣTmIsoInvNat {Γ} {Δ} A B a b σ = funExt λ x → congP (λ _ z → uncurry pairSig (a (σ x) , z)) (symP (toPathP (let
       -- don't look at this
@@ -137,13 +104,13 @@ module _ {ℓU ℓEl : Level}
     PiIso A B .sec = β B
     PiIso A B .ret = η B
 
-    U-Π-Structure : Π-Structure UCat UCwF
+    U-Π-Structure : Π-Structure (UCat TU) UCwF
     U-Π-Structure .Π-Structure.ΠTy A B x                = Pi (A x) (λ y → B (pairSig x y))
     U-Π-Structure .Π-Structure.ΠTyNat A B σ             = funExt (λ x → cong (Pi (A (σ x))) (funExt (λ y → cong B (cong₂ pairSig (cong σ (sym (fstPairSig x y))) (symP (sndPairSig x y))))))
     U-Π-Structure .Π-Structure.ΠTmIso {Γ} A B           =
       ((a : El Γ) → El (Pi (A a) (λ y → B (pairSig a y))))           Iso⟨ codomainIsoDep (λ x → PiIso (A x) (λ y → B (pairSig x y))) ⟩
       (∀ a b → El (B (pairSig a b)))                                 Iso⟨ invIso curryIso ⟩
-      (((a , b) : Σ (El Γ) (λ z → El (A z))) → El (B (pairSig a b))) Iso⟨ invIso (domIsoDep (invIso PairIso)) ⟩
+      (((a , b) : Σ (El Γ) (λ z → El (A z))) → El (B (pairSig a b))) Iso⟨ invIso (domIsoDep (invIso (SigIso _ _))) ⟩
       (((x : El (Sig Γ A)) → El (B x)))                              ∎Iso
     U-Π-Structure .Π-Structure.ΠTmIsoInvNat A B M σ i x =
       lam

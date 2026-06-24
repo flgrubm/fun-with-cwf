@@ -1,0 +1,4 @@
+open import Cubical.Foundations.Prelude
+open import Cubical.HITs.Replacement
+
+module PropResizing where

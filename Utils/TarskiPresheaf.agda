@@ -109,3 +109,6 @@ module _ {ℓob ℓhom ℓU ℓEl : Level} {C : Category ℓob ℓhom} {Univ : T
               → PathP (λ i → El (A .F-ob (x≡x' i)) → El (A .F-ob (y≡y' i)))
                       (A .F-hom f) (A .F-hom g)
   F-hom-PathP f g x≡x' y≡y' p i = A .F-hom (∫U-Hom-PathP Γ f g x≡x' y≡y' p i)
+
+  F-id-PathP : ∀ {ob} proof → A .F-hom {ob} (C .id , proof) ≡ λ x → x
+  F-id-PathP proof = F-hom-PathP (C .id , proof) _ refl refl refl ∙ A .F-id

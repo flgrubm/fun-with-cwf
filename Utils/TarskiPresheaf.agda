@@ -69,9 +69,9 @@ module _ {ℓob ℓhom ℓU ℓEl : Level} {C : Category ℓob ℓhom} {Univ : T
   open Base public
 
   module Properties where
-    ∫V-hom : {Γ Δ : PresheafU C Univ} → NatTrans Δ Γ → Functor (∫U Δ) (∫U Γ)
-    ∫V-hom {Γ} {Δ} η .F-ob (I , x) = I , η . NatTrans.N-ob I x
-    ∫V-hom {Γ} {Δ} η .F-hom {I , x} {J , y} (f , p) = f , proof
+    ∫U-hom : {Γ Δ : PresheafU C Univ} → NatTrans Δ Γ → Functor (∫U Δ) (∫U Γ)
+    ∫U-hom {Γ} {Δ} η .F-ob (I , x) = I , η . NatTrans.N-ob I x
+    ∫U-hom {Γ} {Δ} η .F-hom {I , x} {J , y} (f , p) = f , proof
       where
         proof : (Γ ⟪ f ⟫) (NatTrans.N-ob η I x) ≡ NatTrans.N-ob η J y
         proof =
@@ -81,17 +81,17 @@ module _ {ℓob ℓhom ℓU ℓEl : Level} {C : Category ℓob ℓhom} {Univ : T
             ≡⟨ cong _ p ⟩
               η .NatTrans.N-ob J y
             ∎
-    ∫V-hom {Γ} {Δ} η .F-id {c , _} = ΣPathP ( refl , isSetEl (Γ ⟅ c ⟆) _ _ _ _)
-    ∫V-hom {Γ} {Δ} η .F-seq {z = c , _} f g = ΣPathP ( refl , isSetEl (Γ ⟅ c ⟆) _ _ _ _)
+    ∫U-hom {Γ} {Δ} η .F-id {c , _} = ΣPathP ( refl , isSetEl (Γ ⟅ c ⟆) _ _ _ _)
+    ∫U-hom {Γ} {Δ} η .F-seq {z = c , _} f g = ΣPathP ( refl , isSetEl (Γ ⟅ c ⟆) _ _ _ _)
 
-    ∫V-id : {Γ : PresheafU C Univ} → ∫V-hom (idTrans Γ) ≡ Id
-    ∫V-id {Γ} = Functor≡
+    ∫U-id : {Γ : PresheafU C Univ} → ∫U-hom (idTrans Γ) ≡ Id
+    ∫U-id {Γ} = Functor≡
       (λ _ → refl)
       (λ {_} {c'} (f , p) → ΣPathP (refl , isSetEl (Γ .F-ob (c' .fst)) _ _ _ _))
 
-    ∫V-seq : {Γ Δ Ε : PresheafU C Univ } {f : NatTrans Γ Δ} {g : NatTrans Δ Ε}
-      → ∫V-hom (f ⋆⟨ PRESHEAFU C Univ ⟩ g) ≡ (∫V-hom g) ∘F (∫V-hom f)
-    ∫V-seq {_} {_} {Ε}= Functor≡
+    ∫U-seq : {Γ Δ Ε : PresheafU C Univ } {f : NatTrans Γ Δ} {g : NatTrans Δ Ε}
+      → ∫U-hom (f ⋆⟨ PRESHEAFU C Univ ⟩ g) ≡ (∫U-hom g) ∘F (∫U-hom f)
+    ∫U-seq {_} {_} {Ε}= Functor≡
       (λ _ → refl)
       (λ {_} {c'} (f , p) → ΣPathP (refl , isSetEl (Ε .F-ob (c' .fst)) _ _ _ _))
 

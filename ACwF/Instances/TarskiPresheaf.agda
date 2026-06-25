@@ -176,3 +176,21 @@ module _ {ℓob ℓhom ℓU ℓEl : Level} (C : Category ℓob ℓhom) (Univ : T
   Psh-CwF .CwF.q[⟨⟩]Tm {A = A} M = makeNatTransPathP refl ([p][⟨⟩]Ty A M)
     (λ i x u → (sndPairSig {B = λ v → A .F-ob (x .fst , v)} (x .snd) (M .N-ob x (isContrElUnit .fst))
                   ▷ cong (M .N-ob x) (isContrElUnit .snd u)) i)
+
+  open import ACwF.Sigma
+  Psh-Σ-structure : Σ-Structure (PRESHEAFU C Univ) Psh-CwF
+  Psh-Σ-structure .Σ-Structure.ΣTy A B .F-ob (I , ρ) = Sig (A .F-ob (I , ρ)) (λ x → B .F-ob (I , pairSig ρ x))
+  Psh-Σ-structure .Σ-Structure.ΣTy {Γ = Γ} A B .F-hom (f , p) x = pairSig (A .F-hom (f , p) (fstSig x)) (B .F-hom (f , eqproof) (sndSig x))
+    where
+      eqproof = cong₂ pairSig (cong (Γ .F-hom f) (fstPairSig _ _) ∙ p) {!!}
+  Psh-Σ-structure .Σ-Structure.ΣTy {Γ = Γ} A B .F-id = funExt λ x → SigPathP
+    (fstPairSig _ _ ∙ funExt⁻ (F-id-PathP A (funExt⁻ (Γ .F-id) _)) (fstSig x))
+    {!!}
+  Psh-Σ-structure .Σ-Structure.ΣTy A B .F-seq = {!!}
+  Psh-Σ-structure .Σ-Structure.ΣTyNat A B σ = Functor≡
+    (λ c → cong₂ Sig refl (funExt λ x → cong (B .F-ob) (ΣPathP (refl , cong₂ pairSig (cong (σ .N-ob (c .fst)) (sym (fstPairSig _ _))) (symP (sndPairSig _ _))))))
+    -- (λ c i → Sig (A .F-ob (c .fst , σ .N-ob (c .fst) (c .snd))) λ z → B .F-ob (c .fst , pairSig (σ .N-ob (c .fst) (fstPairSig _ _ (~ i))) (sndPairSig _ _ (~ i))))
+    (λ f → {!!})
+  Psh-Σ-structure .Σ-Structure.ΣTmIso = {!!}
+  Psh-Σ-structure .Σ-Structure.coerce = {!!}
+  Psh-Σ-structure .Σ-Structure.ΣTmIsoInvNat = {!!}

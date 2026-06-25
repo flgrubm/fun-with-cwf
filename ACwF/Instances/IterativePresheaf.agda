@@ -59,6 +59,32 @@ module _ {ℓob ℓhom ℓV : Level} (C : Category ℓob ℓhom) where
     Psh-Tm-isSet : isSet (Psh-Tm)
     Psh-Tm-isSet = isSetNatTrans
 
+    -- Alternative unfolded notion of terms.
+    Psh-Tm' : Type (ℓ-max (ℓ-max ℓob ℓhom) ℓV)
+    Psh-Tm' = Σ
+      ((I : C .ob) → (ρ : El (Γ .F-ob I)) → El (A .F-ob (I , ρ)))
+      λ a → (I J : C .ob) → (f : C [ J , I ]) → (ρ : El (Γ .F-ob I)) → A .F-hom (f , refl) (a I ρ) ≡ a J (Γ .F-hom f ρ)
+    open import Cubical.Foundations.Equiv
+    open import Cubical.Foundations.Isomorphism
+    Psh-Tm'≃Psh-Tm : Psh-Tm' ≃ Psh-Tm
+    Psh-Tm'≃Psh-Tm = isoToEquiv goal
+      where
+        goal : Iso Psh-Tm' Psh-Tm
+        goal .Iso.fun x .N-ob (I , ρ) _ = x .fst I ρ
+        goal .Iso.fun x .N-hom {I , ρ} {Jo , ρ'} (f , p) = funExt λ _ →
+          J (λ ρ'' q → x .fst Jo ρ'' ≡ A .F-hom (f , q) (x .fst I ρ))
+            (sym (x .snd I Jo f ρ)) p
+        goal .Iso.inv x .fst I ρ = x .N-ob (I , ρ) tt-opaque
+        goal .Iso.inv x .snd I J f ρ = sym (funExt⁻ (x .N-hom (f , refl)) tt-opaque)
+        goal .Iso.sec b =
+          makeNatTransPath (funExt λ (I , ρ) → funExt λ u →
+            cong (b .N-ob (I , ρ)) (sym (unit⁰-opaque-contr u)))
+        goal .Iso.ret a =
+          ΣPathP (refl ,
+            isProp→PathP
+              (λ _ → isPropΠ4 (λ I J f ρ → isSetEl⁰ (A .F-ob (J , Γ .F-hom f ρ)) _ _))
+              _ _)
+
   private
     []Tm : ∀ Γ Δ
       → (A : Functor (∫V Γ) (VCat ℓV))

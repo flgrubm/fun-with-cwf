@@ -78,37 +78,37 @@ module _ {ℓob ℓhom ℓU ℓEl : Level} (C : Category ℓob ℓhom) (Univ : T
 
   Psh-CwF .CwF._▹_ Γ A .F-ob I = Sig (Γ .F-ob I) (λ x → A .F-ob (I , x))
   Psh-CwF .CwF._▹_ Γ A .F-hom {I} {J} f x = pairSig (Γ .F-hom f (fstSig x)) (A .F-hom (f , refl) (sndSig x))
-  Psh-CwF .CwF._▹_ Γ A .F-id {I} = funExt λ x → SigPathP
-    (fstPairSig _ _ ∙ funExt⁻ (Γ .F-id) (fstSig x))
-    (compPathP' {B = λ z → El (A .F-ob (I , z))}
-      (sndPairSig _ _)
-      (goal x ▷ funExt⁻ (A .F-id) (sndSig x)))
+  Psh-CwF .CwF._▹_ Γ A .F-id {I} = funExt λ x →
+    cong₂ pairSig
+      (funExt⁻ (Γ .F-id) (fstSig x))
+      (goal x ▷ funExt⁻ (A .F-id) (sndSig x))
+    ∙ ηSig x
     where
+      Elᴬ : El (Γ .F-ob I) → Type ℓEl
+      Elᴬ z = El (A .F-ob (I , z))
       goal : ∀ x →
-        PathP (λ i → El (A .F-ob (I , (Γ .F-id i (fstSig x)))))
+        PathP (λ i → Elᴬ (Γ .F-id i (fstSig x)))
           (A .F-hom (id C , refl) (sndSig x))
           (A .F-hom (∫U Γ .id) (sndSig x))
       goal x =
         funExt⁻ (F-hom-PathP A (id C , refl) (id C , _) refl (λ i → I , Γ .F-id i (fstSig x)) refl) (sndSig x)
-  Psh-CwF .CwF._▹_ Γ A .F-seq {I} {J} {K} f g = funExt λ x → SigPathP
-    (fstPairSig _ _ ∙ (funExt⁻ (Γ .F-seq _ _ ) (fstSig x) ∙ cong (Γ .F-hom g) (sym (fstPairSig _ _))) ∙ sym (fstPairSig _ _))
-    (compPathP' {B = λ z → El (A .F-ob (K , z))}
-      (sndPairSig _ _)
-      (compPathP' {B = λ z → El (A .F-ob (K , z))}
-        (compPathP' {B = λ z → El (A .F-ob (K , z))}
-          (goal x)
-          (congP (λ i z → A .F-hom (g , refl) z) (symP (sndPairSig _ _))))
-        (symP (sndPairSig _ _))))
+  Psh-CwF .CwF._▹_ Γ A .F-seq {I} {J} {K} f g = funExt λ x → cong₂ pairSig
+    (funExt⁻ (Γ .F-seq f g) (fstSig x) ∙ cong (Γ .F-hom g) (sym (fstPairSig _ _)))
+    (compPathP' {B = Elᴬ}
+      (goal x)
+      (congP (λ i z → A .F-hom (g , refl) z) (symP (sndPairSig _ _))))
     where
+      Elᴬ : El (Γ .F-ob K) → Type ℓEl
+      Elᴬ z = El (A .F-ob (K , z))
       goal' : ∀ x →
-        PathP (λ i → El (A .F-ob (K , funExt⁻ (Γ .F-seq f g) (fstSig x) i)))
+        PathP (λ i → Elᴬ (funExt⁻ (Γ .F-seq f g) (fstSig x) i))
           (A .F-hom (g ⋆⟨ C ⟩ f , refl) (sndSig x))
           (A .F-hom ((f , refl) ⋆⟨ ∫U Γ ⟩ (g , refl)) (sndSig x))
       goal' x =
         funExt⁻ (F-hom-PathP A (seq' C g f , refl)
                   (seq' (∫U Γ) (f , refl) (g , refl)) refl (λ i → K , Γ .F-seq f g i (fstSig x)) refl) (sndSig x)
       goal : ∀ x →
-        PathP (λ i → El (A .F-ob (K , funExt⁻ (Γ .F-seq f g) (fstSig x) i)))
+        PathP (λ i → Elᴬ (funExt⁻ (Γ .F-seq f g) (fstSig x) i))
           (A .F-hom (g ⋆⟨ C ⟩ f , refl) (sndSig x))
           (A .F-hom (g , refl) (A .F-hom (f , refl) (sndSig x)))
       goal x = goal' x ▷ funExt⁻ (A .F-seq (f , refl) (g , refl)) (sndSig x)
@@ -123,27 +123,28 @@ module _ {ℓob ℓhom ℓU ℓEl : Level} (C : Category ℓob ℓhom) (Univ : T
                   (∫U-hom (Psh-CwF .CwF.p {Γ} {A}) .F-hom (f , p))
                   refl (λ i → y .fst , qbase i) refl) (sndSig (x .snd)))
     where
+      Elᴬ : El (Γ .F-ob (y .fst)) → Type ℓEl
+      Elᴬ z = El (A .F-ob (y .fst , z))
       qbase : Γ .F-hom f (fstSig (x .snd)) ≡ fstSig (y .snd)
       qbase = sym (fstPairSig _ _) ∙ cong fstSig p
-      bigPathP : PathP (λ i → El (A .F-ob (y .fst , qbase i)))
+      bigPathP : PathP (λ i → Elᴬ (qbase i))
                        (A .F-hom (f , refl) (sndSig (x .snd))) (sndSig (y .snd))
-      bigPathP = compPathP' {B = λ z → El (A .F-ob (y .fst , z))}
+      bigPathP = compPathP' {B = Elᴬ}
                    (symP (sndPairSig _ _)) (cong sndSig p)
+
   Psh-CwF .CwF._⁺ σ .N-ob I x = pairSig (σ .N-ob I (fstSig x)) (sndSig x)
-  Psh-CwF .CwF._⁺ {Γ} {Δ} {A} σ .N-hom {I} {J} f = funExt λ x → SigPathP
-    (fstPairSig _ _ ∙ ((cong (σ .N-ob J) (fstPairSig _ _) ∙ funExt⁻ (σ .N-hom f) (fstSig x)) ∙ cong (Γ .F-hom f) (sym (fstPairSig _ _))) ∙ sym (fstPairSig _ _))
-    (compPathP' {B = λ z → El (A .F-ob (J , z))}
+  Psh-CwF .CwF._⁺ {Γ} {Δ} {A} σ .N-hom {I} {J} f = funExt λ x → cong₂ pairSig
+    (cong (σ .N-ob J) (fstPairSig _ _) ∙ funExt⁻ (σ .N-hom f) (fstSig x) ∙ cong (Γ .F-hom f) (sym (fstPairSig _ _)))
+    (compPathP' {B = Elᴬ}
       (sndPairSig _ _)
-      (compPathP' {B = λ z → El (A .F-ob (J , z))}
-        (compPathP' {B = λ z → El (A .F-ob (J , z))}
-          (compPathP' {B = λ z → El (A .F-ob (J , z))}
-            (sndPairSig _ _)
-            (snd≡ x))
-          (congP (λ i z → A .F-hom (f , refl) z) (symP (sndPairSig _ _))))
-        (symP (sndPairSig _ _))))
+      (compPathP' {B = Elᴬ}
+        (snd≡ x)
+        (congP (λ i z → A .F-hom (f , refl) z) (symP (sndPairSig _ _)))))
     where
+      Elᴬ : El (Γ .F-ob J) → Type ℓEl
+      Elᴬ z = El (A .F-ob (J , z))
       snd≡ : ∀ x → PathP
-                    (λ i → El (A .F-ob (J , funExt⁻ (σ .N-hom f) (fstSig x) i)))
+                    (λ i → Elᴬ (funExt⁻ (σ .N-hom f) (fstSig x) i))
                     (A .F-hom (f , _) (sndSig x))
                     (A .F-hom (f , refl) (sndSig x))
       snd≡ x = funExt⁻ (F-hom-PathP A (f , _) (f , refl) refl (λ i → J , funExt⁻ (σ .N-hom f) (fstSig x) i) refl) (sndSig x)
@@ -152,6 +153,7 @@ module _ {ℓob ℓhom ℓU ℓEl : Level} (C : Category ℓob ℓhom) (Univ : T
   Psh-CwF .CwF.⟨_⟩ {Γ} {A} M .N-hom {I} {J} f = funExt λ x → cong₂ pairSig
     (cong (Γ .F-hom f) (sym (fstPairSig _ _)))
     ((funExt⁻ (M .N-hom (f , refl)) (isContrElUnit .fst)) ◁ congP (λ i z → A .F-hom (f , refl) z) (symP (sndPairSig _ _)))
+
   Psh-CwF .CwF.⟨⟩∘ M σ = makeNatTransPath (funExt λ I → funExt λ x →
     cong₂ pairSig (cong (σ .N-ob I) (sym (fstPairSig _ _))) (symP (sndPairSig _ _)))
   Psh-CwF .CwF.p⁺∘⟨q⟩≡id = makeNatTransPath (funExt λ I → funExt λ x →

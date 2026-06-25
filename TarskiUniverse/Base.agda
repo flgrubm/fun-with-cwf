@@ -57,3 +57,9 @@ record TarskiUniverse (ℓU ℓEl : Level) : Type (ℓ-suc (ℓ-max ℓU ℓEl))
 
   ηPi : {A : U} {B : El A → U} (f : El (Pi A B)) → lamPi (appPi f) ≡ f
   ηPi = PiIso _ _ .ret
+
+  SigPathP : ∀ {A} {B} → {x y : El (Sig A B)} → (fst≡ : fstSig x ≡ fstSig y) → PathP (λ i → El (B (fst≡ i))) (sndSig x) (sndSig y) → x ≡ y
+  SigPathP {x = x} {y = y} fst≡ snd≡ = sym (ηSig x) ∙ cong (uncurry pairSig) (ΣPathP (fst≡ , snd≡)) ∙ ηSig y
+    where
+      open import Cubical.Foundations.Function
+      open import Cubical.Data.Sigma

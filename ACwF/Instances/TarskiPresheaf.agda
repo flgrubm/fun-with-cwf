@@ -3,6 +3,7 @@ module ACwF.Instances.TarskiPresheaf where
 
 open import Cubical.Foundations.Prelude
 open import Cubical.Foundations.HLevels
+open import Cubical.Functions.FunExtEquiv
 open import Cubical.Data.Sigma
 open import Cubical.Categories.Category
 open import Cubical.Categories.Functor
@@ -180,17 +181,76 @@ module _ {ℓob ℓhom ℓU ℓEl : Level} (C : Category ℓob ℓhom) (Univ : T
   open import ACwF.Sigma
   Psh-Σ-structure : Σ-Structure (PRESHEAFU C Univ) Psh-CwF
   Psh-Σ-structure .Σ-Structure.ΣTy A B .F-ob (I , ρ) = Sig (A .F-ob (I , ρ)) (λ x → B .F-ob (I , pairSig ρ x))
-  Psh-Σ-structure .Σ-Structure.ΣTy {Γ = Γ} A B .F-hom (f , p) x = pairSig (A .F-hom (f , p) (fstSig x)) (B .F-hom (f , eqproof) (sndSig x))
+  Psh-Σ-structure .Σ-Structure.ΣTy {Γ = Γ} A B .F-hom {x = X} {y = Y} (f , p) x =
+    pairSig (A .F-hom (f , p) (fstSig x)) (B .F-hom (f , eqproof) (sndSig x))
     where
-      eqproof = cong₂ pairSig (cong (Γ .F-hom f) (fstPairSig _ _) ∙ p) {!!}
-  Psh-Σ-structure .Σ-Structure.ΣTy {Γ = Γ} A B .F-id = funExt λ x → SigPathP
+      Elᴬ : El (Γ .F-ob (Y .fst)) → Type ℓEl
+      Elᴬ z = El (A .F-ob (Y .fst , z))
+      eqproof = cong₂ pairSig (cong (Γ .F-hom f) (fstPairSig _ _) ∙ p)
+        (compPathP' {B = Elᴬ}
+          (congP (λ i z → A .F-hom (f , refl) z) (sndPairSig _ _))
+          (funExt⁻ (F-hom-PathP A (f , refl) (f , p) refl (ΣPathP (refl , p)) refl) (fstSig x)))
+  Psh-Σ-structure .Σ-Structure.ΣTy {Γ = Γ} A B .F-id {I , ρ} = funExt λ x → SigPathP
     (fstPairSig _ _ ∙ funExt⁻ (F-id-PathP A (funExt⁻ (Γ .F-id) _)) (fstSig x))
-    {!!}
-  Psh-Σ-structure .Σ-Structure.ΣTy A B .F-seq = {!!}
-  Psh-Σ-structure .Σ-Structure.ΣTyNat A B σ = Functor≡
-    (λ c → cong₂ Sig refl (funExt λ x → cong (B .F-ob) (ΣPathP (refl , cong₂ pairSig (cong (σ .N-ob (c .fst)) (sym (fstPairSig _ _))) (symP (sndPairSig _ _))))))
-    -- (λ c i → Sig (A .F-ob (c .fst , σ .N-ob (c .fst) (c .snd))) λ z → B .F-ob (c .fst , pairSig (σ .N-ob (c .fst) (fstPairSig _ _ (~ i))) (sndPairSig _ _ (~ i))))
-    (λ f → {!!})
-  Psh-Σ-structure .Σ-Structure.ΣTmIso = {!!}
-  Psh-Σ-structure .Σ-Structure.coerce = {!!}
+    (compPathP' {B = λ z → El (B .F-ob (I , pairSig ρ z))}
+      (sndPairSig _ _)
+      (congP (λ i m → B .F-hom m (sndSig x))
+             (∫U-Hom-PathP (Γ ▹ A) _ (∫U (Γ ▹ A) .id) refl
+                           (ΣPathP (refl , cong (pairSig ρ) (funExt⁻ (F-id-PathP A (funExt⁻ (Γ .F-id) _)) (fstSig x)))) refl)
+        ▷ funExt⁻ (B .F-id) (sndSig x)))
+  Psh-Σ-structure .Σ-Structure.ΣTy {Γ = Γ} A B .F-seq {x = X} {y = Y} {z = Z} f g =
+    funExt λ x → SigPathP
+      (fstPairSig _ _
+        ∙ funExt⁻ (A .F-seq f g) (fstSig x)
+        ∙ cong (A .F-hom g) (sym (fstPairSig _ _))
+        ∙ sym (fstPairSig _ _))
+      (compPathP' {B = Bmot}
+        (sndPairSig _ _)
+        (compPathP' {B = Bmot}
+          (funExt⁻ (F-hom-PathP B _ ((f .fst , eqp f (fstSig x)) ⋆⟨ ∫U (Γ ▹ A) ⟩ (g .fst , eqp g (A .F-hom f (fstSig x)))) refl
+                      (cong (λ v → Z .fst , pairSig (Z .snd) v) (funExt⁻ (A .F-seq f g) (fstSig x))) refl)
+                   (sndSig x)
+            ▷ funExt⁻ (B .F-seq (f .fst , eqp f (fstSig x)) (g .fst , eqp g (A .F-hom f (fstSig x)))) (sndSig x))
+          (compPathP' {B = Bmot}
+            (congP₂ (λ i m z → B .F-hom m z)
+              (∫U-Hom-PathP (Γ ▹ A) (g .fst , eqp g (A .F-hom f (fstSig x))) _
+                (cong (λ v → Y .fst , pairSig (Y .snd) v) (sym (fstPairSig _ _)))
+                (cong (λ v → Z .fst , pairSig (Z .snd) (A .F-hom g v)) (sym (fstPairSig _ _)))
+                refl)
+              (symP (sndPairSig _ _)))
+            (symP (sndPairSig _ _)))))
+    where
+      Bmot : El (A .F-ob Z) → Type ℓEl
+      Bmot v = El (B .F-ob (Z .fst , pairSig (Z .snd) v))
+      eqp : {O O' : ∫U Γ .ob} (m : ∫U Γ [ O , O' ]) (s : El (A .F-ob O))
+          → (Γ ▹ A) .F-hom (m .fst) (pairSig (O .snd) s) ≡ pairSig (O' .snd) (A .F-hom m s)
+      eqp {O} {O'} (m₀ , mp) s = cong₂ pairSig
+        (cong (Γ .F-hom m₀) (fstPairSig _ _) ∙ mp)
+        (compPathP' {B = λ v → El (A .F-ob (O' .fst , v))}
+          (congP (λ i z → A .F-hom (m₀ , refl) z) (sndPairSig _ _))
+          (funExt⁻ (F-hom-PathP A (m₀ , refl) (m₀ , mp) refl (ΣPathP (refl , mp)) refl) s))
+  Psh-Σ-structure .Σ-Structure.ΣTyNat {Γ = Γ} {Δ = Δ} A B σ = Functor≡
+    (λ c → cong₂ Sig refl (funExt λ v → cong (B .F-ob) (BObj c v)))
+    (λ {c} {c'} f → funExtDep (λ {s₀} {s₁} p →
+      congP₂ (λ i a b → pairSig {B = λ v → B .F-ob (BObj c' v i)} a b)
+        (cong (A .F-hom (∫U-hom σ .F-hom f)) (congP (λ i → fstSig {B = λ v → B .F-ob (BObj c v i)}) p))
+        (congP₂ (λ i m z → B .F-hom m z)
+          (∫U-Hom-PathP (Γ ▹ A) _ _
+            (λ i → BObj c (fstSig (p i)) i)
+            (λ i → BObj c' (A .F-hom (∫U-hom σ .F-hom f) (fstSig (p i))) i)
+            refl)
+          (congP (λ i → sndSig {B = λ v → B .F-ob (BObj c v i)}) p))))
+    where
+      BObj : (cc : ∫U Δ .ob) (v : El (A .F-ob (cc .fst , σ .N-ob (cc .fst) (cc .snd))))
+           → Path (∫U (Γ ▹ A) .ob)
+                  (cc .fst , pairSig (σ .N-ob (cc .fst) (cc .snd)) v)
+                  (cc .fst , (_⁺ {A = A} σ) .N-ob (cc .fst) (pairSig {B = λ z → A .F-ob (cc .fst , σ .N-ob (cc .fst) z)} (cc .snd) v))
+      BObj cc v = ΣPathP (refl , cong₂ pairSig (cong (σ .N-ob (cc .fst)) (sym (fstPairSig _ _))) (symP (sndPairSig _ _)))
+  Psh-Σ-structure .Σ-Structure.ΣTmIso A B = {!!}
+  Psh-Σ-structure .Σ-Structure.coerce A B x σ = Functor≡
+    (λ c → cong (B .F-ob) (ΣPathP (refl , cong₂ pairSig (cong (σ .N-ob (c .fst)) (sym (fstPairSig _ _ ))) (symP (sndPairSig _ _)))))
+    (λ {c} {c'} f → F-hom-PathP B _ _
+      (ΣPathP (refl , cong₂ pairSig (cong (σ .N-ob (c .fst)) (sym (fstPairSig _ _))) (symP (sndPairSig _ _))))
+      (ΣPathP (refl , cong₂ pairSig (cong (σ .N-ob (c' .fst)) (sym (fstPairSig _ _))) (symP (sndPairSig _ _))))
+      refl)
   Psh-Σ-structure .Σ-Structure.ΣTmIsoInvNat = {!!}

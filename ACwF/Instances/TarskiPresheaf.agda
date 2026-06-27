@@ -179,6 +179,17 @@ module _ {ℓob ℓhom ℓU ℓEl : Level} (C : Category ℓob ℓhom) (Univ : T
     (λ i x u → (sndPairSig {B = λ v → A .F-ob (x .fst , v)} (x .snd) (M .N-ob x (isContrElUnit .fst))
                   ▷ cong (M .N-ob x) (isContrElUnit .snd u)) i)
 
+  -- The CwF of presheaves has a Σ-structure. It is defined pointwise using the
+  -- universe's Sig:
+  --
+  -- ```
+  -- (Σ A B) (I , ρ) = Sig (A (I , ρ)) (λ x → B (I , (ρ , x)))
+  -- ```
+  --
+  -- The non-computational parts (proofs) were generated using Claude and are
+  -- very ugly, if not unreadable. A lot of them is just threading pairSig and
+  -- fstPairSig deep into the terms. V-valued presheaves would not have this
+  -- problem as these are definitional.
   open import ACwF.Sigma
   Psh-Σ-structure : Σ-Structure (PRESHEAFU C Univ) Psh-CwF
   Psh-Σ-structure .Σ-Structure.ΣTy A B .F-ob (I , ρ) = Sig (A .F-ob (I , ρ)) (λ x → B .F-ob (I , pairSig ρ x))
@@ -230,6 +241,7 @@ module _ {ℓob ℓhom ℓU ℓEl : Level} (C : Category ℓob ℓhom) (Univ : T
         (compPathP' {B = λ v → El (A .F-ob (O' .fst , v))}
           (congP (λ i z → A .F-hom (m₀ , refl) z) (sndPairSig _ _))
           (funExt⁻ (F-hom-PathP A (m₀ , refl) (m₀ , mp) refl (ΣPathP (refl , mp)) refl) s))
+
   Psh-Σ-structure .Σ-Structure.ΣTyNat {Γ = Γ} {Δ = Δ} A B σ = Functor≡
     (λ c → cong₂ Sig refl (funExt λ v → cong (B .F-ob) (BObj c v)))
     (λ {c} {c'} f → funExtDep (λ {s₀} {s₁} p →
@@ -247,6 +259,7 @@ module _ {ℓob ℓhom ℓU ℓEl : Level} (C : Category ℓob ℓhom) (Univ : T
                   (cc .fst , pairSig (σ .N-ob (cc .fst) (cc .snd)) v)
                   (cc .fst , (_⁺ {A = A} σ) .N-ob (cc .fst) (pairSig {B = λ z → A .F-ob (cc .fst , σ .N-ob (cc .fst) z)} (cc .snd) v))
       BObj cc v = ΣPathP (refl , cong₂ pairSig (cong (σ .N-ob (cc .fst)) (sym (fstPairSig _ _))) (symP (sndPairSig _ _)))
+
   Psh-Σ-structure .Σ-Structure.ΣTmIso {Γ = Γ} A B .Iso.fun M .fst .N-ob o u = fstSig (M .N-ob o u)
   Psh-Σ-structure .Σ-Structure.ΣTmIso {Γ = Γ} A B .Iso.fun M .fst .N-hom f =
     funExt λ u → cong fstSig (funExt⁻ (M .N-hom f) u) ∙ fstPairSig _ _
@@ -289,10 +302,37 @@ module _ {ℓob ℓhom ℓU ℓEl : Level} (C : Category ℓob ℓhom) (Univ : T
           i))
   Psh-Σ-structure .Σ-Structure.ΣTmIso {Γ = Γ} A B .Iso.ret M =
     makeNatTransPath (funExt λ o → funExt λ u → ηSig _ ∙ cong (M .N-ob o) (isContrElUnit .snd u))
+
   Psh-Σ-structure .Σ-Structure.coerce A B x σ = Functor≡
     (λ c → cong (B .F-ob) (ΣPathP (refl , cong₂ pairSig (cong (σ .N-ob (c .fst)) (sym (fstPairSig _ _ ))) (symP (sndPairSig _ _)))))
     (λ {c} {c'} f → F-hom-PathP B _ _
       (ΣPathP (refl , cong₂ pairSig (cong (σ .N-ob (c .fst)) (sym (fstPairSig _ _))) (symP (sndPairSig _ _))))
       (ΣPathP (refl , cong₂ pairSig (cong (σ .N-ob (c' .fst)) (sym (fstPairSig _ _))) (symP (sndPairSig _ _))))
       refl)
-  Psh-Σ-structure .Σ-Structure.ΣTmIsoInvNat = {!!}
+
+  Psh-Σ-structure .Σ-Structure.ΣTmIsoInvNat {Γ} {Δ} A B a b σ =
+    makeNatTransPathP refl _ (λ i o u →
+      let
+        σo : ∫U Γ .ob
+        σo = ∫U-hom σ .F-ob o
+        av : El (A .F-ob σo)
+        av = a .N-ob σo (isContrElUnit .fst)
+        bσ : Tm Δ ((B [ ⟨ a ⟩ ]Ty) [ σ ]Ty)
+        bσ = b [ σ ]Tm
+        cee : (B [ ⟨ a ⟩ ]Ty) [ σ ]Ty ≡ (B [ σ ⁺ ]Ty) [ ⟨ a [ σ ]Tm ⟩ ]Ty
+        cee = Psh-Σ-structure .Σ-Structure.coerce A B a σ
+        b' : Tm Δ ((B [ σ ⁺ ]Ty) [ ⟨ a [ σ ]Tm ⟩ ]Ty)
+        b' = subst (Tm Δ) cee bσ
+        cand : PathP (λ j → El (cee j .F-ob o)) (bσ .N-ob o u) (b' .N-ob o u)
+        cand j = subst-filler (Tm Δ) cee bσ j .N-ob o u
+        bobj : (v : El (A .F-ob σo))
+             → Path (∫U (Γ ▹ A) .ob)
+                    (o .fst , pairSig (σ .N-ob (o .fst) (o .snd)) v)
+                    (o .fst , (_⁺ {A = A} σ) .N-ob (o .fst) (pairSig (o .snd) v))
+        bobj v = ΣPathP (refl , cong₂ pairSig (cong (σ .N-ob (o .fst)) (sym (fstPairSig _ _))) (symP (sndPairSig _ _)))
+        sndPath : PathP (λ j → El (B .F-ob (bobj av j))) (bσ .N-ob o u) (b' .N-ob o u)
+        sndPath = subst (λ r → PathP (λ j → El (r j)) (bσ .N-ob o u) (b' .N-ob o u))
+                        (isSetU _ _ (λ j → cee j .F-ob o) (λ j → B .F-ob (bobj av j)))
+                        cand
+      in congP (λ j z → pairSig {B = λ v → B .F-ob (bobj v j)} av z) sndPath i)
+

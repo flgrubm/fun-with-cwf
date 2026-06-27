@@ -3,6 +3,7 @@ module ACwF.Instances.TarskiPresheaf where
 
 open import Cubical.Foundations.Prelude
 open import Cubical.Foundations.HLevels
+open import Cubical.Foundations.Isomorphism
 open import Cubical.Functions.FunExtEquiv
 open import Cubical.Data.Sigma
 open import Cubical.Categories.Category
@@ -246,7 +247,48 @@ module _ {ℓob ℓhom ℓU ℓEl : Level} (C : Category ℓob ℓhom) (Univ : T
                   (cc .fst , pairSig (σ .N-ob (cc .fst) (cc .snd)) v)
                   (cc .fst , (_⁺ {A = A} σ) .N-ob (cc .fst) (pairSig {B = λ z → A .F-ob (cc .fst , σ .N-ob (cc .fst) z)} (cc .snd) v))
       BObj cc v = ΣPathP (refl , cong₂ pairSig (cong (σ .N-ob (cc .fst)) (sym (fstPairSig _ _))) (symP (sndPairSig _ _)))
-  Psh-Σ-structure .Σ-Structure.ΣTmIso A B = {!!}
+  Psh-Σ-structure .Σ-Structure.ΣTmIso {Γ = Γ} A B .Iso.fun M .fst .N-ob o u = fstSig (M .N-ob o u)
+  Psh-Σ-structure .Σ-Structure.ΣTmIso {Γ = Γ} A B .Iso.fun M .fst .N-hom f =
+    funExt λ u → cong fstSig (funExt⁻ (M .N-hom f) u) ∙ fstPairSig _ _
+  Psh-Σ-structure .Σ-Structure.ΣTmIso {Γ = Γ} A B .Iso.fun M .snd .N-ob o u = sndSig (M .N-ob o (isContrElUnit .fst))
+  Psh-Σ-structure .Σ-Structure.ΣTmIso {Γ = Γ} A B .Iso.fun M .snd .N-hom {x} {y} f =
+    funExt λ u →
+      let Mx = M .N-ob x (isContrElUnit .fst)
+          mnhom = funExt⁻ (M .N-hom f) (isContrElUnit .fst)
+          base = cong fstSig mnhom ∙ fstPairSig _ _
+          bigPathP = compPathP' {B = λ w → El (B .F-ob (y .fst , pairSig (y .snd) w))}
+            (cong sndSig mnhom) (sndPairSig _ _)
+          P3 = funExt⁻ (F-hom-PathP B _ _ refl (ΣPathP (refl , cong (pairSig (y .snd)) base)) refl) (sndSig Mx)
+      in sym (fromPathP (symP bigPathP)) ∙ fromPathP (symP P3)
+  Psh-Σ-structure .Σ-Structure.ΣTmIso {Γ = Γ} A B .Iso.inv (a , b) .N-ob o u =
+    pairSig (a .N-ob o (isContrElUnit .fst)) (b .N-ob o u)
+  Psh-Σ-structure .Σ-Structure.ΣTmIso {Γ = Γ} A B .Iso.inv (a , b) .N-hom {x} {y} f =
+    funExt λ u →
+      let fst≡ = funExt⁻ (a .N-hom f) (isContrElUnit .fst) ∙ cong (A .F-hom f) (sym (fstPairSig _ _))
+      in cong₂ pairSig fst≡
+           (funExt⁻ (b .N-hom f) u ◁
+             congP₂ (λ i m z → B .F-hom m z)
+               (∫U-Hom-PathP (Γ ▹ A) _ _
+                 (cong (λ w → x .fst , pairSig (x .snd) w) (sym (fstPairSig _ _)))
+                 (cong (λ w → y .fst , pairSig (y .snd) w) fst≡)
+                 refl)
+               (symP (sndPairSig _ _)))
+  Psh-Σ-structure .Σ-Structure.ΣTmIso {Γ = Γ} A B .Iso.sec (a , b) = ΣPathP (
+    (makeNatTransPath (funExt λ o → funExt λ u → fstPairSig _ _ ∙ cong (N-ob a o) (isContrElUnit .snd u)))
+    , makeNatTransPathP refl
+        (cong (λ a' → B [ ⟨ a' ⟩ ]Ty)
+          (makeNatTransPath (funExt λ o → funExt λ u → fstPairSig _ _ ∙ cong (N-ob a o) (isContrElUnit .snd u))))
+        (λ i o u → compPathP' {B = λ v → El (B .F-ob (o .fst , pairSig (o .snd) v))}
+          (sndPairSig (N-ob a o (isContrElUnit .fst)) (N-ob b o (isContrElUnit .fst)))
+          (subst
+            (λ p → PathP (λ j → El (B .F-ob (o .fst , pairSig (o .snd) (p j))))
+                         (N-ob b o (isContrElUnit .fst)) (N-ob b o u))
+            (sym (cong (cong (N-ob a o))
+              (isProp→isSet (isContr→isProp isContrElUnit) _ _ (isContrElUnit .snd (isContrElUnit .fst)) refl)))
+            (cong (N-ob b o) (isContrElUnit .snd u)))
+          i))
+  Psh-Σ-structure .Σ-Structure.ΣTmIso {Γ = Γ} A B .Iso.ret M =
+    makeNatTransPath (funExt λ o → funExt λ u → ηSig _ ∙ cong (M .N-ob o) (isContrElUnit .snd u))
   Psh-Σ-structure .Σ-Structure.coerce A B x σ = Functor≡
     (λ c → cong (B .F-ob) (ΣPathP (refl , cong₂ pairSig (cong (σ .N-ob (c .fst)) (sym (fstPairSig _ _ ))) (symP (sndPairSig _ _)))))
     (λ {c} {c'} f → F-hom-PathP B _ _

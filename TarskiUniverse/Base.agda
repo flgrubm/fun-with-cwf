@@ -3,7 +3,7 @@ module TarskiUniverse.Base where
 open import Cubical.Foundations.Prelude
 open import Cubical.Foundations.Isomorphism
 
-record TarskiUniverse (ℓU ℓEl : Level) : Type (ℓ-suc (ℓ-max ℓU ℓEl)) where
+record TarskiUniverse-Base (ℓU ℓEl : Level) : Type (ℓ-suc (ℓ-max ℓU ℓEl)) where
   field
     U : Type ℓU
     isSetU : isSet U
@@ -11,55 +11,64 @@ record TarskiUniverse (ℓU ℓEl : Level) : Type (ℓ-suc (ℓ-max ℓU ℓEl))
     El : U → Type ℓEl
     isSetEl : (Γ : U) → isSet (El Γ)
 
-    -- TODO: rename? Maybe state that it decodes to Builtin.Unit instead?
-    Unit : U
-    isContrElUnit : isContr (El Unit)
-
-    Sig : (A : U) → (El A → U) → U
-    SigIso : (A : U) (B : El A → U)
-           → Iso (El (Sig A B)) (Σ[ x ∈ El A ] El (B x))
-
-    Pi : (A : U) (B : El A → U) → U
-    PiIso : (A : U) (B : El A → U)
-          → Iso (El (Pi A B)) ((x : El A) → El (B x))
-
+module _ {ℓU ℓEl : Level} (Univ : TarskiUniverse-Base ℓU ℓEl) where
   open Iso
+  open TarskiUniverse-Base Univ
+  record TarskiUniverse-Unit : Type (ℓ-max ℓU ℓEl) where
+    field
+      -- TODO: rename? Maybe state that it decodes to Builtin.Unit instead?
+      Unit : U
+      isContrElUnit : isContr (El Unit)
 
-  fstSig : {A : U} {B : El A → U} → El (Sig A B) → El A
-  fstSig p = SigIso _ _ .fun p .fst
+  record TarskiUniverse-Sig : Type (ℓ-max ℓU ℓEl) where
+    field
+      Sig : (A : U) → (El A → U) → U
+      SigIso : (A : U) (B : El A → U)
+           → Iso (El (Sig A B)) (Σ[ x ∈ El A ] El (B x))
+    fstSig : {A : U} {B : El A → U} → El (Sig A B) → El A
+    fstSig p = SigIso _ _ .fun p .fst
 
-  sndSig : {A : U} {B : El A → U} (p : El (Sig A B)) → El (B (fstSig p))
-  sndSig p = SigIso _ _ .fun p .snd
+    sndSig : {A : U} {B : El A → U} (p : El (Sig A B)) → El (B (fstSig p))
+    sndSig p = SigIso _ _ .fun p .snd
 
-  pairSig : {A : U} {B : El A → U} (x : El A) (y : El (B x)) → El (Sig A B)
-  pairSig x y = SigIso _ _ .inv (x , y)
+    pairSig : {A : U} {B : El A → U} (x : El A) (y : El (B x)) → El (Sig A B)
+    pairSig x y = SigIso _ _ .inv (x , y)
 
-  ηSig : {A : U} {B : El A → U} (p : El (Sig A B))
-       → pairSig (fstSig p) (sndSig p) ≡ p
-  ηSig p = SigIso _ _ .ret p
+    ηSig : {A : U} {B : El A → U} (p : El (Sig A B))
+         → pairSig (fstSig p) (sndSig p) ≡ p
+    ηSig p = SigIso _ _ .ret p
 
-  fstPairSig : {A : U} {B : El A → U} (x : El A) (y : El (B x))
-             → fstSig (pairSig {B = B} x y) ≡ x
-  fstPairSig x y = cong fst (SigIso _ _ .sec (x , y))
+    fstPairSig : {A : U} {B : El A → U} (x : El A) (y : El (B x))
+               → fstSig (pairSig {B = B} x y) ≡ x
+    fstPairSig x y = cong fst (SigIso _ _ .sec (x , y))
 
-  sndPairSig : {A : U} {B : El A → U} (x : El A) (y : El (B x))
-             → PathP (λ i → El (B (fstPairSig {B = B} x y i))) (sndSig (pairSig {B = B} x y)) y
-  sndPairSig x y = cong snd (SigIso _ _ .sec (x , y))
+    sndPairSig : {A : U} {B : El A → U} (x : El A) (y : El (B x))
+               → PathP (λ i → El (B (fstPairSig {B = B} x y i))) (sndSig (pairSig {B = B} x y)) y
+    sndPairSig x y = cong snd (SigIso _ _ .sec (x , y))
 
-  appPi : {A : U} {B : El A → U} (f : El (Pi A B)) (x : El A) → El (B x)
-  appPi = PiIso _ _ .fun
+  record TarskiUniverse-Pi : Type (ℓ-max ℓU ℓEl) where
+    field
+      Pi : (A : U) (B : El A → U) → U
+      PiIso : (A : U) (B : El A → U)
+            → Iso (El (Pi A B)) ((x : El A) → El (B x))
 
-  lamPi : {A : U} {B : El A → U} → ((x : El A) → El (B x)) → El (Pi A B)
-  lamPi = PiIso _ _ .inv
+    appPi : {A : U} {B : El A → U} (f : El (Pi A B)) (x : El A) → El (B x)
+    appPi = PiIso _ _ .fun
 
-  βPi : {A : U} {B : El A → U} (f : (x : El A) → El (B x)) → appPi (lamPi f) ≡ f
-  βPi = PiIso _ _ .sec
+    lamPi : {A : U} {B : El A → U} → ((x : El A) → El (B x)) → El (Pi A B)
+    lamPi = PiIso _ _ .inv
 
-  ηPi : {A : U} {B : El A → U} (f : El (Pi A B)) → lamPi (appPi f) ≡ f
-  ηPi = PiIso _ _ .ret
+    βPi : {A : U} {B : El A → U} (f : (x : El A) → El (B x)) → appPi (lamPi f) ≡ f
+    βPi = PiIso _ _ .sec
 
-  SigPathP : ∀ {A} {B} → {x y : El (Sig A B)} → (fst≡ : fstSig x ≡ fstSig y) → PathP (λ i → El (B (fst≡ i))) (sndSig x) (sndSig y) → x ≡ y
-  SigPathP {x = x} {y = y} fst≡ snd≡ = sym (ηSig x) ∙ cong (uncurry pairSig) (ΣPathP (fst≡ , snd≡)) ∙ ηSig y
-    where
-      open import Cubical.Foundations.Function
-      open import Cubical.Data.Sigma
+    ηPi : {A : U} {B : El A → U} (f : El (Pi A B)) → lamPi (appPi f) ≡ f
+    ηPi = PiIso _ _ .ret
+
+record TarskiUniverse (ℓU ℓEl : Level) : Type (ℓ-max (ℓ-suc ℓU) (ℓ-suc ℓEl)) where
+  field
+    TU-Base : TarskiUniverse-Base ℓU ℓEl
+    TU-Unit : TarskiUniverse-Unit TU-Base
+    TU-Sig : TarskiUniverse-Sig TU-Base
+  open TarskiUniverse-Base TU-Base public
+  open TarskiUniverse-Unit TU-Unit public
+  open TarskiUniverse-Sig TU-Sig public

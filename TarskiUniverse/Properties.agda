@@ -27,15 +27,44 @@ module _ {ℓU ℓEl : Level} (TU : TarskiUniverse-Base ℓU ℓEl) where
   UCat .⋆Assoc _ _ _ = refl
   UCat .isSetHom {y = y} = isSet→ (isSetEl y)
 
-  record TarskiUniverse-Limit (ℓob ℓhom : Level) : Type (ℓ-max (ℓ-suc ℓhom) (ℓ-max (ℓ-suc ℓob) (ℓ-max ℓU ℓEl))) where
+  -- An internal category: a category whose object- and morphism-types are
+  -- given by codes (so they live in `U`/`El`), rather than arbitrary types.
+  -- Expressing "the objects are an El" is just storing the code `Obᵢ : U` and
+  -- using `El Obᵢ` wherever the object type is needed.
+  record InternalCategory : Type (ℓ-max ℓU ℓEl) where
     field
-      Limit : {D : Category ℓob ℓhom} (J : Functor D UCat) → U
-      LimitIso : ∀ {D} J →
+      Obᵢ  : U
+      Homᵢ : El Obᵢ → El Obᵢ → U
+      idᵢ  : (x : El Obᵢ) → El (Homᵢ x x)
+      _⋆ᵢ_ : {x y z : El Obᵢ} → El (Homᵢ x y) → El (Homᵢ y z) → El (Homᵢ x z)
+      ⋆IdLᵢ   : {x y : El Obᵢ} (f : El (Homᵢ x y)) → idᵢ x ⋆ᵢ f ≡ f
+      ⋆IdRᵢ   : {x y : El Obᵢ} (f : El (Homᵢ x y)) → f ⋆ᵢ idᵢ y ≡ f
+      ⋆Assocᵢ : {x y z w : El Obᵢ} (f : El (Homᵢ x y)) (g : El (Homᵢ y z)) (h : El (Homᵢ z w))
+              → (f ⋆ᵢ g) ⋆ᵢ h ≡ f ⋆ᵢ (g ⋆ᵢ h)
+
+  open InternalCategory
+
+  -- Externalize an internal category to an ordinary cubical category via `El`,
+  -- so we can reuse the `Functor`/`Limits` machinery for diagrams.
+  ⟦_⟧Cat : InternalCategory → Category ℓEl ℓEl
+  ⟦ D ⟧Cat .ob          = El (D .Obᵢ)
+  ⟦ D ⟧Cat .Hom[_,_] x y = El (D .Homᵢ x y)
+  ⟦ D ⟧Cat .id {x}      = D .idᵢ x
+  ⟦ D ⟧Cat ._⋆_         = D ._⋆ᵢ_
+  ⟦ D ⟧Cat .⋆IdL        = D .⋆IdLᵢ
+  ⟦ D ⟧Cat .⋆IdR        = D .⋆IdRᵢ
+  ⟦ D ⟧Cat .⋆Assoc      = D .⋆Assocᵢ
+  ⟦ D ⟧Cat .isSetHom    = isSetEl _
+
+  record TarskiUniverse-Limit : Type (ℓ-max ℓU ℓEl) where
+    field
+      Limit : {D : InternalCategory} (J : Functor ⟦ D ⟧Cat UCat) → U
+      LimitIso : {D : InternalCategory} (J : Functor ⟦ D ⟧Cat UCat) →
         Iso
           (El (Limit {D} J))
           (Σ
-            ((d : D .ob) → El (J ⟅ d ⟆))
-              λ s → {x y : D .ob} (m : D [ x , y ]) → J .F-hom m (s x) ≡ s y)
+            ((d : El (D .Obᵢ)) → El (J ⟅ d ⟆))
+              λ s → {x y : El (D .Obᵢ)} (m : El (D .Homᵢ x y)) → J .F-hom m (s x) ≡ s y)
 
 module _ {ℓU ℓEl : Level} (TU : TarskiUniverse ℓU ℓEl) where
 

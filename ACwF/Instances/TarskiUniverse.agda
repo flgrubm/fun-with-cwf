@@ -89,7 +89,8 @@ module _ {ℓU ℓEl : Level} (TU : TarskiUniverse ℓU ℓEl) where
          (b (σ (transp (λ _ → El Δ) j x))))
       in goal)))
 
-  module U-Π where
+  module U-Π (TU-Pi : TarskiUniverse-Pi TU-Base) where
+    open TarskiUniverse-Pi TU-Pi
     open Algebraic
     open CwF UCwF
 

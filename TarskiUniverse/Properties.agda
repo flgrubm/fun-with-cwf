@@ -4,6 +4,8 @@ open import Cubical.Foundations.Prelude
 open import Cubical.Foundations.Isomorphism
 open import Cubical.Foundations.HLevels
 
+open import Cubical.Data.Sigma
+
 open import Cubical.Categories.Category
 open import Cubical.Categories.Functor
 open import Cubical.Categories.Limits
@@ -11,6 +13,8 @@ open import Cubical.Categories.Limits
 open import TarskiUniverse.Base
 
 open Functor
+open Cone
+open LimCone
 
 module _ {ℓU ℓEl : Level} (TU : TarskiUniverse-Base ℓU ℓEl) where
 
@@ -29,8 +33,6 @@ module _ {ℓU ℓEl : Level} (TU : TarskiUniverse-Base ℓU ℓEl) where
 
   -- An internal category: a category whose object- and morphism-types are
   -- given by codes (so they live in `U`/`El`), rather than arbitrary types.
-  -- Expressing "the objects are an El" is just storing the code `Obᵢ : U` and
-  -- using `El Obᵢ` wherever the object type is needed.
   record InternalCategory : Type (ℓ-max ℓU ℓEl) where
     field
       Obᵢ  : U
@@ -44,8 +46,7 @@ module _ {ℓU ℓEl : Level} (TU : TarskiUniverse-Base ℓU ℓEl) where
 
   open InternalCategory
 
-  -- Externalize an internal category to an ordinary cubical category via `El`,
-  -- so we can reuse the `Functor`/`Limits` machinery for diagrams.
+  -- Internal categories are actually categories
   ⟦_⟧Cat : InternalCategory → Category ℓEl ℓEl
   ⟦ D ⟧Cat .ob          = El (D .Obᵢ)
   ⟦ D ⟧Cat .Hom[_,_] x y = El (D .Homᵢ x y)
@@ -56,6 +57,7 @@ module _ {ℓU ℓEl : Level} (TU : TarskiUniverse-Base ℓU ℓEl) where
   ⟦ D ⟧Cat .⋆Assoc      = D .⋆Assocᵢ
   ⟦ D ⟧Cat .isSetHom    = isSetEl _
 
+  -- a Tarski universe can be closed under limits of internal diagrams
   record TarskiUniverse-Limit : Type (ℓ-max ℓU ℓEl) where
     field
       Limit : {D : InternalCategory} (J : Functor ⟦ D ⟧Cat UCat) → U
@@ -65,6 +67,55 @@ module _ {ℓU ℓEl : Level} (TU : TarskiUniverse-Base ℓU ℓEl) where
           (Σ
             ((d : El (D .Obᵢ)) → El (J ⟅ d ⟆))
               λ s → {x y : El (D .Obᵢ)} (m : El (D .Homᵢ x y)) → J .F-hom m (s x) ≡ s y)
+
+  -- The limits in the Tarski universe are limits in actual categories
+  module _ (TL : TarskiUniverse-Limit) {D : InternalCategory}
+           (Dgm : Functor ⟦ D ⟧Cat UCat) where
+
+    open TarskiUniverse-Limit TL
+
+    private
+      L : U
+      L = Limit {D} Dgm
+
+      ConeT : Type ℓEl
+      ConeT = Σ[ s ∈ ((d : El (D .Obᵢ)) → El (Dgm ⟅ d ⟆)) ]
+                ({x y : El (D .Obᵢ)} (m : El (D .Homᵢ x y)) → Dgm .F-hom m (s x) ≡ s y)
+
+      limIso : Iso (El L) ConeT
+      limIso = LimitIso {D} Dgm
+
+    theCone : Cone Dgm L
+    theCone .coneOut v l               = Iso.fun limIso l .fst v
+    theCone .coneOutCommutes {u} {v} e = funExt λ l → Iso.fun limIso l .snd {u} {v} e
+
+    theConeIsLimiting : isLimCone Dgm L theCone
+    theConeIsLimiting c cc = (f , fConeMor) , uniq
+      where
+        cn : El c → ConeT
+        cn x = (λ d → cc .coneOut d x)
+             , λ {u} {v} e → funExt⁻ (cc .coneOutCommutes {u} {v} e) x
+
+        f : El c → El L
+        f x = Iso.inv limIso (cn x)
+
+        fConeMor : isConeMor cc theCone f
+        fConeMor v = funExt λ x → cong (λ p → p .fst v) (Iso.sec limIso (cn x))
+
+        uniq : (gp : Σ[ g ∈ (El c → El L) ] isConeMor cc theCone g)
+             → (f , fConeMor) ≡ gp
+        uniq (g , gConeMor) =
+          Σ≡Prop (λ h → isPropIsConeMor cc theCone h)
+                 (funExt λ x → isoFunInjective limIso (f x) (g x)
+                   (Σ≡Prop (λ s → isPropImplicitΠ2 λ _ y → isPropΠ λ m → isSetEl (Dgm ⟅ y ⟆) _ _)
+                           (funExt λ v →
+                              cong (λ p → p .fst v) (Iso.sec limIso (cn x))
+                            ∙ sym (funExt⁻ (gConeMor v) x))))
+
+    LimitLimCone : LimCone Dgm
+    LimitLimCone .lim      = L
+    LimitLimCone .limCone  = theCone
+    LimitLimCone .univProp = theConeIsLimiting
 
 module _ {ℓU ℓEl : Level} (TU : TarskiUniverse ℓU ℓEl) where
 

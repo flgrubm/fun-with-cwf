@@ -64,6 +64,15 @@ module _ {ℓU ℓEl : Level} (Univ : TarskiUniverse-Base ℓU ℓEl) where
     ηPi : {A : U} {B : El A → U} (f : El (Pi A B)) → lamPi (appPi f) ≡ f
     ηPi = PiIso _ _ .ret
 
+  record TarskiUniverse-Eq : Type (ℓ-max ℓU ℓEl) where
+    field
+      Eq : (A : U) → (a b : El A) → U
+      EqIso : ∀ A a b → Iso (El (Eq A a b)) (a ≡ b)
+    eqIntro : ∀ {A} {a} {b} → a ≡ b → El (Eq A a b)
+    eqIntro = EqIso _ _ _ .Iso.inv
+    eqElim : ∀ {A} {a} {b} → El (Eq A a b) → a ≡ b
+    eqElim = EqIso _ _ _ .Iso.fun
+
 record TarskiUniverse (ℓU ℓEl : Level) : Type (ℓ-max (ℓ-suc ℓU) (ℓ-suc ℓEl)) where
   field
     TU-Base : TarskiUniverse-Base ℓU ℓEl

@@ -4,6 +4,7 @@ module ACwF.Instances.IterativeSets  where
 open import Cubical.Foundations.Prelude
 open import Cubical.Foundations.HLevels
 open import Cubical.Foundations.Isomorphism
+open import Cubical.Functions.FunExtEquiv
 
 open import Cubical.Data.Sigma
 open import Cubical.Data.Unit
@@ -13,12 +14,14 @@ open import Cubical.Categories.Category
 open import ACwF.Base
 open import ACwF.Sigma
 open import ACwF.Pi
+open import ACwF.Eq
 
 open import Cubical.Data.IterativeSets.Base renaming (V⁰ to V ; El⁰ to El ; isSetEl⁰ to isSetEl)
 open import Utils.VCat
 open import Cubical.Data.IterativeSets.Sigma
 open import Cubical.Data.IterativeSets.Pi
 open import Cubical.Data.IterativeSets.Unit
+open import Cubical.Data.IterativeSets.Identity
 
 open Category
 
@@ -86,3 +89,16 @@ module _ {ℓHom : Level} where
   V-Π-Structure .ΠTyNat _ _ _         = refl
   V-Π-Structure .ΠTmIso _ _           = invIso curryIso
   V-Π-Structure .ΠTmIsoInvNat _ _ _ _ = refl
+
+module _ {ℓHom : Level} where
+
+  open Algebraic
+  open CwF {ℓHom = ℓHom} VCwF
+
+  open Eq-Structure
+
+  V-Eq-Structure : Eq-Structure {ℓHom = ℓHom} VCwF
+  V-Eq-Structure .EqTy A a b x            = Id⁰ (A x) (a x) (b x)
+  V-Eq-Structure .EqTyNat _ _ _ _         = refl
+  V-Eq-Structure .EqTmIso _ _ _           = funExtIso
+  V-Eq-Structure .EqTmIsoInvNat _ _ _ _ _ = refl

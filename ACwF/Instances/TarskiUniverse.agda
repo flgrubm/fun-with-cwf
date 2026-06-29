@@ -7,6 +7,7 @@ open import Cubical.Foundations.Transport
 open import Cubical.Foundations.Isomorphism
 open import Cubical.Foundations.Equiv.Properties
 open import Cubical.Foundations.Function
+open import Cubical.Functions.FunExtEquiv
 open import Cubical.Data.Sigma
 
 open import Cubical.Categories.Category
@@ -14,6 +15,7 @@ open import Cubical.Categories.Category
 open import ACwF.Base
 open import ACwF.Sigma
 open import ACwF.Pi
+open import ACwF.Eq
 
 open import TarskiUniverse.Base
 open import TarskiUniverse.Properties
@@ -105,3 +107,17 @@ module _ {ℓU ℓEl : Level} (TU : TarskiUniverse ℓU ℓEl) where
     U-Π-Structure .Π-Structure.ΠTmIsoInvNat A B M σ i x =
       lamPi
         (λ y → M (pairSig (σ (fstPairSig x y (~ i))) (sndPairSig {B = A [ σ ]Ty} x y (~ i))))
+
+  module U-Eq (TU-Eq : TarskiUniverse-Eq TU-Base) where
+    open TarskiUniverse-Eq TU-Eq
+    open Algebraic
+    open CwF UCwF
+
+    U-Eq-Structure : Eq-Structure UCwF
+    U-Eq-Structure .Eq-Structure.EqTy A a b x            = Eq (A x) (a x) (b x)
+    U-Eq-Structure .Eq-Structure.EqTyNat _ _ _ _         = refl
+    U-Eq-Structure .Eq-Structure.EqTmIso {Γ} A a b       =
+      ((x : El Γ) → El (Eq (A x) (a x) (b x))) Iso⟨ codomainIsoDep (λ x → EqIso (A x) (a x) (b x)) ⟩
+      ((x : El Γ) → a x ≡ b x)                 Iso⟨ funExtIso ⟩
+      (a ≡ b)                                  ∎Iso
+    U-Eq-Structure .Eq-Structure.EqTmIsoInvNat _ _ _ _ _ = refl

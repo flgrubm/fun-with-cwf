@@ -92,37 +92,38 @@ isLocallySmallV {ℓ} x y =
   isSmall-≃-isSmall (isLocallySmallV∞ (x .fst) (y .fst)) (invEquiv ≡V⁰-≃-≡V∞)
 
 module _ {ℓ : Level} where
-  union-index : (x : V⁰ {ℓ}) → Type ℓ
-  union-index x = Σ (index x) λ a → index (elements x a)
-  union-elements : (x : V⁰) → union-index x → V⁰
-  union-elements x (a , b) = elements (elements x a) b
+  ∪⁰-index : (x : V⁰ {ℓ}) → Type ℓ
+  ∪⁰-index x = Σ (index x) λ a → index (elements x a)
+  ∪⁰-elements : (x : V⁰) → ∪⁰-index x → V⁰
+  ∪⁰-elements x (a , b) = elements (elements x a) b
 
-  uar : (x : V⁰ {ℓ}) → UARel V⁰ ℓ
-  uar x = uaRel isLocallySmallV (union-elements x)
+  private
+    uar : (x : V⁰ {ℓ}) → UARel V⁰ ℓ
+    uar x = uaRel isLocallySmallV (∪⁰-elements x)
 
   ∪⁰ : V⁰ {ℓ} → V⁰ {ℓ}
   ∪⁰ x = fromEmb (idx , elm)
     where
       idx : Type ℓ
-      idx = Replacement' isLocallySmallV (union-elements x) .fst
+      idx = Replacement' isLocallySmallV (∪⁰-elements x) .fst
       elm : idx ↪ V⁰
-      elm .fst = unrep (uar x) (union-elements x)
-      elm .snd = isEmbeddingUnrep (uaRel isLocallySmallV (union-elements x)) (union-elements x)
+      elm .fst = unrep (uar x) (∪⁰-elements x)
+      elm .snd = isEmbeddingUnrep (uaRel isLocallySmallV (∪⁰-elements x)) (∪⁰-elements x)
 
-  union-correct : ∀ x z → (z ∈⁰ (∪⁰ x)) ≃ (∃[ a ∈ index x ] z ∈⁰ elements x a)
-  union-correct x z = 
+  ∈∪⁰-≃ : ∀ x z → (z ∈⁰ (∪⁰ x)) ≃ (∃[ a ∈ index x ] z ∈⁰ elements x a)
+  ∈∪⁰-≃ x z =
       (z ∈⁰ ∪⁰ x)
     ≃⟨ idEquiv _ ⟩
       fiber (unrep _ _) z
-    ≃⟨ invEquiv (propTruncIdempotent≃ (isEmbedding→hasPropFibers (isEmbeddingUnrep (uar x) (union-elements x)) z)) ⟩
-      isInImage (unrep (uar x) (union-elements x)) z
+    ≃⟨ invEquiv (propTruncIdempotent≃ (isEmbedding→hasPropFibers (isEmbeddingUnrep (uar x) (∪⁰-elements x)) z)) ⟩
+      isInImage (unrep (uar x) (∪⁰-elements x)) z
     ≃⟨ idEquiv _ ⟩
-      ∃[ x₁ ∈ Replacement (uar x) (union-elements x)] unrep (uar x) (union-elements x) x₁ ≡ z
+      ∃[ x₁ ∈ Replacement (uar x) (∪⁰-elements x)] unrep (uar x) (∪⁰-elements x) x₁ ≡ z
     ≃⟨ propBiimpl→Equiv squash₁ squash₁
          (rec squash₁ λ (r , p) →
            rec squash₁ (λ ((a , b) , q) →
-             ∣ a , ∣ b , cong (unrep (uar x) (union-elements x)) q ∙ p ∣₁ ∣₁)
-             (isSurjectiveRep (uar x) (union-elements x) r))
+             ∣ a , ∣ b , cong (unrep (uar x) (∪⁰-elements x)) q ∙ p ∣₁ ∣₁)
+             (isSurjectiveRep (uar x) (∪⁰-elements x) r))
          (rec squash₁ λ (a , h) →
            rec squash₁ (λ (b , p) → ∣ rep (a , b) , p ∣₁) h)
       ⟩

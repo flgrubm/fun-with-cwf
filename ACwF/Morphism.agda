@@ -34,31 +34,31 @@ module _ {ℓOb ℓHom ℓOb' ℓHom'} (C : Category ℓOb ℓHom) (D : Category
           (tmMorph (X ._[_]Tm x σ))
           (Y ._[_]Tm (tmMorph x) (ctxMorph .F-hom σ))
 
+    field
       preserves▹ : ∀ Γ A → ctxMorph .F-ob (X ._▹_ Γ A) ≡ Y ._▹_ (ctxMorph .F-ob Γ) (tyMorph A)
-      preserves⟨_⟩ : ∀ {Γ} {A : X .Ty Γ} (a : X .Tm Γ A)
-        → PathP (λ i → D [ ctxMorph .F-ob Γ , preserves▹ Γ A i ])
-            (ctxMorph .F-hom (X .⟨_⟩ a))
-            (Y .⟨_⟩ (tmMorph a))
 
-      preserves⁺ : ∀ {Γ Δ} {A : X .Ty Γ} (σ : C [ Δ , Γ ])
-        → PathP (λ i → D
-              [ (preserves▹ Δ (X ._[_]Ty A σ) ∙ cong (Y ._▹_ (ctxMorph .F-ob Δ)) (preserves[]Ty σ)) i
-              , preserves▹ Γ A i
-              ])
-            (ctxMorph .F-hom (X ._⁺ σ))
-            (Y ._⁺ (ctxMorph .F-hom σ))
+      preservesp : ∀ {Γ} {A : X .Ty Γ}
+        → PathP (λ i → D [ preserves▹ Γ A i , ctxMorph .F-ob Γ ])
+            (ctxMorph .F-hom (X .p))
+            (Y .p)
 
+      preservesq : ∀ {Γ} {A : X .Ty Γ}
+        → PathP (λ i → Y .Tm (preserves▹ Γ A i) ((preserves[]Ty (X .p) ◁ (λ j → Y ._[_]Ty (tyMorph A) (preservesp j))) i))
+            (tmMorph (X .q))
+            (Y .q)
 
-    -- alternatively, we can replace the preservation of ⁺ and ⟨_⟩ by preservation of p and q
-    -- it would be nice to prove this!
-    -- field
-    --   preservesp : ∀ {Γ} {A : X .Ty Γ}
-    --     → PathP (λ i → D [ preserves▹ Γ A i , ctxMorph .F-ob Γ ])
-    --         (ctxMorph .F-hom (X .p))
-    --         (Y .p)
-    --   preservesp
+    -- these should be proved in the future
+    -- preserves⟨_⟩ : ∀ {Γ} {A : X .Ty Γ} (a : X .Tm Γ A)
+    --   → PathP (λ i → D [ ctxMorph .F-ob Γ , preserves▹ Γ A i ])
+    --       (ctxMorph .F-hom (X .⟨_⟩ a))
+    --       (Y .⟨_⟩ (tmMorph a))
+    -- preserves⟨_⟩ {Γ} {A} a = {!!}
 
-    --   preservesq : ∀ {Γ} {A : X .Ty Γ}
-    --     → PathP (λ i → Y .Tm (preserves▹ Γ A i) ((preserves[]Ty (X .p) ◁ (λ j → Y ._[_]Ty (tyMorph A) (preservesp j))) i))
-    --         (tmMorph (X .q))
-    --         (Y .q)
+    -- preserves⁺ : ∀ {Γ Δ} {A : X .Ty Γ} (σ : C [ Δ , Γ ])
+    --   → PathP (λ i → D
+    --         [ (preserves▹ Δ (X ._[_]Ty A σ) ∙ cong (Y ._▹_ (ctxMorph .F-ob Δ)) (preserves[]Ty σ)) i
+    --         , preserves▹ Γ A i
+    --         ])
+    --       (ctxMorph .F-hom (X ._⁺ σ))
+    --       (Y ._⁺ (ctxMorph .F-hom σ))
+    -- preserves⁺ {Γ} {Δ} {A} σ = {!!}

@@ -159,3 +159,175 @@ module Algebraic {ℓOb ℓHom : Level} (C : Category ℓOb ℓHom) where
     coeP {Γ = Γ} e x = symP (subst-filler (Tm Γ) (sym e) x)
 
   open CwF
+
+  -- | Two CwFs on the same base category are equal as soon as their
+  -- *computational* parts agree: the empty context, types and terms with their
+  -- substitution, context extension with its projection, generic variable,
+  -- weakening and sections.  Everything else — the h-level fields and all the
+  -- laws and coherences — is a proposition (equations in the sets `Ty`, `Tm`
+  -- and `C [_,_]`), hence transported for free by `isProp→PathP`.
+  module _ {ℓTy ℓTm : Level} (Cw Cw' : CwF ℓTy ℓTm)
+    (⟨⟩≡ : Cw .⟨⟩ .fst ≡ Cw' .⟨⟩ .fst)
+    (Ty≡ : Cw .Ty ≡ Cw' .Ty)
+    ([]Ty≡ : PathP (λ i → {Γ Δ : Ctx} → Ty≡ i Γ → Δ ⟶ Γ → Ty≡ i Δ)
+                   (Cw ._[_]Ty) (Cw' ._[_]Ty))
+    (Tm≡ : PathP (λ i → (Γ : Ctx) → Ty≡ i Γ → Type ℓTm) (Cw .Tm) (Cw' .Tm))
+    ([]Tm≡ : PathP (λ i → {Γ Δ : Ctx} {A : Ty≡ i Γ}
+                        → Tm≡ i Γ A → (σ : Δ ⟶ Γ) → Tm≡ i Δ ([]Ty≡ i A σ))
+                   (Cw ._[_]Tm) (Cw' ._[_]Tm))
+    (▹≡ : PathP (λ i → (Γ : Ctx) → Ty≡ i Γ → Ctx) (Cw ._▹_) (Cw' ._▹_))
+    (p≡ : PathP (λ i → {Γ : Ctx} {A : Ty≡ i Γ} → ▹≡ i Γ A ⟶ Γ) (Cw .p) (Cw' .p))
+    (q≡ : PathP (λ i → {Γ : Ctx} {A : Ty≡ i Γ}
+                     → Tm≡ i (▹≡ i Γ A) ([]Ty≡ i A (p≡ i)))
+                (Cw .q) (Cw' .q))
+    (⁺≡ : PathP (λ i → {Γ Δ : Ctx} {A : Ty≡ i Γ} (σ : Δ ⟶ Γ)
+                     → ▹≡ i Δ ([]Ty≡ i A σ) ⟶ ▹≡ i Γ A)
+                (Cw ._⁺) (Cw' ._⁺))
+    (⟨⟩'≡ : PathP (λ i → {Γ : Ctx} {A : Ty≡ i Γ} → Tm≡ i Γ A → Γ ⟶ ▹≡ i Γ A)
+                  (Cw .⟨_⟩) (Cw' .⟨_⟩))
+    where
+
+    private
+      -- The propositional fields, in dependency order: each one is stated as a
+      -- `PathP` over the computational data above and filled by `isProp→PathP`.
+      -- They are defined *before* the record so that no clause of
+      -- `makeACwFPath` refers to `makeACwFPath` itself.
+
+      isSetTy≡ : PathP (λ i → (Γ : Ctx) → isSet (Ty≡ i Γ))
+                       (Cw .isSetTy) (Cw' .isSetTy)
+      isSetTy≡ = isProp→PathP (λ i → isPropΠ λ _ → isPropIsSet) _ _
+
+      isSetTm≡ : PathP (λ i → (Γ : Ctx) (A : Ty≡ i Γ) → isSet (Tm≡ i Γ A))
+                       (Cw .isSetTm) (Cw' .isSetTm)
+      isSetTm≡ = isProp→PathP (λ i → isPropΠ2 λ _ _ → isPropIsSet) _ _
+
+      [id]Ty≡ : PathP (λ i → {Γ : Ctx} (A : Ty≡ i Γ) → []Ty≡ i A id ≡ A)
+                      (Cw .[id]Ty) (Cw' .[id]Ty)
+      [id]Ty≡ = isProp→PathP
+        (λ i → isPropImplicitΠ λ _ → isPropΠ λ _ → isSetTy≡ i _ _ _) _ _
+
+      [][]Ty≡ : PathP (λ i → {Γ Θ Δ : Ctx} (A : Ty≡ i Γ) (σ' : Θ ⟶ Δ) (σ : Δ ⟶ Γ)
+                           → []Ty≡ i A (σ ∘ σ') ≡ []Ty≡ i ([]Ty≡ i A σ) σ')
+                      (Cw .[][]Ty) (Cw' .[][]Ty)
+      [][]Ty≡ = isProp→PathP
+        (λ i → isPropImplicitΠ3 λ _ _ _ → isPropΠ3 λ _ _ _ → isSetTy≡ i _ _ _) _ _
+
+      [id]Tm≡ : PathP (λ i → {Γ : Ctx} {A : Ty≡ i Γ} (a : Tm≡ i Γ A)
+                           → PathP (λ j → Tm≡ i Γ ([id]Ty≡ i A j))
+                                   ([]Tm≡ i a id) a)
+                      (Cw .[id]Tm) (Cw' .[id]Tm)
+      [id]Tm≡ = isProp→PathP
+        (λ i → isPropImplicitΠ2 λ _ _ → isPropΠ λ _ →
+                 isOfHLevelPathP' 1 (isSetTm≡ i _ _) _ _) _ _
+
+      [][]Tm≡ : PathP (λ i → {Γ Θ Δ : Ctx} {A : Ty≡ i Γ}
+                             (a : Tm≡ i Γ A) (σ' : Θ ⟶ Δ) (σ : Δ ⟶ Γ)
+                           → PathP (λ j → Tm≡ i Θ ([][]Ty≡ i A σ' σ j))
+                                   ([]Tm≡ i a (σ ∘ σ'))
+                                   ([]Tm≡ i ([]Tm≡ i a σ) σ'))
+                      (Cw .[][]Tm) (Cw' .[][]Tm)
+      [][]Tm≡ = isProp→PathP
+        (λ i → isPropImplicitΠ4 λ _ _ _ _ → isPropΠ3 λ _ _ _ →
+                 isOfHLevelPathP' 1 (isSetTm≡ i _ _) _ _) _ _
+
+      ⟨⟩∘≡ : PathP (λ i → {Γ Δ : Ctx} {A : Ty≡ i Γ} (a : Tm≡ i Γ A) (σ : Δ ⟶ Γ)
+                        → ⟨⟩'≡ i a ∘ σ ≡ ⁺≡ i σ ∘ ⟨⟩'≡ i ([]Tm≡ i a σ))
+                   (Cw .⟨⟩∘) (Cw' .⟨⟩∘)
+      ⟨⟩∘≡ = isProp→PathP
+        (λ i → isPropImplicitΠ3 λ _ _ _ → isPropΠ2 λ _ _ → isSetHom _ _) _ _
+
+      p⁺∘⟨q⟩≡id≡ : PathP (λ i → {Γ : Ctx} {A : Ty≡ i Γ}
+                              → ⁺≡ i (p≡ i {A = A}) ∘ ⟨⟩'≡ i (q≡ i)
+                                ≡ id {▹≡ i Γ A})
+                         (Cw .p⁺∘⟨q⟩≡id) (Cw' .p⁺∘⟨q⟩≡id)
+      p⁺∘⟨q⟩≡id≡ = isProp→PathP
+        (λ i → isPropImplicitΠ2 λ _ _ → isSetHom _ _) _ _
+
+      ∘⁺≡ : PathP (λ i → {Γ Θ Δ : Ctx} {A : Ty≡ i Γ} (σ' : Θ ⟶ Δ) (σ : Δ ⟶ Γ)
+                       → PathP (λ j → ▹≡ i Θ ([][]Ty≡ i A σ' σ j) ⟶ ▹≡ i Γ A)
+                               (⁺≡ i (σ ∘ σ')) (⁺≡ i σ ∘ ⁺≡ i σ'))
+                  (Cw .∘⁺) (Cw' .∘⁺)
+      ∘⁺≡ = isProp→PathP
+        (λ i → isPropImplicitΠ4 λ _ _ _ _ → isPropΠ2 λ _ _ →
+                 isOfHLevelPathP' 1 isSetHom _ _) _ _
+
+      id⁺≡ : PathP (λ i → {Γ : Ctx} {A : Ty≡ i Γ}
+                        → PathP (λ j → ▹≡ i Γ ([id]Ty≡ i A j) ⟶ ▹≡ i Γ A)
+                                (⁺≡ i id) id)
+                   (Cw .id⁺) (Cw' .id⁺)
+      id⁺≡ = isProp→PathP
+        (λ i → isPropImplicitΠ2 λ _ _ → isOfHLevelPathP' 1 isSetHom _ _) _ _
+
+      p∘⁺≡ : PathP (λ i → {Γ Δ : Ctx} {A : Ty≡ i Γ} (σ : Δ ⟶ Γ)
+                        → p≡ i {A = A} ∘ ⁺≡ i σ ≡ σ ∘ p≡ i)
+                   (Cw .p∘⁺) (Cw' .p∘⁺)
+      p∘⁺≡ = isProp→PathP
+        (λ i → isPropImplicitΠ3 λ _ _ _ → isPropΠ λ _ → isSetHom _ _) _ _
+
+      [p][⁺]Ty≡ : PathP (λ i → {Γ Δ : Ctx} {A : Ty≡ i Γ}
+                               (B : Ty≡ i Γ) (σ : Δ ⟶ Γ)
+                             → []Ty≡ i ([]Ty≡ i B (p≡ i {A = A})) (⁺≡ i σ)
+                               ≡ []Ty≡ i ([]Ty≡ i B σ) (p≡ i))
+                        (Cw .[p][⁺]Ty) (Cw' .[p][⁺]Ty)
+      [p][⁺]Ty≡ = isProp→PathP
+        (λ i → isPropImplicitΠ3 λ _ _ _ → isPropΠ2 λ _ _ → isSetTy≡ i _ _ _) _ _
+
+      q[⁺]Tm≡ : PathP (λ i → {Γ Δ : Ctx} {A : Ty≡ i Γ} (σ : Δ ⟶ Γ)
+                           → PathP (λ j → Tm≡ i (▹≡ i Δ ([]Ty≡ i A σ))
+                                                ([p][⁺]Ty≡ i A σ j))
+                                   ([]Tm≡ i (q≡ i) (⁺≡ i σ)) (q≡ i))
+                      (Cw .q[⁺]Tm) (Cw' .q[⁺]Tm)
+      q[⁺]Tm≡ = isProp→PathP
+        (λ i → isPropImplicitΠ3 λ _ _ _ → isPropΠ λ _ →
+                 isOfHLevelPathP' 1 (isSetTm≡ i _ _) _ _) _ _
+
+      p∘⟨⟩≡id≡ : PathP (λ i → {Γ : Ctx} {A : Ty≡ i Γ} (a : Tm≡ i Γ A)
+                            → p≡ i ∘ ⟨⟩'≡ i a ≡ id)
+                       (Cw .p∘⟨⟩≡id) (Cw' .p∘⟨⟩≡id)
+      p∘⟨⟩≡id≡ = isProp→PathP
+        (λ i → isPropImplicitΠ2 λ _ _ → isPropΠ λ _ → isSetHom _ _) _ _
+
+      [p][⟨⟩]Ty≡ : PathP (λ i → {Γ : Ctx} {A : Ty≡ i Γ}
+                                (B : Ty≡ i Γ) (a : Tm≡ i Γ A)
+                              → []Ty≡ i ([]Ty≡ i B (p≡ i)) (⟨⟩'≡ i a) ≡ B)
+                         (Cw .[p][⟨⟩]Ty) (Cw' .[p][⟨⟩]Ty)
+      [p][⟨⟩]Ty≡ = isProp→PathP
+        (λ i → isPropImplicitΠ2 λ _ _ → isPropΠ2 λ _ _ → isSetTy≡ i _ _ _) _ _
+
+      q[⟨⟩]Tm≡ : PathP (λ i → {Γ : Ctx} {A : Ty≡ i Γ} (a : Tm≡ i Γ A)
+                            → PathP (λ j → Tm≡ i Γ ([p][⟨⟩]Ty≡ i A a j))
+                                    ([]Tm≡ i (q≡ i) (⟨⟩'≡ i a)) a)
+                       (Cw .q[⟨⟩]Tm) (Cw' .q[⟨⟩]Tm)
+      q[⟨⟩]Tm≡ = isProp→PathP
+        (λ i → isPropImplicitΠ2 λ _ _ → isPropΠ λ _ →
+                 isOfHLevelPathP' 1 (isSetTm≡ i _ _) _ _) _ _
+
+    makeACwFPath : Cw ≡ Cw'
+    makeACwFPath i .⟨⟩ =
+      Σ≡Prop (isPropIsTerminal C) {u = Cw .⟨⟩} {v = Cw' .⟨⟩} ⟨⟩≡ i
+    makeACwFPath i .Ty = Ty≡ i
+    makeACwFPath i .isSetTy = isSetTy≡ i
+    makeACwFPath i ._[_]Ty = []Ty≡ i
+    makeACwFPath i .[id]Ty = [id]Ty≡ i
+    makeACwFPath i .[][]Ty = [][]Ty≡ i
+    makeACwFPath i .Tm = Tm≡ i
+    makeACwFPath i .isSetTm = isSetTm≡ i
+    makeACwFPath i ._[_]Tm = []Tm≡ i
+    makeACwFPath i .[id]Tm = [id]Tm≡ i
+    makeACwFPath i .[][]Tm = [][]Tm≡ i
+    makeACwFPath i ._▹_ = ▹≡ i
+    makeACwFPath i .p = p≡ i
+    makeACwFPath i .q = q≡ i
+    makeACwFPath i ._⁺ = ⁺≡ i
+    makeACwFPath i .⟨_⟩ = ⟨⟩'≡ i
+    makeACwFPath i .⟨⟩∘ = ⟨⟩∘≡ i
+    makeACwFPath i .p⁺∘⟨q⟩≡id = p⁺∘⟨q⟩≡id≡ i
+    makeACwFPath i .∘⁺ = ∘⁺≡ i
+    makeACwFPath i .id⁺ = id⁺≡ i
+    makeACwFPath i .p∘⁺ = p∘⁺≡ i
+    makeACwFPath i .[p][⁺]Ty = [p][⁺]Ty≡ i
+    makeACwFPath i .q[⁺]Tm = q[⁺]Tm≡ i
+    makeACwFPath i .p∘⟨⟩≡id = p∘⟨⟩≡id≡ i
+    makeACwFPath i .[p][⟨⟩]Ty = [p][⟨⟩]Ty≡ i
+    makeACwFPath i .q[⟨⟩]Tm = q[⟨⟩]Tm≡ i
+

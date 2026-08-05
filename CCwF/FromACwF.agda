@@ -126,7 +126,7 @@ module _ {ℓOb ℓHom ℓTy ℓTm : Level} (C : Category ℓOb ℓHom) (X : Alg
     Q3 = q[⟨⟩]Tm t
 
     Q : PathP (λ i → X .Tm Δ (R i)) (q [ τ ]Tm) t
-    Q = compPathP' {B = X .Tm Δ} Q1 (compPathP' {B = X .Tm Δ} Q2 Q3)
+    Q = Q1 ∙Tm Q2 ∙Tm Q3
 
     secSnd : PathP (λ i → X .Tm Δ (A [ secFst i ]Ty)) u t
     secSnd = toPathP (

@@ -134,3 +134,28 @@ module Algebraic {ℓOb ℓHom : Level} (C : Category ℓOb ℓHom) where
               → ------------------------------------------------------
                 PathP (λ i → Tm Γ ([p][⟨⟩]Ty A a i)) (q [ ⟨ a ⟩ ]Tm) a
 
+    -- | Moving terms along equalities of types.
+
+    -- `Ty Γ` is a set, so a dependent path of terms may be reindexed along *any*
+    -- other type-path with the same endpoints.  This lets a lemma be stated with
+    -- whichever path is convenient to build and fixed up at the use site.
+    reindex : {A B : Ty Γ} {e e' : A ≡ B} {x : Tm Γ A} {y : Tm Γ B}
+            → PathP (λ i → Tm Γ (e i)) x y → PathP (λ i → Tm Γ (e' i)) x y
+    reindex {Γ = Γ} {e = e} {e' = e'} {x = x} {y = y} =
+      subst (λ ε → PathP (λ i → Tm Γ (ε i)) x y) (isSetTy Γ _ _ e e')
+
+    -- Composition of dependent paths of terms.  `compPathP'` cannot infer its
+    -- `B`, so pin it here once and for all.
+    infixr 30 _∙Tm_
+    _∙Tm_ : {A B B' : Ty Γ} {e : A ≡ B} {e' : B ≡ B'}
+            {x : Tm Γ A} {y : Tm Γ B} {z : Tm Γ B'}
+          → PathP (λ i → Tm Γ (e i)) x y → PathP (λ i → Tm Γ (e' i)) y z
+          → PathP (λ i → Tm Γ ((e ∙ e') i)) x z
+    _∙Tm_ {Γ = Γ} = compPathP' {B = Tm Γ}
+
+    -- Transporting a term backwards along a type-path, read as a dependent path.
+    coeP : {A B : Ty Γ} (e : A ≡ B) (x : Tm Γ B)
+         → PathP (λ i → Tm Γ (e i)) (subst⁻ (Tm Γ) e x) x
+    coeP {Γ = Γ} e x = symP (subst-filler (Tm Γ) (sym e) x)
+
+  open CwF

@@ -23,7 +23,9 @@ module _ {ℓOb ℓHom ℓTy ℓTm : Level} (C : Category ℓOb ℓHom) (X : Cat
   open Category C hiding (_⋆_)
 
   open Categorical.CwF X
-  open Algebraic.CwF hiding (_[_]Ty ; _[_]Tm)
+  -- `reindex` / `_∙Tm_` are re-derived below for the *CCwF* `X`: the ACwF
+  -- versions live on `CCwF→ACwF`, which is exactly what we are defining.
+  open Algebraic.CwF hiding (_[_]Ty ; _[_]Tm ; reindex ; _∙Tm_ ; coeP)
   open Functor
   open Iso
 

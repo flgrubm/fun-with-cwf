@@ -46,6 +46,12 @@ module _ {ℓU ℓEl : Level} (Univ : TarskiUniverse-Base ℓU ℓEl) where
                → PathP (λ i → El (B (fstPairSig {B = B} x y i))) (sndSig (pairSig {B = B} x y)) y
     sndPairSig x y = cong snd (SigIso _ _ .sec (x , y))
 
+    SigPathP : ∀ {A} {B} → {x y : El (Sig A B)} → (fst≡ : fstSig x ≡ fstSig y) → PathP (λ i → El (B (fst≡ i))) (sndSig x) (sndSig y) → x ≡ y
+    SigPathP {x = x} {y = y} fst≡ snd≡ = sym (ηSig x) ∙ cong (uncurry pairSig) (ΣPathP (fst≡ , snd≡)) ∙ ηSig y
+      where
+        open import Cubical.Foundations.Function
+        open import Cubical.Data.Sigma
+
   record TarskiUniverse-Pi : Type (ℓ-max ℓU ℓEl) where
     field
       Pi : (A : U) (B : El A → U) → U

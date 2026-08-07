@@ -2,7 +2,10 @@ module CCwF.Base where
 
 open import Cubical.Foundations.Prelude
 open import Cubical.Foundations.HLevels
-open import Cubical.Foundations.Isomorphism
+open import Cubical.Foundations.Equiv
+open import Cubical.Foundations.Equiv.Properties
+
+open import Cubical.Data.Sigma
 
 open import Cubical.Categories.Category
 open import Cubical.Categories.Limits.Terminal
@@ -16,7 +19,6 @@ module Categorical {ℓOb ℓHom : Level} (C : Category ℓOb ℓHom) where
 
   open Category C hiding (_⋆_)
   open Functor
-  open Iso
 
   Ctx = Category.ob C
 
@@ -37,8 +39,6 @@ module Categorical {ℓOb ℓHom : Level} (C : Category ℓOb ℓHom) where
 
       Tm : Presheaf (∫ Ty) ℓTm
 
-      ctxExt : Functor (∫ Ty) C
-
     -- Some nice notations
     Ty[_] : (Γ : Ctx) → Type ℓTy
     Ty[ Γ ] = Ty .F-ob Γ .fst
@@ -52,49 +52,62 @@ module Categorical {ℓOb ℓHom : Level} (C : Category ℓOb ℓHom) where
     _[_]Tm : {A : Ty[ Γ ]} (a : Tm[ Γ , A ]) (σ : Δ ⟶ Γ) → Tm[ Δ , A [ σ ]Ty ]
     a [ σ ]Tm = Tm .F-hom (σ , refl) a
 
-    _⋆_ : (Γ : Ctx) (A : Ty[ Γ ]) → Ctx
-    Γ ⋆ A = ctxExt .F-ob (Γ , A)
-
     infix  40 _[_]Ty
     infix  40 _[_]Tm
-    infixl 30 _⋆_
 
     field
-      ctxExtIso : (A : Ty[ Γ ])
-                → Iso (Δ ⟶ Γ ⋆ A) (Σ[ σ ∈ Δ ⟶ Γ ] Tm[ Δ , A [ σ ]Ty ])
+      _▹_ : (Γ : Ctx) (A : Ty[ Γ ]) → Ctx
+      p   : {Γ : Ctx} {A : Ty[ Γ ]} → Γ ▹ A ⟶ Γ
+      q   : {Γ : Ctx} {A : Ty[ Γ ]} → Tm[ Γ ▹ A , A [ p ]Ty ]
 
-    -- TODO: what is a good name for this?
-    drop : (A : Ty[ Γ ]) (τ : Δ ⟶ Γ ⋆ A) → Δ ⟶ Γ
-    drop A τ = ctxExtIso A .fun τ .fst
+    infixl 30 _▹_
 
+    ⟨p,q⟩ : {Γ Δ : Ctx} (A : Ty[ Γ ])
+          → (Δ ⟶ Γ ▹ A) → Σ[ σ ∈ Δ ⟶ Γ ] Tm[ Δ , A [ σ ]Ty ]
+    ⟨p,q⟩ {Δ = Δ} A τ =
+      p ∘ τ , subst (λ T → Tm[ Δ , T ]) (sym (funExt⁻ (Ty .F-seq p τ) A)) (q [ τ ]Tm)
 
-    -- TODO: settle for the minimal set of fields below which are equivalent to ACwF and makes the proof as easy as possible
     field
-      -- This is redundant and doesn't seem to make instantiation easier...
-      coerceFun : (A : Ty[ Γ ]) (σ : Δ ⟶ Γ ⋆ A) (τ : Θ ⟶ Δ)
-                → A [ drop A σ ]Ty [ τ ]Ty ≡ A [ drop A σ ∘ τ ]Ty
+      ctxExtRepr : {Γ Δ : Ctx} (A : Ty[ Γ ]) → isEquiv (⟨p,q⟩ {Γ} {Δ} A)
 
-      ctxExtIsoFunNat : (A : Ty[ Γ ]) (σ : Δ ⟶ Γ ⋆ A) (τ : Θ ⟶ Δ)
-                      → ctxExtIso A .fun (σ ∘ τ)
-                      ≡ ( drop A σ ∘ τ
-                        , Tm .F-hom (τ , coerceFun A σ τ) (ctxExtIso A .fun σ .snd))
+  open CwF
 
-      -- We can also do it this way...
-      ctxExtIsoFunNatWithoutCoerceFun :
-                         (A : Ty[ Γ ]) (σ : Δ ⟶ Γ ⋆ A) (τ : Θ ⟶ Δ)
-                      →  ctxExtIso A .fun (σ ∘ τ)
-                      ≡ ( drop A σ ∘ τ
-                        , Tm .F-hom (τ , sym (funExt⁻ (Ty .F-seq (drop A σ) τ) A)) (ctxExtIso A .fun σ .snd))
+  module _ {ℓTy ℓTm : Level} (Cw Cw' : CwF ℓTy ℓTm)
+    (emptyContext≡ : Cw .emptyContext .fst ≡ Cw' .emptyContext .fst)
+    (Ty≡ : Cw .Ty ≡ Cw' .Ty)
+    (Tm≡ : PathP (λ i → Presheaf (∫ (Ty≡ i)) ℓTm) (Cw .Tm) (Cw' .Tm))
+    where
+      private
+        TyAt : ∀ i Γ → Type ℓTy
+        TyAt i Γ = Ty≡ i .F-ob Γ .fst
+        TmAt : ∀ i Γ A → Type ℓTm
+        TmAt i Γ A = Tm≡ i .F-ob (Γ , A) .fst
+      module _
+        (▹≡ : PathP (λ i → (Γ : Ctx) → TyAt i Γ → Ctx) (Cw ._▹_) (Cw' ._▹_))
+        (p≡ : PathP (λ i → {Γ : Ctx} {A : TyAt i Γ} → ▹≡ i Γ A ⟶ Γ) (Cw .p) (Cw' .p))
+        (q≡ : PathP (λ i → {Γ : Ctx} {A : TyAt i Γ} → TmAt i (▹≡ i Γ A) (Ty≡ i .F-hom (p≡ i) A)) (Cw .q) (Cw' .q))
+        where
 
-      -- Stating naturality for the inverse is closer to the algebraic version, so we do it as well even though it is redundant...
-      coerceInv : (A : Ty[ Γ ]) (σ : Δ ⟶ Γ) (τ : Θ ⟶ Δ)
-                → A [ σ ]Ty [ τ ]Ty ≡ A [ σ ∘ τ ]Ty
+        private
+          ⟨p,q⟩At : ∀ i → {Γ Δ : Ctx} (A : TyAt i Γ)
+            → (Δ ⟶ ▹≡ i Γ A) → Σ[ σ ∈ Δ ⟶ Γ ] TmAt i Δ (Ty≡ i .F-hom σ A)
+          ⟨p,q⟩At i {Γ} {Δ} A τ =
+            (p≡ i ∘ τ) ,
+            subst (TmAt i Δ) (sym (funExt⁻ (Ty≡ i .F-seq (p≡ i) τ) A)) (Tm≡ i .F-hom (τ , refl) (q≡ i))
+          ctxExtRepr≡ :
+            PathP (λ i → ∀ {Γ} {Δ} (A : TyAt i Γ) → isEquiv (⟨p,q⟩At i {Γ} {Δ} A))
+              (λ A → Cw .ctxExtRepr A)
+              (λ A → Cw' .ctxExtRepr A)
+          ctxExtRepr≡ = isProp→PathP (λ i → isPropImplicitΠ2 λ Γ Δ → isPropΠ λ A → isPropIsEquiv _) _ _
 
-      ctxExtIsoInvNat : (A : Ty[ Γ ]) (σ : Δ ⟶ Γ) (a : Tm[ Δ , A [ σ ]Ty ]) (τ : Θ ⟶ Δ)
-                      → ctxExtIso A .inv (σ , a) ∘ τ
-                      ≡ ctxExtIso A .inv (σ ∘ τ , Tm .F-hom (τ , coerceInv A σ τ) a)
-
-      ctxExtIsoInvNatWithoutCoerceInv :
-                        (A : Ty[ Γ ]) (σ : Δ ⟶ Γ) (a : Tm[ Δ , A [ σ ]Ty ]) (τ : Θ ⟶ Δ)
-                      → ctxExtIso A .inv (σ , a) ∘ τ
-                      ≡ ctxExtIso A .inv (σ ∘ τ , Tm .F-hom (τ , sym (funExt⁻ (Ty .F-seq σ τ) A)) a)
+        makeCCwFPath : Cw ≡ Cw'
+        makeCCwFPath i .emptyContext =
+          Σ≡Prop (isPropIsTerminal C) {u = Cw .emptyContext} {v = Cw' .emptyContext}
+            emptyContext≡
+            i
+        makeCCwFPath i .Ty = Ty≡ i
+        makeCCwFPath i .Tm = Tm≡ i
+        makeCCwFPath i ._▹_ = ▹≡ i
+        makeCCwFPath i .p = p≡ i
+        makeCCwFPath i .q = q≡ i
+        makeCCwFPath i .ctxExtRepr A = ctxExtRepr≡ i A

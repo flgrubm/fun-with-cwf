@@ -123,29 +123,28 @@ module _ {ℓ : Level} where
   isSetU : isSet U
   isSetU = isPropId
 
-  IR_Universe-Base : TarskiUniverse-Base ℓ ℓ
-  IR_Universe-Base .TarskiUniverse-Base.U       = U
-  IR_Universe-Base .TarskiUniverse-Base.isSetU  = isSetU
-  IR_Universe-Base .TarskiUniverse-Base.El      = El
-  IR_Universe-Base .TarskiUniverse-Base.isSetEl = isSetElU
+  BareTarskiUniverseU : BareTarskiUniverse ℓ U
+  BareTarskiUniverseU .BareTarskiUniverse.isSetU  = isSetU
+  BareTarskiUniverseU .BareTarskiUniverse.El      = El
+  BareTarskiUniverseU .BareTarskiUniverse.isSetEl = isSetElU
 
-  IR_Universe-Sig : TarskiUniverse-Sig IR_Universe-Base
-  IR_Universe-Sig .TarskiUniverse-Sig.Sig             = Sig
-  IR_Universe-Sig .TarskiUniverse-Sig.SigIso A B      = idIso
+  hasSigmaU : hasSigma BareTarskiUniverseU
+  hasSigmaU .hasSigma.Sigma             = Sig
+  hasSigmaU .hasSigma.SigmaIso A B      = idIso
 
-  IR_Universe-Pi : TarskiUniverse-Pi IR_Universe-Base
-  IR_Universe-Pi .TarskiUniverse-Pi.Pi           = Pi
-  IR_Universe-Pi .TarskiUniverse-Pi.PiIso A B    = idIso
+  hasPiU : hasPi BareTarskiUniverseU
+  hasPiU .hasPi.Pi           = Pi
+  hasPiU .hasPi.PiIso A B    = idIso
 
-  IR_Universe-Unit : TarskiUniverse-Unit IR_Universe-Base
-  IR_Universe-Unit .TarskiUniverse-Unit.Unit          = UnitC
-  IR_Universe-Unit .TarskiUniverse-Unit.isContrElUnit = isContrUnit*
+  hasUnitU : hasUnit BareTarskiUniverseU
+  hasUnitU .hasUnit.Unit          = UnitC
+  hasUnitU .hasUnit.isContrElUnit = isContrUnit*
 
-  IR_Universe-Eq : TarskiUniverse-Eq IR_Universe-Base
-  IR_Universe-Eq .TarskiUniverse-Eq.Eq          = EqC
-  IR_Universe-Eq .TarskiUniverse-Eq.EqIso A a b = idIso
+  hasEqU : hasEq BareTarskiUniverseU
+  hasEqU .hasEq.Eq          = EqC
+  hasEqU .hasEq.EqIso A a b = idIso
 
-  IR_Universe-TarskiUniverse : TarskiUniverse ℓ ℓ
-  IR_Universe-TarskiUniverse .TarskiUniverse.TU-Base = IR_Universe-Base
-  IR_Universe-TarskiUniverse .TarskiUniverse.TU-Unit = IR_Universe-Unit
-  IR_Universe-TarskiUniverse .TarskiUniverse.TU-Sig  = IR_Universe-Sig
+  TarskiUniverseU : TarskiUniverse ℓ U
+  TarskiUniverseU .TarskiUniverse.TU = BareTarskiUniverseU
+  TarskiUniverseU .TarskiUniverse.hasUnitTU = hasUnitU
+  TarskiUniverseU .TarskiUniverse.hasSigmaTU  = hasSigmaU

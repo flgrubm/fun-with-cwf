@@ -1,5 +1,5 @@
 -- Mostly written by Claude and manually polished
-module TarskiUniverse.Constructions.InductiveRecursiveUniverse where
+module TarskiUniverse.Instances.InductiveRecursiveUniverse where
 
 open import Cubical.Foundations.Prelude
 open import Cubical.Foundations.Isomorphism

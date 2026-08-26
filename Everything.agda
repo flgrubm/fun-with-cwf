@@ -1,4 +1,5 @@
 open import FinSet-Pi-Contradiction
+open import TarskiUniverse.Instances.CumulativeHierarchy
 open import TarskiUniverse.Instances.FinSets
 open import TarskiUniverse.Instances.Unit
 open import TarskiUniverse.Instances.IterativeSets

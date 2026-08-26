@@ -75,8 +75,8 @@ module _ where
   C .Category.isSetHom                        = isProp→isSet isPropHom
 
   -- now take the presheaf CwF on it.
-  CwF : Algebraic.CwF (PRESHEAFU C ℕ-TarskiUniverse) ℓ-zero ℓ-zero
-  CwF = Psh-CwF C ℕ-TarskiUniverse
+  CwF : Algebraic.CwF (PRESHEAFU C BareTarskiUniverseℕ) ℓ-zero ℓ-zero
+  CwF = Psh-CwF C TarskiUniverseℕ
 
   -- equality decision valued in Fin 2.
   hit : ℕ → ℕ → Fin 2
@@ -97,9 +97,9 @@ module _ where
     open Functor
     open NatTrans
     open Algebraic.CwF CwF
-    open TarskiUniverse ℕ-TarskiUniverse
+    open TarskiUniverse TarskiUniverseℕ
 
-    CtxCat = PRESHEAFU C ℕ-TarskiUniverse
+    CtxCat = PRESHEAFU C BareTarskiUniverseℕ
     Ctx = Category.ob CtxCat
 
     -- Let's choose Γ, A, and B such that Π A B will lead to a contradiction.
@@ -227,5 +227,5 @@ module _ where
     Π-Structure-FinSet→⊥ : ⊥
     Π-Structure-FinSet→⊥ = <-irrefl k<k
 
-¬Π-FinSet : Σ[ C ∈ Category ℓ-zero ℓ-zero ] ¬ (Π-Structure (PRESHEAFU C ℕ-TarskiUniverse) (Psh-CwF C ℕ-TarskiUniverse))
+¬Π-FinSet : Σ[ C ∈ Category ℓ-zero ℓ-zero ] ¬ (Π-Structure (PRESHEAFU C BareTarskiUniverseℕ) (Psh-CwF C TarskiUniverseℕ))
 ¬Π-FinSet = C , Π-Structure-FinSet→⊥

@@ -8,10 +8,10 @@ open import Cubical.Categories.Category
 
 open import TarskiUniverse.Base
 
-module _ {ℓU ℓEl : Level} (TU : TarskiUniverse ℓU ℓEl) where
+module _ {ℓU ℓEl : Level} {U : Type ℓU} (TU : BareTarskiUniverse ℓEl U) where
 
   open Category
-  open TarskiUniverse TU
+  open BareTarskiUniverse TU
 
   UCat : Category ℓU ℓEl
   UCat .ob = U

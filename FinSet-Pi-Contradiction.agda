@@ -225,7 +225,7 @@ module _ where
     k<k = card↪Inequality (_ , isFinSetFin) (_ , isFinSetFin) ∣ embed ∣₁
 
     Π-Structure-FinSet→⊥ : ⊥
-    Π-Structure-FinSet→⊥ = ¬m<m k<k
+    Π-Structure-FinSet→⊥ = <-irrefl k<k
 
 ¬Π-FinSet : Σ[ C ∈ Category ℓ-zero ℓ-zero ] ¬ (Π-Structure (PRESHEAFU C ℕ-TarskiUniverse) (Psh-CwF C ℕ-TarskiUniverse))
 ¬Π-FinSet = C , Π-Structure-FinSet→⊥

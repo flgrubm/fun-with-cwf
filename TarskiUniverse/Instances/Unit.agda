@@ -7,35 +7,34 @@ open import Cubical.Data.Unit
 
 open import TarskiUniverse.Base
 
-open TarskiUniverse-Base
+open BareTarskiUniverse
 
 module _ (ℓ : Level) where
-  Unit-TarskiUniverse-Base : TarskiUniverse-Base (ℓ-suc ℓ) ℓ
-  Unit-TarskiUniverse-Base .U = Unit*
+  Unit-TarskiUniverse-Base : BareTarskiUniverse ℓ (Unit* {ℓ})
   Unit-TarskiUniverse-Base .isSetU = isSetUnit*
   Unit-TarskiUniverse-Base .El x = Unit*
   Unit-TarskiUniverse-Base .isSetEl _ = isSetUnit*
 
-  Unit-TarskiUniverse-Sig : TarskiUniverse-Sig Unit-TarskiUniverse-Base
-  Unit-TarskiUniverse-Sig .TarskiUniverse-Sig.Sig A x = tt*
-  Unit-TarskiUniverse-Sig .TarskiUniverse-Sig.SigIso _ _ .Iso.fun x = tt* , tt*
-  Unit-TarskiUniverse-Sig .TarskiUniverse-Sig.SigIso _ _ .Iso.inv x = tt*
-  Unit-TarskiUniverse-Sig .TarskiUniverse-Sig.SigIso _ _ .Iso.sec (tt* , tt*) = refl
-  Unit-TarskiUniverse-Sig .TarskiUniverse-Sig.SigIso _ _ .Iso.ret tt* = refl
+  hasSigmaUnit : hasSigma Unit-TarskiUniverse-Base
+  hasSigmaUnit .hasSigma.Sigma A x = tt*
+  hasSigmaUnit .hasSigma.SigmaIso _ _ .Iso.fun x = tt* , tt*
+  hasSigmaUnit .hasSigma.SigmaIso _ _ .Iso.inv x = tt*
+  hasSigmaUnit .hasSigma.SigmaIso _ _ .Iso.sec (tt* , tt*) = refl
+  hasSigmaUnit .hasSigma.SigmaIso _ _ .Iso.ret tt* = refl
 
-  Unit-TarskiUniverse-Unit : TarskiUniverse-Unit Unit-TarskiUniverse-Base
-  Unit-TarskiUniverse-Unit .TarskiUniverse-Unit.Unit          = tt*
-  Unit-TarskiUniverse-Unit .TarskiUniverse-Unit.isContrElUnit = isContrUnit*
+  hasUnitUnit : hasUnit Unit-TarskiUniverse-Base
+  hasUnitUnit .hasUnit.Unit = tt*
+  hasUnitUnit .hasUnit.isContrElUnit = isContrUnit*
 
-  Unit-TarskiUniverse : TarskiUniverse (ℓ-suc ℓ) ℓ
-  Unit-TarskiUniverse .TarskiUniverse.TU-Base = Unit-TarskiUniverse-Base
-  Unit-TarskiUniverse .TarskiUniverse.TU-Unit = Unit-TarskiUniverse-Unit
-  Unit-TarskiUniverse .TarskiUniverse.TU-Sig = Unit-TarskiUniverse-Sig
+  Unit-TarskiUniverse : TarskiUniverse ℓ Unit*
+  Unit-TarskiUniverse .TarskiUniverse.TU = Unit-TarskiUniverse-Base
+  Unit-TarskiUniverse .TarskiUniverse.hasUnitTU = hasUnitUnit
+  Unit-TarskiUniverse .TarskiUniverse.hasSigmaTU = hasSigmaUnit
 
-  Unit-TarskiUniverse-Pi : TarskiUniverse-Pi Unit-TarskiUniverse-Base
-  Unit-TarskiUniverse-Pi .TarskiUniverse-Pi.Pi A B = tt*
-  Unit-TarskiUniverse-Pi .TarskiUniverse-Pi.PiIso _ _ .Iso.fun _ _ = tt*
-  Unit-TarskiUniverse-Pi .TarskiUniverse-Pi.PiIso _ _ .Iso.inv _ = tt*
-  Unit-TarskiUniverse-Pi .TarskiUniverse-Pi.PiIso _ _ .Iso.sec _ _ _ = tt*
-  Unit-TarskiUniverse-Pi .TarskiUniverse-Pi.PiIso _ _ .Iso.ret tt* = refl
+  hasPiUnit : hasPi Unit-TarskiUniverse-Base
+  hasPiUnit .hasPi.Pi A B = tt*
+  hasPiUnit .hasPi.PiIso _ _ .Iso.fun _ _ = tt*
+  hasPiUnit .hasPi.PiIso _ _ .Iso.inv _ = tt*
+  hasPiUnit .hasPi.PiIso _ _ .Iso.sec _ _ _ = tt*
+  hasPiUnit .hasPi.PiIso _ _ .Iso.ret tt* = refl
 

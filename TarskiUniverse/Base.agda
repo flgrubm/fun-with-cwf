@@ -2,57 +2,68 @@ module TarskiUniverse.Base where
 
 open import Cubical.Foundations.Prelude
 open import Cubical.Foundations.Isomorphism
+open import Cubical.Foundations.Function
 
-record TarskiUniverse-Base (ℓU ℓEl : Level) : Type (ℓ-suc (ℓ-max ℓU ℓEl)) where
+open import Cubical.Data.Sigma
+open import Cubical.Data.Unit hiding (Unit)
+
+-- A "bare Tarski universe" is a set U of codes with a set-valued
+-- decoding function El.  We parameterize by U to make it easier to
+-- transport between equal types
+record BareTarskiUniverse {ℓU : Level} (ℓEl : Level) (U : Type ℓU) : Type (ℓ-suc (ℓ-max ℓU ℓEl)) where
   field
-    U : Type ℓU
     isSetU : isSet U
 
     El : U → Type ℓEl
     isSetEl : (Γ : U) → isSet (El Γ)
 
-module _ {ℓU ℓEl : Level} (Univ : TarskiUniverse-Base ℓU ℓEl) where
+-- Structures on Tarski universes
+module _ {ℓU ℓEl : Level} {U : Type ℓU} (TU : BareTarskiUniverse ℓEl U) where
   open Iso
-  open TarskiUniverse-Base Univ
-  record TarskiUniverse-Unit : Type (ℓ-max ℓU ℓEl) where
+  open BareTarskiUniverse TU
+
+  record hasUnit : Type (ℓ-max ℓU ℓEl) where
     field
-      -- TODO: rename? Maybe state that it decodes to Builtin.Unit instead?
       Unit : U
       isContrElUnit : isContr (El Unit)
 
-  record TarskiUniverse-Sig : Type (ℓ-max ℓU ℓEl) where
+    ElUnit≡Unit* : El Unit ≡ Unit*
+    ElUnit≡Unit* = isContr→≡Unit* isContrElUnit
+
+  record hasSigma : Type (ℓ-max ℓU ℓEl) where
     field
-      Sig : (A : U) → (El A → U) → U
-      SigIso : (A : U) (B : El A → U)
-           → Iso (El (Sig A B)) (Σ[ x ∈ El A ] El (B x))
-    fstSig : {A : U} {B : El A → U} → El (Sig A B) → El A
-    fstSig p = SigIso _ _ .fun p .fst
+      Sigma    : (A : U) → (El A → U) → U
+      SigmaIso : (A : U) (B : El A → U)
+               → Iso (El (Sigma A B)) (Σ[ x ∈ El A ] El (B x))
 
-    sndSig : {A : U} {B : El A → U} (p : El (Sig A B)) → El (B (fstSig p))
-    sndSig p = SigIso _ _ .fun p .snd
+    fstSigma : {A : U} {B : El A → U} → El (Sigma A B) → El A
+    fstSigma p = SigmaIso _ _ .fun p .fst
 
-    pairSig : {A : U} {B : El A → U} (x : El A) (y : El (B x)) → El (Sig A B)
-    pairSig x y = SigIso _ _ .inv (x , y)
+    sndSigma : {A : U} {B : El A → U} (p : El (Sigma A B)) → El (B (fstSigma p))
+    sndSigma p = SigmaIso _ _ .fun p .snd
 
-    ηSig : {A : U} {B : El A → U} (p : El (Sig A B))
-         → pairSig (fstSig p) (sndSig p) ≡ p
-    ηSig p = SigIso _ _ .ret p
+    pairSigma : {A : U} {B : El A → U} (x : El A) (y : El (B x)) → El (Sigma A B)
+    pairSigma x y = SigmaIso _ _ .inv (x , y)
 
-    fstPairSig : {A : U} {B : El A → U} (x : El A) (y : El (B x))
-               → fstSig (pairSig {B = B} x y) ≡ x
-    fstPairSig x y = cong fst (SigIso _ _ .sec (x , y))
+    ηSigma : {A : U} {B : El A → U} (p : El (Sigma A B))
+         → pairSigma (fstSigma p) (sndSigma p) ≡ p
+    ηSigma p = SigmaIso _ _ .ret p
 
-    sndPairSig : {A : U} {B : El A → U} (x : El A) (y : El (B x))
-               → PathP (λ i → El (B (fstPairSig {B = B} x y i))) (sndSig (pairSig {B = B} x y)) y
-    sndPairSig x y = cong snd (SigIso _ _ .sec (x , y))
+    fstPairSigma : {A : U} {B : El A → U} (x : El A) (y : El (B x))
+               → fstSigma (pairSigma {B = B} x y) ≡ x
+    fstPairSigma x y = cong fst (SigmaIso _ _ .sec (x , y))
 
-    SigPathP : ∀ {A} {B} → {x y : El (Sig A B)} → (fst≡ : fstSig x ≡ fstSig y) → PathP (λ i → El (B (fst≡ i))) (sndSig x) (sndSig y) → x ≡ y
-    SigPathP {x = x} {y = y} fst≡ snd≡ = sym (ηSig x) ∙ cong (uncurry pairSig) (ΣPathP (fst≡ , snd≡)) ∙ ηSig y
-      where
-        open import Cubical.Foundations.Function
-        open import Cubical.Data.Sigma
+    sndPairSigma : {A : U} {B : El A → U} (x : El A) (y : El (B x))
+               → PathP (λ i → El (B (fstPairSigma {B = B} x y i))) (sndSigma (pairSigma {B = B} x y)) y
+    sndPairSigma x y = cong snd (SigmaIso _ _ .sec (x , y))
 
-  record TarskiUniverse-Pi : Type (ℓ-max ℓU ℓEl) where
+    SigmaPathP : ∀ {A} {B} → {x y : El (Sigma A B)}
+                 (fst≡ : fstSigma x ≡ fstSigma y)
+               → PathP (λ i → El (B (fst≡ i))) (sndSigma x) (sndSigma y) → x ≡ y
+    SigmaPathP {x = x} {y = y} fst≡ snd≡ =
+      sym (ηSigma x) ∙∙ cong (uncurry pairSigma) (ΣPathP (fst≡ , snd≡)) ∙∙ ηSigma y
+
+  record hasPi : Type (ℓ-max ℓU ℓEl) where
     field
       Pi : (A : U) (B : El A → U) → U
       PiIso : (A : U) (B : El A → U)
@@ -70,20 +81,25 @@ module _ {ℓU ℓEl : Level} (Univ : TarskiUniverse-Base ℓU ℓEl) where
     ηPi : {A : U} {B : El A → U} (f : El (Pi A B)) → lamPi (appPi f) ≡ f
     ηPi = PiIso _ _ .ret
 
-  record TarskiUniverse-Eq : Type (ℓ-max ℓU ℓEl) where
+  record hasEq : Type (ℓ-max ℓU ℓEl) where
     field
       Eq : (A : U) → (a b : El A) → U
       EqIso : ∀ A a b → Iso (El (Eq A a b)) (a ≡ b)
+
     eqIntro : ∀ {A} {a} {b} → a ≡ b → El (Eq A a b)
     eqIntro = EqIso _ _ _ .Iso.inv
+
     eqElim : ∀ {A} {a} {b} → El (Eq A a b) → a ≡ b
     eqElim = EqIso _ _ _ .Iso.fun
 
-record TarskiUniverse (ℓU ℓEl : Level) : Type (ℓ-max (ℓ-suc ℓU) (ℓ-suc ℓEl)) where
+-- As we are only interested in Tarski universes with Unit and Sigma
+-- we use the name "Tarski universe" for these universes
+record TarskiUniverse {ℓU : Level} (ℓEl : Level) (U : Type ℓU) : Type (ℓ-max (ℓ-suc ℓU) (ℓ-suc ℓEl)) where
   field
-    TU-Base : TarskiUniverse-Base ℓU ℓEl
-    TU-Unit : TarskiUniverse-Unit TU-Base
-    TU-Sig : TarskiUniverse-Sig TU-Base
-  open TarskiUniverse-Base TU-Base public
-  open TarskiUniverse-Unit TU-Unit public
-  open TarskiUniverse-Sig TU-Sig public
+    TU         : BareTarskiUniverse ℓEl U
+    hasUnitTU  : hasUnit TU
+    hasSigmaTU : hasSigma TU
+
+  open BareTarskiUniverse TU public
+  open hasUnit hasUnitTU public
+  open hasSigma hasSigmaTU public

@@ -10,28 +10,27 @@ open import Cubical.Data.Nat
 
 open import TarskiUniverse.Base
 
-open TarskiUniverse-Base
+open BareTarskiUniverse
 
 module _ where
-  ℕ-TarskiUniverse-Base : TarskiUniverse-Base ℓ-zero ℓ-zero
-  ℕ-TarskiUniverse-Base .U         = ℕ
-  ℕ-TarskiUniverse-Base .isSetU    = isSetℕ
-  ℕ-TarskiUniverse-Base .El n      = Fin n
-  ℕ-TarskiUniverse-Base .isSetEl n = isSetFin {k = n}
+  BareTarskiUniverseℕ : BareTarskiUniverse ℓ-zero ℕ
+  BareTarskiUniverseℕ .isSetU    = isSetℕ
+  BareTarskiUniverseℕ .El n      = Fin n
+  BareTarskiUniverseℕ .isSetEl n = isSetFin {k = n}
 
-  ℕ-TarskiUniverse-Unit : TarskiUniverse-Unit ℕ-TarskiUniverse-Base
-  ℕ-TarskiUniverse-Unit .TarskiUniverse-Unit.Unit          = 1
-  ℕ-TarskiUniverse-Unit .TarskiUniverse-Unit.isContrElUnit = isContrSumFin1
+  hasUnitℕ : hasUnit BareTarskiUniverseℕ
+  hasUnitℕ .hasUnit.Unit          = 1
+  hasUnitℕ .hasUnit.isContrElUnit = isContrSumFin1
 
-  ℕ-TarskiUniverse-Sig : TarskiUniverse-Sig ℕ-TarskiUniverse-Base
-  ℕ-TarskiUniverse-Sig .TarskiUniverse-Sig.Sig _      = totalSum
-  ℕ-TarskiUniverse-Sig .TarskiUniverse-Sig.SigIso _ _ = equivToIso (invEquiv (SumFinΣ≃ _ _))
+  hasSigmaℕ : hasSigma BareTarskiUniverseℕ
+  hasSigmaℕ .hasSigma.Sigma _      = totalSum
+  hasSigmaℕ .hasSigma.SigmaIso _ _ = equivToIso (invEquiv (SumFinΣ≃ _ _))
 
-  ℕ-TarskiUniverse : TarskiUniverse ℓ-zero ℓ-zero
-  ℕ-TarskiUniverse .TarskiUniverse.TU-Base = ℕ-TarskiUniverse-Base
-  ℕ-TarskiUniverse .TarskiUniverse.TU-Unit = ℕ-TarskiUniverse-Unit
-  ℕ-TarskiUniverse .TarskiUniverse.TU-Sig = ℕ-TarskiUniverse-Sig
+  TarskiUniverseℕ : TarskiUniverse ℓ-zero ℕ
+  TarskiUniverseℕ .TarskiUniverse.TU = BareTarskiUniverseℕ
+  TarskiUniverseℕ .TarskiUniverse.hasUnitTU = hasUnitℕ
+  TarskiUniverseℕ .TarskiUniverse.hasSigmaTU = hasSigmaℕ
 
-  ℕ-TarskiUniverse-Pi : TarskiUniverse-Pi ℕ-TarskiUniverse-Base
-  ℕ-TarskiUniverse-Pi .TarskiUniverse-Pi.Pi _ = totalProd
-  ℕ-TarskiUniverse-Pi .TarskiUniverse-Pi.PiIso _ _ = equivToIso (invEquiv (SumFinΠ≃ _ _))
+  hasPiℕ : hasPi BareTarskiUniverseℕ
+  hasPiℕ .hasPi.Pi _      = totalProd
+  hasPiℕ .hasPi.PiIso _ _ = equivToIso (invEquiv (SumFinΠ≃ _ _))

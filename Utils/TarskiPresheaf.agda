@@ -16,13 +16,13 @@ open import TarskiUniverse.Properties
 open Category
 open Functor
 
-module _ {ℓob ℓhom ℓU ℓEl : Level} (C : Category ℓob ℓhom) (U : TarskiUniverse ℓU ℓEl) where
-  PresheafU = Functor (C ^op) (UCat U)
-  PRESHEAFU = FUNCTOR (C ^op) (UCat U)
+module _ {ℓob ℓhom ℓU ℓEl : Level} (C : Category ℓob ℓhom) {U : Type ℓU} (TU : BareTarskiUniverse ℓEl U) where
+  PresheafU = Functor (C ^op) (UCat TU)
+  PRESHEAFU = FUNCTOR (C ^op) (UCat TU)
 
-module _ {ℓob ℓhom ℓU ℓEl : Level} {C : Category ℓob ℓhom} {Univ : TarskiUniverse ℓU ℓEl} where
-  open TarskiUniverse Univ
-  module Base (F : PresheafU C Univ) where
+module _ {ℓob ℓhom ℓU ℓEl : Level} {C : Category ℓob ℓhom} {U : Type ℓU} {TU : BareTarskiUniverse ℓEl U} where
+  open BareTarskiUniverse TU
+  module Base (F : PresheafU C TU) where
 
     private
       ∫ob : Type (ℓ-max ℓob ℓEl)
@@ -69,7 +69,7 @@ module _ {ℓob ℓhom ℓU ℓEl : Level} {C : Category ℓob ℓhom} {Univ : T
   open Base public
 
   module Properties where
-    ∫U-hom : {Γ Δ : PresheafU C Univ} → NatTrans Δ Γ → Functor (∫U Δ) (∫U Γ)
+    ∫U-hom : {Γ Δ : PresheafU C TU} → NatTrans Δ Γ → Functor (∫U Δ) (∫U Γ)
     ∫U-hom {Γ} {Δ} η .F-ob (I , x) = I , η . NatTrans.N-ob I x
     ∫U-hom {Γ} {Δ} η .F-hom {I , x} {J , y} (f , p) = f , proof
       where
@@ -84,22 +84,22 @@ module _ {ℓob ℓhom ℓU ℓEl : Level} {C : Category ℓob ℓhom} {Univ : T
     ∫U-hom {Γ} {Δ} η .F-id {c , _} = ΣPathP ( refl , isSetEl (Γ ⟅ c ⟆) _ _ _ _)
     ∫U-hom {Γ} {Δ} η .F-seq {z = c , _} f g = ΣPathP ( refl , isSetEl (Γ ⟅ c ⟆) _ _ _ _)
 
-    ∫U-id : {Γ : PresheafU C Univ} → ∫U-hom (idTrans Γ) ≡ Id
+    ∫U-id : {Γ : PresheafU C TU} → ∫U-hom (idTrans Γ) ≡ Id
     ∫U-id {Γ} = Functor≡
       (λ _ → refl)
       (λ {_} {c'} (f , p) → ΣPathP (refl , isSetEl (Γ .F-ob (c' .fst)) _ _ _ _))
 
-    ∫U-seq : {Γ Δ Ε : PresheafU C Univ } {f : NatTrans Γ Δ} {g : NatTrans Δ Ε}
-      → ∫U-hom (f ⋆⟨ PRESHEAFU C Univ ⟩ g) ≡ (∫U-hom g) ∘F (∫U-hom f)
+    ∫U-seq : {Γ Δ Ε : PresheafU C TU} {f : NatTrans Γ Δ} {g : NatTrans Δ Ε}
+      → ∫U-hom (f ⋆⟨ PRESHEAFU C TU ⟩ g) ≡ (∫U-hom g) ∘F (∫U-hom f)
     ∫U-seq {_} {_} {Ε}= Functor≡
       (λ _ → refl)
       (λ {_} {c'} (f , p) → ΣPathP (refl , isSetEl (Ε .F-ob (c' .fst)) _ _ _ _))
 
   open Properties public
 
-module _ {ℓob ℓhom ℓU ℓEl : Level} {C : Category ℓob ℓhom} {Univ : TarskiUniverse ℓU ℓEl} {Γ : PresheafU C Univ}
-         (A : Functor (∫U Γ) (UCat Univ)) where
-  open TarskiUniverse Univ
+module _ {ℓob ℓhom ℓU ℓEl : Level} {C : Category ℓob ℓhom} {U : Type ℓU} {TU : BareTarskiUniverse ℓEl U} {Γ : PresheafU C TU}
+         (A : Functor (∫U Γ) (UCat TU)) where
+  open BareTarskiUniverse TU
 
   -- A.F-hom depends only on the C-morphism, not the proof in ∫V Γ
   F-hom-PathP : {x x' y y' : (∫U Γ) .ob}

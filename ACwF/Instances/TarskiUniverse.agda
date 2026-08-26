@@ -25,10 +25,10 @@ open import Agda.Builtin.Unit
 open Iso
 open Category
 
-module _ {ℓU ℓEl : Level} (TU : TarskiUniverse ℓU ℓEl) where
+module _ {ℓU ℓEl : Level} {U : Type ℓU} (Univ : TarskiUniverse ℓEl U) where
 
   open Algebraic
-  open TarskiUniverse TU
+  open TarskiUniverse Univ
 
   module _ where
     open CwF
@@ -47,21 +47,21 @@ module _ {ℓU ℓEl : Level} (TU : TarskiUniverse ℓU ℓEl) where
     UCwF ._[_]Tm a σ x     = a (σ x)
     UCwF .[id]Tm _         = refl
     UCwF .[][]Tm _ _ _     = refl
-    UCwF ._▹_              = Sig
-    UCwF .p                = fstSig
-    UCwF .q                = sndSig
-    UCwF ._⁺ σ s           = pairSig (σ (fstSig s)) (sndSig s)
-    UCwF .⟨_⟩ a x          = pairSig x (a x)
-    UCwF .⟨⟩∘ a σ          = funExt (λ x → cong₂ pairSig (sym (cong σ (fstPairSig x (a (σ x))))) (symP (sndPairSig x (a (σ x)))))
-    UCwF .p⁺∘⟨q⟩≡id        = funExt λ x → cong₂ pairSig (cong fstSig (fstPairSig _ _)) (sndPairSig _ _) ∙ ηSig _
-    UCwF .∘⁺ σ τ           = funExt λ x → cong₂ pairSig (cong τ (sym (fstPairSig _ _))) (symP (sndPairSig _ _))
-    UCwF .id⁺              = funExt λ x → ηSig _
-    UCwF .p∘⁺ σ            = funExt λ x → fstPairSig _ _
-    UCwF .[p][⁺]Ty B σ     = funExt λ x → cong B (fstPairSig _ _)
-    UCwF .q[⁺]Tm σ         = funExt λ x → sndPairSig _ _
-    UCwF .p∘⟨⟩≡id a        = funExt λ x → fstPairSig _ _
-    UCwF .[p][⟨⟩]Ty B a    = funExt λ x → cong B (fstPairSig _ _)
-    UCwF .q[⟨⟩]Tm a        = funExt λ x → sndPairSig _ _
+    UCwF ._▹_              = Sigma
+    UCwF .p                = fstSigma
+    UCwF .q                = sndSigma
+    UCwF ._⁺ σ s           = pairSigma (σ (fstSigma s)) (sndSigma s)
+    UCwF .⟨_⟩ a x          = pairSigma x (a x)
+    UCwF .⟨⟩∘ a σ          = funExt (λ x → cong₂ pairSigma (sym (cong σ (fstPairSigma x (a (σ x))))) (symP (sndPairSigma x (a (σ x)))))
+    UCwF .p⁺∘⟨q⟩≡id        = funExt λ x → cong₂ pairSigma (cong fstSigma (fstPairSigma _ _)) (sndPairSigma _ _) ∙ ηSigma _
+    UCwF .∘⁺ σ τ           = funExt λ x → cong₂ pairSigma (cong τ (sym (fstPairSigma _ _))) (symP (sndPairSigma _ _))
+    UCwF .id⁺              = funExt λ x → ηSigma _
+    UCwF .p∘⁺ σ            = funExt λ x → fstPairSigma _ _
+    UCwF .[p][⁺]Ty B σ     = funExt λ x → cong B (fstPairSigma _ _)
+    UCwF .q[⁺]Tm σ         = funExt λ x → sndPairSigma _ _
+    UCwF .p∘⟨⟩≡id a        = funExt λ x → fstPairSigma _ _
+    UCwF .[p][⟨⟩]Ty B a    = funExt λ x → cong B (fstPairSigma _ _)
+    UCwF .q[⟨⟩]Tm a        = funExt λ x → sndPairSigma _ _
 
   module U-Σ
     where
@@ -70,46 +70,46 @@ module _ {ℓU ℓEl : Level} (TU : TarskiUniverse ℓU ℓEl) where
     open CwF UCwF
 
     U-Σ-Structure : Σ-Structure (UCat TU) UCwF
-    U-Σ-Structure .Σ-Structure.ΣTy A B x                      = Sig (A x) λ y → B (pairSig x y)
-    U-Σ-Structure .Σ-Structure.ΣTyNat A B σ                   = funExt λ x → cong (Sig (A (σ x))) (funExt λ y → cong B (cong₂ pairSig (cong σ (sym (fstPairSig _ _))) (symP (sndPairSig _ _))))
-    U-Σ-Structure .Σ-Structure.ΣTmIso A B                     = compIso (codomainIsoDep (λ _ → SigIso _ _)) Σ-Π-Iso
-    U-Σ-Structure .Σ-Structure.coerce A B a σ                 = funExt λ x → cong B (cong₂ pairSig (cong σ (sym (fstPairSig _ _))) (symP (sndPairSig _ _)))
-    U-Σ-Structure .Σ-Structure.ΣTmIsoInvNat {Γ} {Δ} A B a b σ = funExt λ x → congP (λ _ z → uncurry pairSig (a (σ x) , z)) (symP (toPathP (let
+    U-Σ-Structure .Σ-Structure.ΣTy A B x                      = Sigma (A x) λ y → B (pairSigma x y)
+    U-Σ-Structure .Σ-Structure.ΣTyNat A B σ                   = funExt λ x → cong (Sigma (A (σ x))) (funExt λ y → cong B (cong₂ pairSigma (cong σ (sym (fstPairSigma _ _))) (symP (sndPairSigma _ _))))
+    U-Σ-Structure .Σ-Structure.ΣTmIso A B                     = compIso (codomainIsoDep (λ _ → SigmaIso _ _)) Σ-Π-Iso
+    U-Σ-Structure .Σ-Structure.coerce A B a σ                 = funExt λ x → cong B (cong₂ pairSigma (cong σ (sym (fstPairSigma _ _))) (symP (sndPairSigma _ _)))
+    U-Σ-Structure .Σ-Structure.ΣTmIsoInvNat {Γ} {Δ} A B a b σ = funExt λ x → congP (λ _ z → uncurry pairSigma (a (σ x) , z)) (symP (toPathP (let
       -- don't look at this
       goal :
-        transp (λ i → El (B (pairSig (σ (fstPairSig {B = λ v → A (σ v)} x (a (σ x)) i)) (sndPairSig {B = λ v → A (σ v)} x (a (σ x)) i))))
+        transp (λ i → El (B (pairSigma (σ (fstPairSigma {B = λ v → A (σ v)} x (a (σ x)) i)) (sndPairSigma {B = λ v → A (σ v)} x (a (σ x)) i))))
         i0
-        (transp (λ i → El (B (pairSig (σ (fstPairSig {B = λ v → A (σ v)} (transp (λ j → El Δ) i x) (a (σ (transp (λ j → El Δ) i x))) (~ i))) (sndPairSig {B = λ v → A (σ v)} (transp (λ j → El Δ) i x) (a (σ (transp (λ j → El Δ) i x))) (~ i)))))
+        (transp (λ i → El (B (pairSigma (σ (fstPairSigma {B = λ v → A (σ v)} (transp (λ j → El Δ) i x) (a (σ (transp (λ j → El Δ) i x))) (~ i))) (sndPairSigma {B = λ v → A (σ v)} (transp (λ j → El Δ) i x) (a (σ (transp (λ j → El Δ) i x))) (~ i)))))
          i0
          (b (σ (transp (λ j → El Δ) i0 x))))
         ≡
           b (σ x)
-      goal j = transp (λ i → El (B (pairSig (σ (fstPairSig {B = λ v → A (σ v)} x (a (σ x)) (i ∨ j))) (sndPairSig {B = λ v → A (σ v)} x (a (σ x)) (i ∨ j)))))
+      goal j = transp (λ i → El (B (pairSigma (σ (fstPairSigma {B = λ v → A (σ v)} x (a (σ x)) (i ∨ j))) (sndPairSigma {B = λ v → A (σ v)} x (a (σ x)) (i ∨ j)))))
         j
-        (transp (λ i → El (B (pairSig (σ (fstPairSig {B = λ v → A (σ v)} (transp (λ _ → El Δ) (i ∨ j) x) (a (σ (transp (λ _ → El Δ) (i ∨ j) x))) (~ i ∨ j))) (sndPairSig {B = λ v → A (σ v)} (transp (λ j → El Δ) (i ∨ j) x) (a (σ (transp (λ _ → El Δ) (i ∨ j) x))) (~ i ∨ j)))))
+        (transp (λ i → El (B (pairSigma (σ (fstPairSigma {B = λ v → A (σ v)} (transp (λ _ → El Δ) (i ∨ j) x) (a (σ (transp (λ _ → El Δ) (i ∨ j) x))) (~ i ∨ j))) (sndPairSigma {B = λ v → A (σ v)} (transp (λ j → El Δ) (i ∨ j) x) (a (σ (transp (λ _ → El Δ) (i ∨ j) x))) (~ i ∨ j)))))
           j
          (b (σ (transp (λ _ → El Δ) j x))))
       in goal)))
 
-  module U-Π (TU-Pi : TarskiUniverse-Pi TU-Base) where
-    open TarskiUniverse-Pi TU-Pi
+  module U-Π (TU-Pi : hasPi TU) where
+    open hasPi TU-Pi
     open Algebraic
     open CwF UCwF
 
     U-Π-Structure : Π-Structure (UCat TU) UCwF
-    U-Π-Structure .Π-Structure.ΠTy A B x                = Pi (A x) (λ y → B (pairSig x y))
-    U-Π-Structure .Π-Structure.ΠTyNat A B σ             = funExt (λ x → cong (Pi (A (σ x))) (funExt (λ y → cong B (cong₂ pairSig (cong σ (sym (fstPairSig x y))) (symP (sndPairSig x y))))))
+    U-Π-Structure .Π-Structure.ΠTy A B x                = Pi (A x) (λ y → B (pairSigma x y))
+    U-Π-Structure .Π-Structure.ΠTyNat A B σ             = funExt (λ x → cong (Pi (A (σ x))) (funExt (λ y → cong B (cong₂ pairSigma (cong σ (sym (fstPairSigma x y))) (symP (sndPairSigma x y))))))
     U-Π-Structure .Π-Structure.ΠTmIso {Γ} A B           =
-      ((a : El Γ) → El (Pi (A a) (λ y → B (pairSig a y))))           Iso⟨ codomainIsoDep (λ x → PiIso (A x) (λ y → B (pairSig x y))) ⟩
-      (∀ a b → El (B (pairSig a b)))                                 Iso⟨ invIso curryIso ⟩
-      (((a , b) : Σ (El Γ) (λ z → El (A z))) → El (B (pairSig a b))) Iso⟨ invIso (domIsoDep (invIso (SigIso _ _))) ⟩
-      (((x : El (Sig Γ A)) → El (B x)))                              ∎Iso
+      ((a : El Γ) → El (Pi (A a) (λ y → B (pairSigma a y))))           Iso⟨ codomainIsoDep (λ x → PiIso (A x) (λ y → B (pairSigma x y))) ⟩
+      (∀ a b → El (B (pairSigma a b)))                                 Iso⟨ invIso curryIso ⟩
+      (((a , b) : Σ (El Γ) (λ z → El (A z))) → El (B (pairSigma a b))) Iso⟨ invIso (domIsoDep (invIso (SigmaIso _ _))) ⟩
+      (((x : El (Sigma Γ A)) → El (B x)))                              ∎Iso
     U-Π-Structure .Π-Structure.ΠTmIsoInvNat A B M σ i x =
       lamPi
-        (λ y → M (pairSig (σ (fstPairSig x y (~ i))) (sndPairSig {B = A [ σ ]Ty} x y (~ i))))
+        (λ y → M (pairSigma (σ (fstPairSigma x y (~ i))) (sndPairSigma {B = A [ σ ]Ty} x y (~ i))))
 
-  module U-Eq (TU-Eq : TarskiUniverse-Eq TU-Base) where
-    open TarskiUniverse-Eq TU-Eq
+  module U-Eq (TU-Eq : hasEq TU) where
+    open hasEq TU-Eq
     open Algebraic
     open CwF UCwF
 

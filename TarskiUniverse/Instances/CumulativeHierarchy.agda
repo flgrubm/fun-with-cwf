@@ -4,9 +4,8 @@ open import Cubical.Foundations.Prelude
 open import Cubical.Foundations.Transport
 
 open import Cubical.Data.IterativeSets.Base
+open import Cubical.Data.IterativeSets.IsCumulativeHierarchy
 open import Cubical.HITs.CumulativeHierarchy
-
-open import Utils.CumulativeHierarchyEquivIterativeSets
 
 open import TarskiUniverse.Instances.IterativeSets renaming ( BareTarskiUniverseV to BareTarskiUniverseV⁰
                                                             ; TarskiUniverseV     to TarskiUniverseV⁰
@@ -18,7 +17,7 @@ module _ {ℓ : Level} where
 
   BareTarskiUniverseV : BareTarskiUniverse ℓ (V ℓ)
   BareTarskiUniverseV = subst⁻ (BareTarskiUniverse ℓ) V≡V⁰ (BareTarskiUniverseV⁰ ℓ)
-  
+
   TarskiUniverseV : TarskiUniverse ℓ (V ℓ)
   TarskiUniverseV = subst⁻ (TarskiUniverse ℓ) V≡V⁰ (TarskiUniverseV⁰ ℓ)
 

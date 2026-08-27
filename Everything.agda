@@ -22,3 +22,4 @@ open import ACwF-CCwF
 open import Utils.VCat
 open import Utils.TarskiPresheaf
 open import Utils.IterativePresheaf
+open import Utils.InductiveRecursiveUniverse

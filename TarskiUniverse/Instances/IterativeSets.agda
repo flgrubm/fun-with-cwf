@@ -8,6 +8,7 @@ open import Cubical.Data.IterativeSets.Base
 open import Cubical.Data.IterativeSets.Sigma
 open import Cubical.Data.IterativeSets.Pi
 open import Cubical.Data.IterativeSets.Unit
+open import Cubical.Data.IterativeSets.Identity
 
 open import TarskiUniverse.Base
 
@@ -34,4 +35,6 @@ module _ (ℓ : Level) where
   hasPiV .hasPi.Pi        = Π⁰
   hasPiV .hasPi.PiIso _ _ = idIso
 
-  -- TODO: add hasEqV
+  hasEqV : hasEq BareTarskiUniverseV
+  hasEqV .hasEq.Eq          = Id⁰
+  hasEqV .hasEq.EqIso _ _ _ = idIso

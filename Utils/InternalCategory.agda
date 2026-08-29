@@ -141,14 +141,15 @@ module _
   open BareTarskiUniverse Univ
   open InternalCategory
 
-  section : Coded→Internal (Internal→Coded C) ≡ C
-  section i .obᵢ = C .obᵢ
-  section i .Hom[_,_]ᵢ = C .Hom[_,_]ᵢ
-  section i .idᵢ = C .idᵢ
-  section i ._⋆ᵢ_ = C ._⋆ᵢ_
-  section i .⋆IdLᵢ f =
+  Internal→Coded→Internal : Coded→Internal (Internal→Coded C) ≡ C
+  Internal→Coded→Internal i .obᵢ = C .obᵢ
+  Internal→Coded→Internal i .Hom[_,_]ᵢ = C .Hom[_,_]ᵢ
+  Internal→Coded→Internal i .idᵢ = C .idᵢ
+  Internal→Coded→Internal i ._⋆ᵢ_ = C ._⋆ᵢ_
+  Internal→Coded→Internal i .⋆IdLᵢ f =
     isSetEl _ _ _ (Coded→Internal (Internal→Coded C) .⋆IdLᵢ f) (C .⋆IdLᵢ f) i
-  section i .⋆IdRᵢ f =
+  Internal→Coded→Internal i .⋆IdRᵢ f =
     isSetEl _ _ _ (Coded→Internal (Internal→Coded C) .⋆IdRᵢ f) (C .⋆IdRᵢ f) i
-  section i .⋆Assocᵢ f g h =
+  Internal→Coded→Internal i .⋆Assocᵢ f g h =
     isSetEl _ _ _ (Coded→Internal (Internal→Coded C) .⋆Assocᵢ f g h) (C .⋆Assocᵢ f g h) i
+

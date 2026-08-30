@@ -64,10 +64,24 @@ module _
   {ℓU ℓEl : Level} {U : Type ℓU} (Univ : BareTarskiUniverse ℓEl U)
   {ℓob ℓhom : Level} (C : Category ℓob ℓhom)
   where
+  open BareTarskiUniverse Univ
   record [_]CodedCategory : Type (ℓ-max (ℓ-max (ℓ-max ℓU ℓEl) ℓob) ℓhom) where
     field
       isSmallOb : Univ hasCodeFor (C .ob)
       isSmallHom : ∀ x y → Univ hasCodeFor (C [ x , y ])
+    obᵢ : U
+    obᵢ = isSmallOb .fst
+    obᵢ→ob : El obᵢ → C .ob
+    obᵢ→ob = isSmallOb .snd .fst
+    homᵢ : ∀ x y → U
+    homᵢ x y = isSmallHom (obᵢ→ob x) (obᵢ→ob y) .fst
+    hom→homᵢ : ∀ {x} {y} → C [ obᵢ→ob x , obᵢ→ob y ] → El (homᵢ x y)
+    hom→homᵢ f = invEquiv (isSmallHom _ _ .snd) .fst f
+    homᵢ→hom : ∀ {x} {y} → El (homᵢ x y) → C [ obᵢ→ob x , obᵢ→ob y ]
+    homᵢ→hom f = isSmallHom _ _ .snd .fst f
+    homEquiv : ∀ {x} {y} → El (isSmallHom (obᵢ→ob x) (obᵢ→ob y) .fst)
+                         ≃ C [ obᵢ→ob x , obᵢ→ob y ]
+    homEquiv = isSmallHom (obᵢ→ob _) (obᵢ→ob _) .snd
 
 module _
   {ℓU ℓEl : Level} {U : Type ℓU} {Univ : BareTarskiUniverse ℓEl U}
@@ -86,48 +100,32 @@ module _
   open BareTarskiUniverse Univ
   open [_]CodedCategory coded
 
-  private
-    obᵢ : U
-    obᵢ = isSmallOb .fst
-    oᵢ→o : El obᵢ → C .ob
-    oᵢ→o = isSmallOb .snd .fst
-    homᵢ : ∀ x y → U
-    homᵢ x y = isSmallHom (oᵢ→o x) (oᵢ→o y) .fst
-    h→hᵢ : ∀ {x} {y} → C [ oᵢ→o x , oᵢ→o y ] → El (homᵢ x y)
-    h→hᵢ f = invEquiv (isSmallHom _ _ .snd) .fst f
-    hᵢ→h : ∀ {x} {y} → El (homᵢ x y) → C [ oᵢ→o x , oᵢ→o y ]
-    hᵢ→h f = isSmallHom _ _ .snd .fst f
-
-    homEquiv : ∀ {x} {y} → El (isSmallHom (oᵢ→o x) (oᵢ→o y) .fst)
-                         ≃ C [ oᵢ→o x , oᵢ→o y ]
-    homEquiv = isSmallHom (oᵢ→o _) (oᵢ→o _) .snd
-
   Coded→Internal : InternalCategory Univ
   Coded→Internal .InternalCategory.obᵢ = obᵢ
   Coded→Internal .InternalCategory.Hom[_,_]ᵢ = homᵢ
-  Coded→Internal .InternalCategory.idᵢ = h→hᵢ (C .id)
-  Coded→Internal .InternalCategory._⋆ᵢ_ f g = h→hᵢ (hᵢ→h f ⋆⟨ C ⟩ hᵢ→h g)
+  Coded→Internal .InternalCategory.idᵢ = hom→homᵢ (C .id)
+  Coded→Internal .InternalCategory._⋆ᵢ_ f g = hom→homᵢ (homᵢ→hom f ⋆⟨ C ⟩ homᵢ→hom g)
   Coded→Internal .InternalCategory.⋆IdLᵢ f =
-    h→hᵢ ((hᵢ→h (h→hᵢ (C .id))) ⋆⟨ C ⟩ (hᵢ→h f)) ≡⟨ cong (λ k → h→hᵢ (k ⋆⟨ C ⟩ (hᵢ→h f))) (secEq homEquiv (C .id)) ⟩
-    h→hᵢ ((C .id) ⋆⟨ C ⟩ (hᵢ→h f))               ≡⟨ cong h→hᵢ (C .⋆IdL (hᵢ→h f)) ⟩
-    h→hᵢ (hᵢ→h f)                                ≡⟨ retEq homEquiv f ⟩
-    f                                            ∎
+    hom→homᵢ ((homᵢ→hom (hom→homᵢ (C .id))) ⋆⟨ C ⟩ (homᵢ→hom f)) ≡⟨ cong (λ k → hom→homᵢ (k ⋆⟨ C ⟩ (homᵢ→hom f))) (secEq homEquiv (C .id)) ⟩
+    hom→homᵢ ((C .id) ⋆⟨ C ⟩ (homᵢ→hom f))                       ≡⟨ cong hom→homᵢ (C .⋆IdL (homᵢ→hom f)) ⟩
+    hom→homᵢ (homᵢ→hom f)                                        ≡⟨ retEq homEquiv f ⟩
+    f                                                            ∎
   Coded→Internal .InternalCategory.⋆IdRᵢ f =
-    h→hᵢ ((hᵢ→h f) ⋆⟨ C ⟩ (hᵢ→h (h→hᵢ (C .id)))) ≡⟨ cong (λ k → h→hᵢ ((hᵢ→h f) ⋆⟨ C ⟩ k)) (secEq homEquiv (C .id)) ⟩
-    h→hᵢ ((hᵢ→h f) ⋆⟨ C ⟩ (C .id))               ≡⟨ cong h→hᵢ (C .⋆IdR (hᵢ→h f)) ⟩
-    h→hᵢ (hᵢ→h f)                                ≡⟨ retEq homEquiv f ⟩
-    f                                            ∎
+    hom→homᵢ ((homᵢ→hom f) ⋆⟨ C ⟩ (homᵢ→hom (hom→homᵢ (C .id)))) ≡⟨ cong (λ k → hom→homᵢ ((homᵢ→hom f) ⋆⟨ C ⟩ k)) (secEq homEquiv (C .id)) ⟩
+    hom→homᵢ ((homᵢ→hom f) ⋆⟨ C ⟩ (C .id))                       ≡⟨ cong hom→homᵢ (C .⋆IdR (homᵢ→hom f)) ⟩
+    hom→homᵢ (homᵢ→hom f)                                        ≡⟨ retEq homEquiv f ⟩
+    f                                                            ∎
   Coded→Internal .InternalCategory.⋆Assocᵢ f g h =
-    h→hᵢ ((hᵢ→h (h→hᵢ ((hᵢ→h f) ⋆⟨ C ⟩ (hᵢ→h g)))) ⋆⟨ C ⟩ (hᵢ→h h)) ≡⟨ cong (λ k → h→hᵢ (k ⋆⟨ C ⟩ (hᵢ→h h))) (secEq homEquiv ((hᵢ→h f) ⋆⟨ C ⟩ (hᵢ→h g))) ⟩
-    h→hᵢ (((hᵢ→h f) ⋆⟨ C ⟩ (hᵢ→h g)) ⋆⟨ C ⟩ (hᵢ→h h))               ≡⟨ cong h→hᵢ (C .⋆Assoc (hᵢ→h f) (hᵢ→h g) (hᵢ→h h)) ⟩
-    h→hᵢ ((hᵢ→h f) ⋆⟨ C ⟩ ((hᵢ→h g) ⋆⟨ C ⟩ (hᵢ→h h)))               ≡⟨ cong (λ k → h→hᵢ ((hᵢ→h f) ⋆⟨ C ⟩ k)) (sym (secEq homEquiv ((hᵢ→h g) ⋆⟨ C ⟩ (hᵢ→h h)))) ⟩
-    h→hᵢ ((hᵢ→h f) ⋆⟨ C ⟩ (hᵢ→h (h→hᵢ ((hᵢ→h g) ⋆⟨ C ⟩ (hᵢ→h h))))) ∎
+    hom→homᵢ ((homᵢ→hom (hom→homᵢ ((homᵢ→hom f) ⋆⟨ C ⟩ (homᵢ→hom g)))) ⋆⟨ C ⟩ (homᵢ→hom h)) ≡⟨ cong (λ k → hom→homᵢ (k ⋆⟨ C ⟩ (homᵢ→hom h))) (secEq homEquiv ((homᵢ→hom f) ⋆⟨ C ⟩ (homᵢ→hom g))) ⟩
+    hom→homᵢ (((homᵢ→hom f) ⋆⟨ C ⟩ (homᵢ→hom g)) ⋆⟨ C ⟩ (homᵢ→hom h))                       ≡⟨ cong hom→homᵢ (C .⋆Assoc (homᵢ→hom f) (homᵢ→hom g) (homᵢ→hom h)) ⟩
+    hom→homᵢ ((homᵢ→hom f) ⋆⟨ C ⟩ ((homᵢ→hom g) ⋆⟨ C ⟩ (homᵢ→hom h)))                       ≡⟨ cong (λ k → hom→homᵢ ((homᵢ→hom f) ⋆⟨ C ⟩ k)) (sym (secEq homEquiv ((homᵢ→hom g) ⋆⟨ C ⟩ (homᵢ→hom h)))) ⟩
+    hom→homᵢ ((homᵢ→hom f) ⋆⟨ C ⟩ (homᵢ→hom (hom→homᵢ ((homᵢ→hom g) ⋆⟨ C ⟩ (homᵢ→hom h))))) ∎
 
   open import Cubical.Categories.Equivalence
 
   internalizeFunctor : Functor (InternalCategory.→Category Coded→Internal) C
-  internalizeFunctor .F-ob = oᵢ→o
-  internalizeFunctor .F-hom = hᵢ→h
+  internalizeFunctor .F-ob = obᵢ→ob
+  internalizeFunctor .F-hom = homᵢ→hom
   internalizeFunctor .F-id = secEq homEquiv (C .id)
   internalizeFunctor .F-seq f g = secEq homEquiv _
 

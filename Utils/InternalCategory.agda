@@ -196,3 +196,7 @@ module _
   _hasCodeForEq a b hasEqTU codeForA .snd =
        isoToEquiv (hasEqTU .EqIso _ _ _)
     ∙ₑ invEquiv (congEquiv (invEquiv (codeForA .snd)))
+
+  _hasCodeForEl : {a : U} → TU hasCodeFor (El a)
+  _hasCodeForEl {a} .fst = a
+  _hasCodeForEl {a} .snd = idEquiv _

@@ -49,9 +49,6 @@ module _ (ac1 : {ℓa ℓb : Level} {A : Type ℓa} → isSet A → satAC ℓb 1
     pointwise : (c : Card {ℓ}) → ∃[ X ∈ hSet ℓ ] ∣ X ∣₂ ≡ c
     pointwise = ∥₂.elim (λ _ → isProp→isSet isPropPropTrunc) (λ X → ∣ X , refl ∣₁)
 
-  IsTarski : Type (ℓ-suc (ℓ-suc ℓ))
-  IsTarski {ℓ} = Σ[ TU ∈ BareTarskiUniverse ℓ (Card {ℓ}) ] hasUnit TU × hasSigma TU
-
   module _ {ℓ : Level} (El' : Card {ℓ} → hSet ℓ) (isEl'∈ : (c : Card {ℓ}) → ∣ El' c ∣₂ ≡ c) where
 
     El : Card {ℓ} → Type ℓ
@@ -61,7 +58,9 @@ module _ (ac1 : {ℓa ℓb : Level} {A : Type ℓa} → isSet A → satAC ℓb 1
     isSetEl c = El' c .snd
 
     TU : BareTarskiUniverse ℓ (Card {ℓ})
-    TU = record { isSetU = isSetCard ; El = El ; isSetEl = isSetEl }
+    TU .BareTarskiUniverse.isSetU = isSetCard
+    TU .BareTarskiUniverse.El = El
+    TU .BareTarskiUniverse.isSetEl = isSetEl
 
     SigmaHSet : (A : Card {ℓ}) (B : El A → Card {ℓ}) → hSet ℓ
     SigmaHSet A B .fst = Σ[ x ∈ El A ] El (B x)
@@ -81,7 +80,7 @@ module _ (ac1 : {ℓa ℓb : Level} {A : Type ℓa} → isSet A → satAC ℓb 1
             → Iso (El (Sigma A B)) (Σ[ x ∈ El A ] El (B x))
       toIso eq = equivToIso (pathToEquiv (cong fst eq))
 
-    buildTarski : ∥ IsTarski {ℓ} ∥₁
+    buildTarski : isTarskiUniverse ℓ Card
     buildTarski = do
       sigmaIsoAll ← choiceFn1 (isSetΣ isSetCard (λ A → isSetΠ (λ _ → isSetCard)))
                             (λ p → Iso (El (Sigma (p .fst) (p .snd))) (Σ[ x ∈ El (p .fst) ] El (p .snd x)))
@@ -101,7 +100,7 @@ module _ (ac1 : {ℓa ℓb : Level} {A : Type ℓa} → isSet A → satAC ℓb 1
 
       ∣ TU , hasUnitStruct , hasSigmaStruct ∣₁
 
-  ∃Tarski : ∥ IsTarski {ℓ} ∥₁
+  ∃Tarski : {ℓ : Level} → isTarskiUniverse ℓ Card
   ∃Tarski {ℓ} = do
     (El' , isEl'∈) ← ∃El {ℓ}
     buildTarski El' isEl'∈

@@ -6,6 +6,7 @@ open import Cubical.Foundations.Function
 
 open import Cubical.Data.Sigma
 open import Cubical.Data.Unit hiding (Unit)
+open import Cubical.HITs.PropositionalTruncation
 
 -- A "bare Tarski universe" is a set U of codes with a set-valued
 -- decoding function El.  We parameterize by U to make it easier to
@@ -94,12 +95,18 @@ module _ {ℓU ℓEl : Level} {U : Type ℓU} (TU : BareTarskiUniverse ℓEl U) 
 
 -- As we are only interested in Tarski universes with Unit and Sigma
 -- we use the name "Tarski universe" for these universes
-record TarskiUniverse {ℓU : Level} (ℓEl : Level) (U : Type ℓU) : Type (ℓ-max (ℓ-suc ℓU) (ℓ-suc ℓEl)) where
-  field
-    TU         : BareTarskiUniverse ℓEl U
-    hasUnitTU  : hasUnit TU
-    hasSigmaTU : hasSigma TU
+-- record TarskiUniverse {ℓU : Level} (ℓEl : Level) (U : Type ℓU) : Type (ℓ-max (ℓ-suc ℓU) (ℓ-suc ℓEl)) where
+--   field
+--     TU         : BareTarskiUniverse ℓEl U
+--     hasUnitTU  : hasUnit TU
+--     hasSigmaTU : hasSigma TU
 
-  open BareTarskiUniverse TU public
-  open hasUnit hasUnitTU public
-  open hasSigma hasSigmaTU public
+--   open BareTarskiUniverse TU public
+--   open hasUnit hasUnitTU public
+--   open hasSigma hasSigmaTU public
+
+TarskiUniverse : {ℓU : Level} (ℓEl : Level) (U : Type ℓU) → Type (ℓ-suc (ℓ-max ℓU ℓEl))
+TarskiUniverse ℓEl U = Σ[ TU ∈ BareTarskiUniverse ℓEl U ] hasUnit TU × hasSigma TU
+
+isTarskiUniverse : {ℓU : Level} (ℓEl : Level) (U : Type ℓU) → Type (ℓ-suc (ℓ-max ℓU ℓEl))
+isTarskiUniverse ℓEl U = ∥ TarskiUniverse ℓEl U ∥₁

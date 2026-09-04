@@ -4,6 +4,7 @@ module ACwF.Instances.TarskiPresheaf where
 open import Cubical.Foundations.Prelude
 open import Cubical.Foundations.HLevels
 open import Cubical.Foundations.Isomorphism
+open import Cubical.Foundations.Equiv
 open import Cubical.Functions.FunExtEquiv
 open import Cubical.Data.Sigma
 open import Cubical.Categories.Category
@@ -336,3 +337,40 @@ module _ {ℓob ℓhom ℓU ℓEl : Level} (C : Category ℓob ℓhom) {U : Type
                         cand
       in congP (λ j z → pairSigma {B = λ v → B .F-ob (bobj v j)} av z) sndPath i)
 
+  open import ACwF.Pi
+  open import TarskiUniverse.Solver
+  open import Utils.InternalCategory
+  open [_]CodedCategory
+  module _ (hasPiTU : hasPi TU) (hasEqTU : hasEq TU) (coded : [ TU ]CodedCategory C) where
+    module _ {Γ : PresheafU C TU } {A : Functor (∫U Γ) (UCat TU)} where
+      ▹ob : (x : ∫U Γ .ob) → (a : El (A .F-ob x)) → ∫U (Γ ▹ A) .ob
+      ▹ob x a = (x .fst) , (pairSigma (x .snd) a)
+      ▹hom : ∀ {y} {z} → (f : (∫U Γ) [ y , z ]) (a : El (A .F-ob y)) → ∫U (Γ ▹ A) [ ▹ob y a , ▹ob z (A .F-hom f a) ]
+      ▹hom f a .fst = f .fst
+      ▹hom {y} {z} f a .snd = cong₂ pairSigma
+        (cong (Γ .F-hom (f .fst)) (fstPairSigma (y .snd) a) ∙ f .snd)
+        (compPathP' {B = λ v → El (A .F-ob (z .fst , v))}
+          (congP (λ i s → A .F-hom (f .fst , refl) s) (sndPairSigma (y .snd) a))
+          (funExt⁻ (F-hom-PathP A (f .fst , refl) f refl (ΣPathP (refl , f .snd)) refl) a))
+    module _ {Γ : PresheafU C TU } (A : Functor (∫U Γ) (UCat TU)) (B : Functor (∫U (Γ ▹ A)) (UCat TU)) (x : ∫U Γ .ob)  where
+      Πtype : Type (ℓ-max (ℓ-max ℓob ℓhom) ℓEl)
+      Πtype = Σ
+        ((y : ∫U Γ .ob) (f : ∫U Γ [ x , y ]) (a : El (A .F-ob y)) → El (B .F-ob (▹ob {Γ} {A} y a)))
+        λ w → (y z : ∫U Γ .ob) (m : ∫U Γ [ x , y ]) (n : ∫U Γ [ y , z ]) (a : El (A .F-ob y))
+          → B .F-hom (▹hom n a) (w y m a) ≡ w z (m ⋆⟨ ∫U Γ ⟩ n) (A .F-hom n a)
+      Πcode : TU hasCodeFor Πtype
+      Πcode = solveCode (coded .isSmallHom ◂ coded .isSmallOb ◂ hasPiTU ◂ hasEqTU ◂ hasSigmaTU ◂ ε)
+    module _ {Γ : PresheafU C TU } {A : Functor (∫U Γ) (UCat TU)} {B : Functor (∫U (Γ ▹ A)) (UCat TU)} where
+      restrict : {x x' : ∫U Γ .ob} → (f : ∫U Γ [ x , x' ]) → Πtype A B x → Πtype A B x'
+      restrict h (w , nat) .fst y f a = w y (h ⋆⟨ ∫U Γ ⟩ f) a
+      restrict h (w , nat) .snd y z m n a =
+          nat y z (h ⋆⟨ ∫U Γ ⟩ m) n a
+        ∙ cong (λ v → w z v (A .F-hom n a)) (∫U Γ .⋆Assoc h m n)
+    Psh-Π-structure : Π-Structure _ Psh-CwF
+    Psh-Π-structure .Π-Structure.ΠTy A B .F-ob Iρ = Πcode A B Iρ .fst
+    Psh-Π-structure .Π-Structure.ΠTy A B .F-hom f a = invEq (Πcode A B _ .snd) (restrict {A = A} {B = B} f (Πcode A B _ .snd .fst a))
+    Psh-Π-structure .Π-Structure.ΠTy A B .F-id = {!!}
+    Psh-Π-structure .Π-Structure.ΠTy A B .F-seq = {!!}
+    Psh-Π-structure .Π-Structure.ΠTyNat = {!!}
+    Psh-Π-structure .Π-Structure.ΠTmIso = {!!}
+    Psh-Π-structure .Π-Structure.ΠTmIsoInvNat = {!!}

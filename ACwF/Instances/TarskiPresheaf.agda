@@ -332,9 +332,7 @@ module _ {ℓob ℓhom ℓU ℓEl : Level} (C : Category ℓob ℓhom) {U : Type
                     (o .fst , (_⁺ {A = A} σ) .N-ob (o .fst) (pairSigma (o .snd) v))
         bobj v = ΣPathP (refl , cong₂ pairSigma (cong (σ .N-ob (o .fst)) (sym (fstPairSigma _ _))) (symP (sndPairSigma _ _)))
         sndPath : PathP (λ j → El (B .F-ob (bobj av j))) (bσ .N-ob o u) (b' .N-ob o u)
-        sndPath = subst (λ r → PathP (λ j → El (r j)) (bσ .N-ob o u) (b' .N-ob o u))
-                        (isSetU _ _ (λ j → cee j .F-ob o) (λ j → B .F-ob (bobj av j)))
-                        cand
+        sndPath = reindexEl cand
       in congP (λ j z → pairSigma {B = λ v → B .F-ob (bobj v j)} av z) sndPath i)
 
   open import ACwF.Pi
@@ -470,6 +468,15 @@ module _ {ℓob ℓhom ℓU ℓEl : Level} (C : Category ℓob ℓhom) {U : Type
 
       indexed-Π : Type _
       indexed-Π = Σ indexed-Πdata indexed-Πnat
+
+      -- Naturality is an equation in El, so it is a proposition: a path of indexed
+      -- Πs is exactly a path of its data.  Every law about ΠTy factors through this.
+      isProp-indexed-Πnat : (w : indexed-Πdata) → isProp (indexed-Πnat w)
+      isProp-indexed-Πnat w =
+        isPropΠ4 λ s t m a → isSetEl (Q .F-ob (t , P .F-hom m a)) _ _
+
+      indexed-Π≡ : {u v : indexed-Π} → u .fst ≡ v .fst → u ≡ v
+      indexed-Π≡ = Σ≡Prop isProp-indexed-Πnat
       -- indexed-Πcode : TU hasCodeFor indexed-Π
       -- indexed-Πcode = solveCode (coded .isSmallOb ◂ coded .isSmallHom ◂ hasSigmaTU ◂ hasPiTU ◂ hasEqTU ◂ ε)
 
@@ -544,12 +551,144 @@ module _ {ℓob ℓhom ℓU ℓEl : Level} (C : Category ℓob ℓhom) {U : Type
         restrict u = transport (λ i → indexed-Π {Γ} (y .fst) (PPath i) (QPath i))
                        (Π-precomp {Γ} _ _ Jφ u)
 
+        -- β-rule for restrict, stated as a PathP over the coercion rather than a
+        -- subst: U is a set, so the use site can reindex it onto whichever path it
+        -- finds convenient.  This is the only place the transport is ever computed.
+        restrictβ : (u : pi x) (s : Fib (y .fst) .ob)
+                    {a₀ : El ((((A ∘F κ Γ) ∘F ι x) ∘F Jφ) .F-ob s)}
+                    {a₁ : El (((A ∘F κ Γ) ∘F ι y) .F-ob s)}
+                    (p : PathP (λ i → El (PPath i .F-ob s)) a₀ a₁)
+                  → PathP (λ i → El (QPath i .F-ob (s , p i)))
+                          (u .fst (Jφ .F-ob s) a₀)
+                          (restrict u .fst s a₁)
+        restrictβ u s p i = filler i .fst s (p i)
+          where
+            filler : PathP (λ i → indexed-Π {Γ} (y .fst) (PPath i) (QPath i))
+                           (Π-precomp {Γ} _ _ Jφ u) (restrict u)
+            filler = transport-filler
+                       (λ i → indexed-Π {Γ} (y .fst) (PPath i) (QPath i))
+                       (Π-precomp {Γ} _ _ Jφ u)
+
+      -- Fib⋆ (C .id) is the identity only up to ⋆IdR, so even at φ = id the
+      -- transport is real work.  restrictβ reduces it to a path in U, and U is a
+      -- set, so it can be reindexed onto the path coming from ⋆IdR itself.
+      restrictId : {x : ∫U Γ .ob} (u : pi x) → restrict (∫U Γ .id) u ≡ u
+      restrictId {x} u = indexed-Π≡ (x .fst) Px Qx (funExt λ s → funExt λ a → goal s a)
+        where
+          idx : ∫U Γ [ x , x ]
+          idx = ∫U Γ .id
+          Px : PresheafU (Fib (x .fst)) TU
+          Px = (A ∘F κ Γ) ∘F ι x
+          Qx : Functor (∫U Px) (UCat TU)
+          Qx = B ∘F κ▹ Γ A ∘F ∫ι x (A ∘F κ Γ)
+          goal : (s : Fib (x .fst) .ob) (a : El (Px .F-ob s))
+               → restrict idx u .fst s a ≡ u .fst s a
+          goal s a =
+            restrict idx u .fst s a ≡⟨ sym (fromPathP (restrictβ idx u s aP)) ⟩
+            mid                     ≡⟨ fromPathP c' ⟩
+            u .fst s a ∎
+            where
+              a₀ : El ((Px ∘F Jφ idx) .F-ob s)
+              a₀ = transport (λ i → El (PPath idx (~ i) .F-ob s)) a
+              aP : PathP (λ i → El (PPath idx i .F-ob s)) a₀ a
+              aP = symP (transport-filler (λ i → El (PPath idx (~ i) .F-ob s)) a)
+              -- the fibre reindexing is the identity, up to ⋆IdR
+              e : Jφ idx .F-ob s ≡ s
+              e = ΣPathP (refl , C .⋆IdR (s .snd))
+              ap : PathP (λ i → El (Px .F-ob (e i))) a₀ a
+              ap = reindexEl aP
+              c : PathP (λ i → El (Qx .F-ob (e i , ap i)))
+                        (u .fst (Jφ idx .F-ob s) a₀) (u .fst s a)
+              c i = u .fst (e i) (ap i)
+              c' : PathP (λ i → El (QPath idx i .F-ob (s , aP i)))
+                         (u .fst (Jφ idx .F-ob s) a₀) (u .fst s a)
+              c' = reindexEl c
+              -- both routes from `u .fst (Jφ idx .F-ob s) a₀` meet here
+              mid : El (Qx .F-ob (s , a))
+              mid = transport (λ i → El (QPath idx i .F-ob (s , aP i)))
+                              (u .fst (Jφ idx .F-ob s) a₀)
+
+      -- Fib⋆ is functorial only up to ⋆Assoc, so composing two restrictions is
+      -- again a transport question.  Both sides are routed back to one common
+      -- starting element and compared there; U is a set, so the two routes may be
+      -- reindexed onto a single path of codes.
+      restrictSeq : {x y z : ∫U Γ .ob} (φ : ∫U Γ [ x , y ]) (ψ : ∫U Γ [ y , z ])
+                    (u : pi x)
+                  → restrict (φ ⋆⟨ ∫U Γ ⟩ ψ) u ≡ restrict ψ (restrict φ u)
+      restrictSeq {x} {y} {z} φ ψ u =
+        indexed-Π≡ (z .fst) Pz Qz (funExt λ s → funExt λ a → goal s a)
+        where
+          φψ : ∫U Γ [ x , z ]
+          φψ = φ ⋆⟨ ∫U Γ ⟩ ψ
+          Px : PresheafU (Fib (x .fst)) TU
+          Px = (A ∘F κ Γ) ∘F ι x
+          Py : PresheafU (Fib (y .fst)) TU
+          Py = (A ∘F κ Γ) ∘F ι y
+          Pz : PresheafU (Fib (z .fst)) TU
+          Pz = (A ∘F κ Γ) ∘F ι z
+          Qx : Functor (∫U Px) (UCat TU)
+          Qx = B ∘F κ▹ Γ A ∘F ∫ι x (A ∘F κ Γ)
+          Qz : Functor (∫U Pz) (UCat TU)
+          Qz = B ∘F κ▹ Γ A ∘F ∫ι z (A ∘F κ Γ)
+          goal : (s : Fib (z .fst) .ob) (a : El (Pz .F-ob s))
+               → restrict φψ u .fst s a ≡ restrict ψ (restrict φ u) .fst s a
+          goal s a =
+            restrict φψ u .fst s a            ≡⟨ sym (fromPathP chainA) ⟩
+            mid                               ≡⟨ fromPathP chainB ⟩
+            restrict ψ (restrict φ u) .fst s a ∎
+            where
+              -- `a` transported backwards along each of the three restrictions
+              a₀ : El ((Px ∘F Jφ φψ) .F-ob s)
+              a₀ = transport (λ i → El (PPath φψ (~ i) .F-ob s)) a
+              aP : PathP (λ i → El (PPath φψ i .F-ob s)) a₀ a
+              aP = symP (transport-filler (λ i → El (PPath φψ (~ i) .F-ob s)) a)
+              b₀ : El ((Py ∘F Jφ ψ) .F-ob s)
+              b₀ = transport (λ i → El (PPath ψ (~ i) .F-ob s)) a
+              bP : PathP (λ i → El (PPath ψ i .F-ob s)) b₀ a
+              bP = symP (transport-filler (λ i → El (PPath ψ (~ i) .F-ob s)) a)
+              t : Fib (y .fst) .ob
+              t = Jφ ψ .F-ob s
+              c₀ : El ((Px ∘F Jφ φ) .F-ob t)
+              c₀ = transport (λ i → El (PPath φ (~ i) .F-ob t)) b₀
+              cP : PathP (λ i → El (PPath φ i .F-ob t)) c₀ b₀
+              cP = symP (transport-filler (λ i → El (PPath φ (~ i) .F-ob t)) b₀)
+              -- reindexing by ψ then by φ is reindexing by ψ ⋆ φ, up to ⋆Assoc
+              e : Jφ φ .F-ob t ≡ Jφ φψ .F-ob s
+              e = ΣPathP (refl , C .⋆Assoc (s .snd) (ψ .fst) (φ .fst))
+              dP : PathP (λ i → El (Px .F-ob (e i))) c₀ a₀
+              dP = reindexEl (compPathP' {B = El} (compPathP' {B = El} cP bP) (symP aP))
+              start : El (Qx .F-ob (Jφ φ .F-ob t , c₀))
+              start = u .fst (Jφ φ .F-ob t) c₀
+              cc : PathP (λ i → El (Qx .F-ob (e i , dP i)))
+                         start (u .fst (Jφ φψ .F-ob s) a₀)
+              cc i = u .fst (e i) (dP i)
+              famA : Qx .F-ob (Jφ φ .F-ob t , c₀) ≡ Qz .F-ob (s , a)
+              famA = (λ i → Qx .F-ob (e i , dP i))
+                   ∙ (λ i → QPath φψ i .F-ob (s , aP i))
+              chainA : PathP (λ i → El (famA i)) start (restrict φψ u .fst s a)
+              chainA = compPathP' {B = El} cc (restrictβ φψ u s aP)
+              chainB : PathP (λ i → El (famA i))
+                             start (restrict ψ (restrict φ u) .fst s a)
+              chainB = reindexEl (compPathP' {B = El}
+                         (restrictβ φ u t cP)
+                         (restrictβ ψ (restrict φ u) s bP))
+              -- both routes out of `start` meet here
+              mid : El (Qz .F-ob (s , a))
+              mid = transport (λ i → El (famA i)) start
+
     Psh-Π-structure : Π-Structure _ Psh-CwF
     Psh-Π-structure .Π-Structure.ΠTy A B .F-ob x = picode A B x .fst
     Psh-Π-structure .Π-Structure.ΠTy {Γ} A B .F-hom {x} {y} φ e =
       invEq (picode A B y .snd) (restrict {Γ} A B {x} {y} φ (picode A B x .snd .fst e))
-    Psh-Π-structure .Π-Structure.ΠTy A B .F-id = {!!}
-    Psh-Π-structure .Π-Structure.ΠTy A B .F-seq = {!!}
+    Psh-Π-structure .Π-Structure.ΠTy {Γ} A B .F-id {x} = funExt λ e →
+      cong (invEq (picode A B x .snd)) (restrictId {Γ} A B (picode A B x .snd .fst e))
+      ∙ retEq (picode A B x .snd) e
+    Psh-Π-structure .Π-Structure.ΠTy {Γ} A B .F-seq {x} {y} {z} φ ψ = funExt λ e →
+      cong (invEq (picode A B z .snd))
+           (restrictSeq {Γ} A B φ ψ (picode A B x .snd .fst e))
+      ∙ cong (λ v → invEq (picode A B z .snd) (restrict {Γ} A B ψ v))
+             (sym (secEq (picode A B y .snd)
+                         (restrict {Γ} A B φ (picode A B x .snd .fst e))))
     Psh-Π-structure .Π-Structure.ΠTyNat = {!!}
     Psh-Π-structure .Π-Structure.ΠTmIso = {!!}
     Psh-Π-structure .Π-Structure.ΠTmIsoInvNat = {!!}

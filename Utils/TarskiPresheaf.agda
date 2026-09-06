@@ -4,15 +4,21 @@ open import TarskiUniverse.Base
 
 open import Cubical.Foundations.Prelude
 open import Cubical.Foundations.HLevels
+open import Cubical.Foundations.Equiv
+open import Cubical.Foundations.Isomorphism
 open import Cubical.Data.Sigma
 open import Cubical.Categories.Category
 open import Cubical.Categories.Functor
 open import Cubical.Categories.NaturalTransformation
 open import Cubical.Categories.Instances.Functors
+open import Utils.InternalCategory
+open import TarskiUniverse.Solver
 
 open import TarskiUniverse.Base
 open import TarskiUniverse.Properties
 
+open hasSigma
+open [_]CodedCategory
 open Category
 open Functor
 
@@ -127,3 +133,17 @@ module _ {ℓob ℓhom ℓU ℓEl : Level} {C : Category ℓob ℓhom} {U : Type
 
   F-id-PathP : ∀ {ob} proof → A .F-hom {ob} (C .id , proof) ≡ λ x → x
   F-id-PathP proof = F-hom-PathP (C .id , proof) _ refl refl refl ∙ A .F-id
+
+module _ {ℓob ℓhom ℓU ℓEl : Level}
+    {U : Type ℓU} {TU : BareTarskiUniverse ℓEl U}
+    {C : Category ℓob ℓhom} {Γ : PresheafU C TU}
+    (coded : [ TU ]CodedCategory C)
+    (hasSigmaTU : hasSigma TU)
+    (hasEqTU : hasEq TU)
+    where
+
+    ∫-Coded : [ TU ]CodedCategory (∫U Γ)
+    ∫-Coded .[_]CodedCategory.isSmallOb =
+      solveCode (hasSigmaTU ◂ coded .isSmallOb ◂ ε)
+    ∫-Coded .[_]CodedCategory.isSmallHom x y =
+      solveCode (hasSigmaTU ◂ hasEqTU ◂ coded .isSmallHom ◂ ε)

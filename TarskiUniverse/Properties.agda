@@ -26,6 +26,11 @@ module _ {ℓU ℓEl : Level} {U : Type ℓU} (TU : BareTarskiUniverse ℓEl U) 
   UCat .⋆Assoc _ _ _ = refl
   UCat .isSetHom {y = y} = isSet→ (isSetEl y)
 
+  ElPathP : {c c' : U} (e e' : c ≡ c') {x : El c} {y : El c'}
+    → PathP (λ i → El (e i)) x y
+    → PathP (λ i → El (e' i)) x y
+  ElPathP {c} {c'} e e' {x} {y} path = subst (λ ϵ → PathP (λ i → El (ϵ i)) x y) (isSetU _ _ e e') path
+
 private variable ℓ ℓ' : Level
 
 module _ {ℓU ℓEl : Level} {U : Type ℓU} (Univ : BareTarskiUniverse ℓEl U) where

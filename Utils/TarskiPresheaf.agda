@@ -97,6 +97,21 @@ module _ {ℓob ℓhom ℓU ℓEl : Level} {C : Category ℓob ℓhom} {U : Type
 
   open Properties public
 
+-- ∫U is functorial in the *base* category, dually to ∫U-hom above (which varies
+-- the presheaf and keeps the base fixed).  A functor of bases J and a presheaf R
+-- on the target induce an inclusion of Grothendieck constructions; every proof
+-- component passes through unchanged, since (R ∘F J) ⟪ m ⟫ is R ⟪ J ⟪ m ⟫ ⟫.
+module _ {ℓob ℓhom ℓob' ℓhom' ℓU ℓEl : Level}
+         {C : Category ℓob ℓhom} {D : Category ℓob' ℓhom'}
+         {U : Type ℓU} {TU : BareTarskiUniverse ℓEl U}
+         (J : Functor (D ^op) (C ^op)) (R : PresheafU C TU) where
+
+  ∫U-base : Functor (∫U (R ∘F J)) (∫U R)
+  ∫U-base .F-ob (d , v) = J .F-ob d , v
+  ∫U-base .F-hom (m , p) = J .F-hom m , p
+  ∫U-base .F-id = ∫U-Hom-PathP R _ _ refl refl (J .F-id)
+  ∫U-base .F-seq _ _ = ∫U-Hom-PathP R _ _ refl refl (J .F-seq _ _)
+
 module _ {ℓob ℓhom ℓU ℓEl : Level} {C : Category ℓob ℓhom} {U : Type ℓU} {TU : BareTarskiUniverse ℓEl U} {Γ : PresheafU C TU}
          (A : Functor (∫U Γ) (UCat TU)) where
   open BareTarskiUniverse TU

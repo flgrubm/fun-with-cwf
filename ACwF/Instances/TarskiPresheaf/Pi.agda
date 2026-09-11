@@ -38,12 +38,12 @@ module _ {ℓob ℓhom ℓU ℓEl : Level} (C : Category ℓob ℓhom) {U : Type
     -- Restricting an indexed Π along a functor of fibres is pure precomposition:
     -- ∫U-base J P sends (m , refl) to (J ⟪ m ⟫ , refl), which is exactly what the
     -- naturality clause needs, so no transport appears.
-    Π-precomp : {Γ : Ctx} {c₀ c₁ : C .ob}
-                (P : PresheafU (Fib c₀) TU) (Q : Functor (∫U P) (UCat TU))
-                (J : Functor (Fib c₁ ^op) (Fib c₀ ^op))
-              → indexed-Π {Γ} c₀ P Q → indexed-Π {Γ} c₁ (P ∘F J) (Q ∘F ∫U-base J P)
-    Π-precomp P Q J (w , nat) .fst s a = w (J .F-ob s) a
-    Π-precomp P Q J (w , nat) .snd s t m a = nat (J .F-ob s) (J .F-ob t) (J .F-hom m) a
+    Π-precomp : {Γ : Ctx} {I I' : C .ob}
+                (P : PresheafU (Fib I) TU) (Q : Functor (∫U P) (UCat TU))
+                (Jf : Functor (Fib I' ^op) (Fib I ^op))
+              → indexed-Π {Γ} I P Q → indexed-Π {Γ} I' (P ∘F Jf) (Q ∘F ∫U-base Jf P)
+    Π-precomp P Q Jf (w , nat) .fst s a = w (Jf .F-ob s) a
+    Π-precomp P Q Jf (w , nat) .snd s t m a = nat (Jf .F-ob s) (Jf .F-ob t) (Jf .F-hom m) a
 
     module _ {Γ : Ctx} (A : Functor (∫U Γ) (UCat TU)) (B : Functor (∫U (Γ ▹ A)) (UCat TU)) where
       -- Πtype and Πcode at this A and B, so they can be used unqualified below.

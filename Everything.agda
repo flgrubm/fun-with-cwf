@@ -6,6 +6,8 @@ open import TarskiUniverse.Instances.InductiveRecursiveUniverse
 open import TarskiUniverse.Instances.IterativeSets
 open import TarskiUniverse.Base
 open import TarskiUniverse.Properties
+open import TarskiUniverse.Solver
+open import TarskiUniverse.Solver.Tests
 open import CCwF.FromACwF
 open import CCwF.Base
 open import ACwF.Morphism
@@ -20,6 +22,8 @@ open import ACwF.Base
 open import ACwF.Eq
 open import ACwF-CCwF
 open import Utils.VCat
+open import Utils.Reflection
+open import Utils.InternalCategory
 open import Utils.TarskiPresheaf
 open import Utils.IterativePresheaf
 open import Utils.InductiveRecursiveUniverse

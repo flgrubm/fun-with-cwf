@@ -4,15 +4,21 @@ open import TarskiUniverse.Base
 
 open import Cubical.Foundations.Prelude
 open import Cubical.Foundations.HLevels
+open import Cubical.Foundations.Equiv
+open import Cubical.Foundations.Isomorphism
 open import Cubical.Data.Sigma
 open import Cubical.Categories.Category
 open import Cubical.Categories.Functor
 open import Cubical.Categories.NaturalTransformation
 open import Cubical.Categories.Instances.Functors
+open import Utils.InternalCategory
+open import TarskiUniverse.Solver
 
 open import TarskiUniverse.Base
 open import TarskiUniverse.Properties
 
+open hasSigma
+open [_]CodedCategory
 open Category
 open Functor
 
@@ -97,6 +103,21 @@ module _ {ℓob ℓhom ℓU ℓEl : Level} {C : Category ℓob ℓhom} {U : Type
 
   open Properties public
 
+-- ∫U is functorial in the *base* category, dually to ∫U-hom above (which varies
+-- the presheaf and keeps the base fixed).  A functor of bases J and a presheaf R
+-- on the target induce an inclusion of Grothendieck constructions; every proof
+-- component passes through unchanged, since (R ∘F J) ⟪ m ⟫ is R ⟪ J ⟪ m ⟫ ⟫.
+module _ {ℓob ℓhom ℓob' ℓhom' ℓU ℓEl : Level}
+         {C : Category ℓob ℓhom} {D : Category ℓob' ℓhom'}
+         {U : Type ℓU} {TU : BareTarskiUniverse ℓEl U}
+         (J : Functor (D ^op) (C ^op)) (R : PresheafU C TU) where
+
+  ∫U-base : Functor (∫U (R ∘F J)) (∫U R)
+  ∫U-base .F-ob (d , v) = J .F-ob d , v
+  ∫U-base .F-hom (m , p) = J .F-hom m , p
+  ∫U-base .F-id = ∫U-Hom-PathP R _ _ refl refl (J .F-id)
+  ∫U-base .F-seq _ _ = ∫U-Hom-PathP R _ _ refl refl (J .F-seq _ _)
+
 module _ {ℓob ℓhom ℓU ℓEl : Level} {C : Category ℓob ℓhom} {U : Type ℓU} {TU : BareTarskiUniverse ℓEl U} {Γ : PresheafU C TU}
          (A : Functor (∫U Γ) (UCat TU)) where
   open BareTarskiUniverse TU
@@ -112,3 +133,17 @@ module _ {ℓob ℓhom ℓU ℓEl : Level} {C : Category ℓob ℓhom} {U : Type
 
   F-id-PathP : ∀ {ob} proof → A .F-hom {ob} (C .id , proof) ≡ λ x → x
   F-id-PathP proof = F-hom-PathP (C .id , proof) _ refl refl refl ∙ A .F-id
+
+module _ {ℓob ℓhom ℓU ℓEl : Level}
+    {U : Type ℓU} {TU : BareTarskiUniverse ℓEl U}
+    {C : Category ℓob ℓhom} {Γ : PresheafU C TU}
+    (coded : [ TU ]CodedCategory C)
+    (hasSigmaTU : hasSigma TU)
+    (hasEqTU : hasEq TU)
+    where
+
+    ∫-Coded : [ TU ]CodedCategory (∫U Γ)
+    ∫-Coded .[_]CodedCategory.isSmallOb =
+      solveCode (hasSigmaTU ◂ coded .isSmallOb ◂ ε)
+    ∫-Coded .[_]CodedCategory.isSmallHom x y =
+      solveCode (hasSigmaTU ◂ hasEqTU ◂ coded .isSmallHom ◂ ε)

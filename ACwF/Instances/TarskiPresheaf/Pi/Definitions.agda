@@ -103,6 +103,16 @@ module _ {ℓob ℓhom ℓU ℓEl : Level} (C : Category ℓob ℓhom) {U : Type
     κ Γ .F-id = ∫U-Hom-PathP Γ _ _ refl refl refl
     κ Γ .F-seq _ _ = ∫U-Hom-PathP Γ _ _ refl refl refl
 
+    -- κ's naturality in a context map σ : Δ ⟶ Γ, read off at a fibre object s
+    -- lying over Iρ.  Unlike Fib⋆ below, which reindexes inside one fixed
+    -- context, σ never moves the C-index — ∫U-hom σ .F-ob (I , ρ) is (I , σ ρ) —
+    -- so this single square is the whole difference between the two sides.
+    -- PPathσ (Pi.agda) is built out of it.
+    κσ : {Γ Δ : Ctx} (σ : Δ ⟶ Γ) (Iρ : ∫U Δ .ob) (s : Fib (Iρ .fst) .ob)
+       → Γ .F-hom (s .snd) (σ .N-ob (Iρ .fst) (Iρ .snd))
+           ≡ σ .N-ob (s .fst) (Δ .F-hom (s .snd) (Iρ .snd))
+    κσ σ Iρ s = sym (funExt⁻ (σ .N-hom (s .snd)) (Iρ .snd))
+
     ι : ∀ {Γ} (Iρ : ∫U Γ .ob) → Functor (Fib (Iρ .fst) ^op) (Idx Γ ^op)
     ι {Γ} Iρ .F-ob s = Iρ , s
     ι {Γ} Iρ .F-hom (f , p) = ∫U Γ .id , f , cong (λ z → f ⋆⟨ C ⟩ z) (C .⋆IdR _) ∙ p
@@ -139,7 +149,7 @@ module _ {ℓob ℓhom ℓU ℓEl : Level} (C : Category ℓob ℓhom) {U : Type
     Fib⋆ ψ .F-id = FibHom≡ refl
     Fib⋆ ψ .F-seq _ _ = FibHom≡ refl
 
-    module _ {Γ : Ctx} (I : C .ob) (P : PresheafU (Fib I) TU) (Q : Functor (∫U P) (UCat TU)) where
+    module _ (I : C .ob) (P : PresheafU (Fib I) TU) (Q : Functor (∫U P) (UCat TU)) where
       indexed-Πdata : Type _
       indexed-Πdata = (s : Fib I .ob) (a : El (P .F-ob s)) → El (Q .F-ob (s , a))
       indexed-Πnat : indexed-Πdata → Type _
@@ -161,8 +171,23 @@ module _ {ℓob ℓhom ℓU ℓEl : Level} (C : Category ℓob ℓhom) {U : Type
       indexed-Πcode : TU hasCodeFor indexed-Π
       indexed-Πcode = solveCode (coded .isSmallOb ◂ coded .isSmallHom ◂ hasSigmaTU ◂ hasPiTU ◂ hasEqTU ◂ ε)
 
+    -- Dependent version of indexed-Π≡, for comparing indexed-Πs over genuinely
+    -- different (P , Q) — needed by ΠTyNat (Pi.agda), which relates indexed-Πs
+    -- reindexed by a context map to indexed-Πs at the substituted context.
+    -- Naturality stays a proposition all along a path of (P , Q), so a PathP of
+    -- indexed-Πs is still exactly a PathP of their data.
+    indexed-Π≡P : {Iob : C .ob}
+                  {P0 P1 : PresheafU (Fib Iob) TU} (Ppath : P0 ≡ P1)
+                  {Q0 : Functor (∫U P0) (UCat TU)} {Q1 : Functor (∫U P1) (UCat TU)}
+                  (Qpath : PathP (λ i → Functor (∫U (Ppath i)) (UCat TU)) Q0 Q1)
+                  {u : indexed-Π Iob P0 Q0} {v : indexed-Π Iob P1 Q1}
+                → PathP (λ i → indexed-Πdata Iob (Ppath i) (Qpath i)) (u .fst) (v .fst)
+                → PathP (λ i → indexed-Π Iob (Ppath i) (Qpath i)) u v
+    indexed-Π≡P {Iob = Iob} Ppath Qpath dataP = ΣPathP
+      (dataP , isProp→PathP (λ i → isProp-indexed-Πnat Iob (Ppath i) (Qpath i) (dataP i)) _ _)
+
     module PiFam {Γ : Ctx} (A : Functor (∫U Γ) (UCat TU)) (B : Functor (∫U (Γ ▹ A)) (UCat TU)) where
       Πtype : ∫U Γ .ob → Type _
-      Πtype Iρ = indexed-Π {Γ} (Iρ .fst) ((A ∘F κ Γ) ∘F ι Iρ) (B ∘F κ▹ Γ A ∘F ∫ι Iρ (A ∘F κ Γ))
+      Πtype Iρ = indexed-Π (Iρ .fst) ((A ∘F κ Γ) ∘F ι Iρ) (B ∘F κ▹ Γ A ∘F ∫ι Iρ (A ∘F κ Γ))
       Πcode : (Iρ : ∫U Γ .ob) → TU hasCodeFor (Πtype Iρ)
-      Πcode Iρ = indexed-Πcode {Γ} (Iρ .fst) ((A ∘F κ Γ) ∘F ι Iρ) (B ∘F κ▹ Γ A ∘F ∫ι Iρ (A ∘F κ Γ))
+      Πcode Iρ = indexed-Πcode (Iρ .fst) ((A ∘F κ Γ) ∘F ι Iρ) (B ∘F κ▹ Γ A ∘F ∫ι Iρ (A ∘F κ Γ))

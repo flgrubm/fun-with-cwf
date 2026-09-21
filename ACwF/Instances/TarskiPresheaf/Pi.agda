@@ -18,7 +18,7 @@ open import ACwF.Pi
 open import TarskiUniverse.Solver
 open import Utils.InternalCategory
 open import ACwF.Instances.TarskiPresheaf.Base
-open import ACwF.Instances.TarskiPresheaf.Pi.Tm
+open import ACwF.Instances.TarskiPresheaf.Pi.TmNat
 
 open Category
 open Functor
@@ -32,7 +32,7 @@ module _ {ℓob ℓhom ℓU ℓEl : Level} (C : Category ℓob ℓhom) {U : Type
   open [_]CodedCategory
   module _ (hasPiTU : hasPi TU) (hasEqTU : hasEq TU) (coded : [ TU ]CodedCategory C) where
     -- Definitions, Restrict and Nat, with this module's parameters applied.
-    open PiTm C Univ hasPiTU hasEqTU coded
+    open PiTmNat C Univ hasPiTU hasEqTU coded
 
     Psh-Π-structure : Π-Structure _ (Psh-CwF C Univ)
     -- Restrict.agda builds ΠTy as a functor and Nat.agda proves ΠTyNat clause by
@@ -42,4 +42,4 @@ module _ {ℓob ℓhom ℓU ℓEl : Level} (C : Category ℓob ℓhom) {U : Type
     Psh-Π-structure .Π-Structure.ΠTyNat A B σ =
       Functor≡ (ΠTyNat-ob A B σ) (ΠTyNat-hom A B σ)
     Psh-Π-structure .Π-Structure.ΠTmIso = ΠTmIso-at
-    Psh-Π-structure .Π-Structure.ΠTmIsoInvNat = {!!}
+    Psh-Π-structure .Π-Structure.ΠTmIsoInvNat = ΠTmIsoInvNat-at

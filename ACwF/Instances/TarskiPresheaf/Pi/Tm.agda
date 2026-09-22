@@ -165,10 +165,10 @@ module _ {ℓob ℓhom ℓU ℓEl : Level} (C : Category ℓob ℓhom) {U : Type
 
         -- app's naturality.  Three separate facts meet here: F's own naturality
         -- (FuNat — Fu at the target *is* a restrict of Fu at the source), the
-        -- indexed-Πnat clause of Fu itself (q1), and restrictβ (q2).  Both routes
-        -- out of `B ⟪ M₀ ⟫ (appRaw z)` are made to meet, exactly as in
-        -- restrictSeq (Restrict.agda); U being a set, the code-paths never have
-        -- to be shown equal, only the values over them.
+        -- indexed-Πnat clause of Fu itself (q1), and restrictβ (q2), mirrored back
+        -- to appRaw by q3.  Both routes out of `B ⟪ M₀ ⟫ (appRaw z)` are made to
+        -- meet, exactly as in restrictSeq (Restrict.agda); U being a set, the
+        -- code-paths never have to be shown equal, only the values over them.
         module _ {z z' : ∫U (Γ ▹ A) .ob} (m : ∫U (Γ ▹ A) [ z , z' ]) where
           private
             g : C [ z' .fst , z .fst ]
@@ -184,53 +184,59 @@ module _ {ℓob ℓhom ℓU ℓEl : Level} (C : Category ℓob ℓhom) {U : Type
             Px : PresheafU (Fib (z .fst)) TU
             Px = (A ∘F κ Γ) ∘F ι {Γ} (zx z)
 
-            -- the identity slice at each end, and the z'-one reindexed into Fib (z .fst)
+            -- the identity slice at each end...
             s : Fib (z .fst) .ob
             s = z .fst , C .id
             s' : Fib (z' .fst) .ob
             s' = z' .fst , C .id
-            t : Fib (z .fst) .ob
-            t = Jφ A B ψ .F-ob s'
+            -- ...and s' reindexed backward into Fib (z .fst) — same role as s'' in
+            -- Nat.agda's restrictNatσData.
+            s'' : Fib (z .fst) .ob
+            s'' = Jφ A B ψ .F-ob s'
 
-            m' : Fib (z .fst) [ t , s ]
+            m' : Fib (z .fst) [ s'' , s ]
             m' = (C .id ⋆⟨ C ⟩ g) , C .⋆IdR _
 
-            -- Px ⟪ m' ⟫ and A ⟪ g ⟫ are the same map up to where their endpoints
-            -- sit: F-hom-PathP says A .F-hom only sees the C-morphism.
-            mκ : ∫U Γ [ (z .fst , Γ .F-hom (C .id) (zρ z))
-                      , (z' .fst , Γ .F-hom (C .id ⋆⟨ C ⟩ g) (zρ z)) ]
-            mκ = κ Γ .F-hom (ι {Γ} (zx z) .F-hom m')
+            -- za z transported along m' agrees with za z', up to PPath: the
+            -- argument half of app's naturality, self-contained from the result
+            -- half below (Tob onward), which only ever needs zaAgree's type.
+            zaAgree : PathP (λ i → El (PPath A B ψ i .F-ob s'))
+                            (Px .F-hom m' (za z)) (za z')
+            zaAgree = ElPathP TU (compPathP' {B = λ u → El (A .F-ob (z' .fst , u))}
+                        (compPathP' {B = λ u → El (A .F-ob (z' .fst , u))} u1 u2)
+                        (symP (zaP z')))
+              where
+                -- Px ⟪ m' ⟫ and A ⟪ g ⟫ are the same map up to where their endpoints
+                -- sit: F-hom-PathP says A .F-hom only sees the C-morphism, and u1
+                -- below is exactly that fact, bridging the gap ⋆IdL leaves.
+                mκ : ∫U Γ [ (z .fst , Γ .F-hom (C .id) (zρ z))
+                          , (z' .fst , Γ .F-hom (C .id ⋆⟨ C ⟩ g) (zρ z)) ]
+                mκ = κ Γ .F-hom (ι {Γ} (zx z) .F-hom m')
 
-            -- spelled out rather than left as `g , refl`: F-hom-PathP's x'/y' are
-            -- otherwise metas that it has to invert srcP/tgtP to recover
-            mg : ∫U Γ [ (z .fst , zρ z) , (z' .fst , Γ .F-hom g (zρ z)) ]
-            mg = g , refl
+                -- spelled out rather than left as `g , refl`: F-hom-PathP's x'/y' are
+                -- otherwise metas that it has to invert srcP/tgtP to recover
+                mg : ∫U Γ [ (z .fst , zρ z) , (z' .fst , Γ .F-hom g (zρ z)) ]
+                mg = g , refl
 
-            -- Path (∫U Γ .ob), not ≡: inferred from the pairs alone the Σ's second
-            -- family stays a meta, and F-hom-PathP then cannot match its endpoints.
-            srcP : Path (∫U Γ .ob) (z .fst , Γ .F-hom (C .id) (zρ z)) (z .fst , zρ z)
-            srcP i = z .fst , idρ z i
-            tgtP : Path (∫U Γ .ob) (z' .fst , Γ .F-hom (C .id ⋆⟨ C ⟩ g) (zρ z))
-                                   (z' .fst , Γ .F-hom g (zρ z))
-            tgtP i = z' .fst , Γ .F-hom (C .⋆IdL g i) (zρ z)
+                -- Path (∫U Γ .ob), not ≡: inferred from the pairs alone the Σ's second
+                -- family stays a meta, and F-hom-PathP then cannot match its endpoints.
+                srcP : Path (∫U Γ .ob) (z .fst , Γ .F-hom (C .id) (zρ z)) (z .fst , zρ z)
+                srcP i = z .fst , idρ z i
+                tgtP : Path (∫U Γ .ob) (z' .fst , Γ .F-hom (C .id ⋆⟨ C ⟩ g) (zρ z))
+                                       (z' .fst , Γ .F-hom g (zρ z))
+                tgtP i = z' .fst , Γ .F-hom (C .⋆IdL g i) (zρ z)
 
-            u1 : PathP (λ i → El (A .F-ob (tgtP i)))
-                       (A .F-hom mκ (za z))
-                       (A .F-hom mg (sndSigma (z .snd)))
-            u1 i = F-hom-PathP A mκ mg srcP tgtP (C .⋆IdL g) i (zaP z i)
+                -- A's action on za z, computed via mκ and via mg, agree.
+                u1 : PathP (λ i → El (A .F-ob (tgtP i)))
+                           (A .F-hom mκ (za z))
+                           (A .F-hom mg (sndSigma (z .snd)))
+                u1 i = F-hom-PathP A mκ mg srcP tgtP (C .⋆IdL g) i (zaP z i)
 
-            u2 : PathP (λ i → El (A .F-ob (z' .fst , qbase i)))
-                       (A .F-hom mg (sndSigma (z .snd))) (sndSigma (z' .snd))
-            u2 = compPathP' {B = λ u → El (A .F-ob (z' .fst , u))}
-                   (symP (sndPairSigma _ _)) (cong sndSigma (m .snd))
-
-            -- Px ⟪ m' ⟫ (za z) is za z' dragged back across PPath — the very input
-            -- restrictβ wants.
-            eqa : PathP (λ i → El (PPath A B ψ i .F-ob s'))
-                        (Px .F-hom m' (za z)) (za z')
-            eqa = ElPathP TU (compPathP' {B = λ u → El (A .F-ob (z' .fst , u))}
-                    (compPathP' {B = λ u → El (A .F-ob (z' .fst , u))} u1 u2)
-                    (symP (zaP z')))
+                -- A's action on mg matches sndSigma (z' .snd), via m's own witness.
+                u2 : PathP (λ i → El (A .F-ob (z' .fst , qbase i)))
+                           (A .F-hom mg (sndSigma (z .snd))) (sndSigma (z' .snd))
+                u2 = compPathP' {B = λ u → El (A .F-ob (z' .fst , u))}
+                       (symP (sndPairSigma _ _)) (cong sndSigma (m .snd))
 
             Tob : ∫U (Γ ▹ A) .ob
             Tob = z' .fst , pairSigma {B = λ u → A .F-ob (z' .fst , u)}
@@ -239,7 +245,7 @@ module _ {ℓob ℓhom ℓU ℓEl : Level} (C : Category ℓob ℓhom) {U : Type
             Tpath : Tob ≡ z'
             Tpath = ΣPathP (refl , congP₂
                       (λ i a b → pairSigma {B = λ u → A .F-ob (z' .fst , u)} a b)
-                      (γ A B ψ s') eqa
+                      (γ A B ψ s') zaAgree
                     ∙ zpathSnd z')
 
             M₀ : ∫U (Γ ▹ A) [ zpath z i0 , Tob ]
@@ -254,14 +260,15 @@ module _ {ℓob ℓhom ℓU ℓEl : Level} (C : Category ℓob ℓhom) {U : Type
                          (funExt⁻ (F .N-hom ψ) (isContrElUnit .fst))
                   ∙ secEq (Πcode (zx z') .snd) (restrict A B ψ (Fu (zx z)))
 
-            q1 : B .F-hom M₀ (appRaw z) ≡ Fu (zx z) .fst t (Px .F-hom m' (za z))
-            q1 = Fu (zx z) .snd s t m' (za z)
+            q1 : B .F-hom M₀ (appRaw z) ≡ Fu (zx z) .fst s'' (Px .F-hom m' (za z))
+            q1 = Fu (zx z) .snd s s'' m' (za z)
 
-            q2 : PathP (λ i → El (QPath A B ψ i .F-ob (s' , eqa i)))
-                       (Fu (zx z) .fst t (Px .F-hom m' (za z)))
+            q2 : PathP (λ i → El (QPath A B ψ i .F-ob (s' , zaAgree i)))
+                       (Fu (zx z) .fst s'' (Px .F-hom m' (za z)))
                        (restrict A B ψ (Fu (zx z)) .fst s' (za z'))
-            q2 = restrictβ A B ψ (Fu (zx z)) s' eqa
+            q2 = restrictβ A B ψ (Fu (zx z)) s' zaAgree
 
+            -- the mirror of q1, through F's own naturality (FuNat) rather than Fu's.
             q3 : restrict A B ψ (Fu (zx z)) .fst s' (za z') ≡ appRaw z'
             q3 = cong (λ u → u .fst s' (za z')) (sym FuNat)
 

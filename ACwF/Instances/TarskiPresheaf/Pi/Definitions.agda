@@ -10,6 +10,7 @@ open import Cubical.Categories.Category
 open import Cubical.Categories.Functor
 open import Cubical.Categories.NaturalTransformation
 open import Cubical.Categories.Instances.Slice.Base
+open import Cubical.Categories.Instances.Slice.Functor using (∑_)
 open import TarskiUniverse.Base
 open import TarskiUniverse.Properties
 open import Utils.TarskiPresheaf
@@ -74,8 +75,9 @@ module _ {ℓob ℓhom ℓU ℓEl : Level} (C : Category ℓob ℓhom) {U : Type
 
     -- The total index category, oriented like Fib: restriction runs from (Iρ , s) to
     -- (I'ρ' , s'), i.e. backwards in Idx, so that PresheafU (Idx Γ) TU is the
-    -- restriction functor.  Idx Γ ^op is the twisted arrow category of ∫U Γ,
-    -- presented so that the fibre over Iρ mentions only C.
+    -- restriction functor.  Idx Γ ^op is equivalent to, but deliberately not,
+    -- the library's TwistedArrowCategory (∫U Γ): there an object is an ∫U Γ-arrow,
+    -- carrying an El-equality, whereas here the fibre over Iρ mentions only C.
     Idx : Ctx → Category (ℓ-max (ℓ-max ℓob ℓhom) ℓEl) (ℓ-max ℓhom ℓEl)
     Idx Γ .ob = Σ[ Iρ ∈ ∫U Γ .ob ] Fib (Iρ .fst) .ob
     Idx Γ .Hom[_,_] (I'ρ' , s') (Iρ , s) = IdxHom Γ Iρ I'ρ' s s'
@@ -106,10 +108,11 @@ module _ {ℓob ℓhom ℓU ℓEl : Level} (C : Category ℓob ℓhom) {U : Type
     κ Γ .F-seq _ _ = ∫U-Hom-PathP Γ _ _ refl refl refl
 
     -- κ's naturality in a context map σ : Δ ⟶ Γ, read off at a fibre object s
-    -- lying over Iρ.  Unlike Fib⋆ below, which reindexes inside one fixed
-    -- context, σ never moves the C-index — ∫U-hom σ .F-ob (I , ρ) is (I , σ ρ) —
-    -- so this single square is the whole difference between the two sides.
-    -- PPathσ (Pi.agda) is built out of it.
+    -- lying over Iρ.  Unlike the fibre reindexing ∑ (φ .fst) that restrict uses
+    -- (Restrict.agda), which stays inside one fixed context, σ never moves the
+    -- C-index — ∫U-hom σ .F-ob (I , ρ) is (I , σ ρ) — so this single square is
+    -- the whole difference between the two sides.  PPathσ (Nat.agda) is built
+    -- out of it.
     κσ : {Γ Δ : Ctx} (σ : Δ ⟶ Γ) (Iρ : ∫U Δ .ob) (s : Fib (Iρ .fst) .ob)
        → Γ .F-hom (S-arr s) (σ .N-ob (Iρ .fst) (Iρ .snd))
            ≡ σ .N-ob (S-ob s) (Δ .F-hom (S-arr s) (Iρ .snd))

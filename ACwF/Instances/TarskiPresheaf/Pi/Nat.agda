@@ -45,7 +45,7 @@ module _ {ℓob ℓhom ℓU ℓEl : Level} (C : Category ℓob ℓhom) {U : Type
       -- along a context map σ : Δ ⟶ Γ, as opposed to `restrict` (Restrict.agda), which
       -- reindexes along a morphism of ∫U Γ within one fixed context. σ acts as
       -- ∫U-hom σ .F-ob (I , ρ) = (I , σ .N-ob I ρ): it never moves the C-index
-      -- I, so unlike `restrict` there is no Fib⋆/Jφ-style change of fibre
+      -- I, so unlike `restrict` there is no Jφ-style change of fibre
       -- category needed — Fib I is shared by both sides on the nose, and only
       -- the ρ-component has to be reindexed, via σ's own naturality square.
       module _ {Δ : Ctx} (σ : Δ ⟶ Γ) where

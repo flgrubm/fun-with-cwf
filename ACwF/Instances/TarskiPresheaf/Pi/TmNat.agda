@@ -98,8 +98,7 @@ module _ {ℓob ℓhom ℓU ℓEl : Level} (C : Category ℓob ℓhom) {U : Type
         -- conversion must be paid somewhere.  Paying it once here rather than
         -- once in the type and again in the body took this file from ~4m45 to
         -- ~2m41.  A real fix would have to keep ΠTy's F-ob from mentioning
-        -- indexed-Πcode at all — cf. the note on making indexed-Πcode opaque in
-        -- CLAUDE.md.
+        -- indexed-Πcode at all.
         ΠTyNatσ : (ΠTy A B) [ σ ]Ty ≡ ΠTy (A [ σ ]Ty) (B [ σ ⁺ ]Ty)
         ΠTyNatσ = Functor≡ (ΠTyNat-ob A B σ) (ΠTyNat-hom A B σ)
 

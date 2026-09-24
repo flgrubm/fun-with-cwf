@@ -10,6 +10,7 @@ open import Cubical.Data.Sigma
 open import Cubical.Categories.Category
 open import Cubical.Categories.Functor
 open import Cubical.Categories.NaturalTransformation
+open import Cubical.Categories.Instances.Slice.Base
 open import TarskiUniverse.Base
 open import TarskiUniverse.Properties
 open import Utils.TarskiPresheaf
@@ -38,7 +39,7 @@ module _ {ℓob ℓhom ℓU ℓEl : Level} (C : Category ℓob ℓhom) {U : Type
       open PiFam A B
 
       -- λ-abstraction, data clause.  The fibre of ΠTy over x at a slice object s
-      -- is `El (B .F-ob (s .fst , pairSigma (Γ .F-hom (s .snd) ρ) a))` — which is
+      -- is `El (B .F-ob (S-ob s , pairSigma (Γ .F-hom (S-arr s) ρ) a))` — which is
       -- *definitionally* where f already takes its value — so this needs no
       -- transport whatsoever.  Everything hard about lam is in its two naturality
       -- obligations, not here.
@@ -46,7 +47,7 @@ module _ {ℓob ℓhom ℓU ℓEl : Level} (C : Category ℓob ℓhom) {U : Type
               → indexed-Πdata (x .fst) ((A ∘F κ Γ) ∘F ι x)
                               (B ∘F κ▹ Γ A ∘F ∫ι x (A ∘F κ Γ))
       lamData f x s a =
-        f .N-ob (s .fst , pairSigma (Γ .F-hom (s .snd) (x .snd)) a) (isContrElUnit .fst)
+        f .N-ob (S-ob s , pairSigma (Γ .F-hom (S-arr s) (x .snd)) a) (isContrElUnit .fst)
 
       -- … and its naturality clause is just f's own naturality, read off at the
       -- ∫U (Γ ▹ A)-morphism that κ▹ ∘ ∫ι produces.  Again no transport: the
@@ -88,10 +89,10 @@ module _ {ℓob ℓhom ℓU ℓEl : Level} (C : Category ℓob ℓhom) {U : Type
               a₀ = pull A B φ s a
               aP : PathP (λ i → El (PPath A B φ i .F-ob s)) a₀ a
               aP = pullP A B φ s a
-              c : PathP (λ i → El (B .F-ob (s .fst
-                    , pairSigma {B = λ u → A .F-ob (s .fst , u)} (γ A B φ s i) (aP i))))
+              c : PathP (λ i → El (B .F-ob (S-ob s
+                    , pairSigma {B = λ u → A .F-ob (S-ob s , u)} (γ A B φ s i) (aP i))))
                         (lamData f x (Jφ A B φ .F-ob s) a₀) (lamData f y s a)
-              c i = f .N-ob (s .fst , pairSigma (γ A B φ s i) (aP i)) (isContrElUnit .fst)
+              c i = f .N-ob (S-ob s , pairSigma (γ A B φ s i) (aP i)) (isContrElUnit .fst)
               c' : PathP (λ i → El (QPath A B φ i .F-ob (s , aP i)))
                          (lamData f x (Jφ A B φ .F-ob s) a₀) (lamData f y s a)
               c' = ElPathP TU c
@@ -154,7 +155,7 @@ module _ {ℓob ℓhom ℓU ℓEl : Level} (C : Category ℓob ℓhom) {U : Type
         appRaw : (z : ∫U (Γ ▹ A) .ob)
                → El (B .F-ob (z .fst , pairSigma {B = λ u → A .F-ob (z .fst , u)}
                                         (Γ .F-hom (C .id) (zρ z)) (za z)))
-        appRaw z = Fu (zx z) .fst (z .fst , C .id) (za z)
+        appRaw z = Fu (zx z) .fst (sliceob (C .id)) (za z)
 
         appData : (z : ∫U (Γ ▹ A) .ob) → El (B .F-ob z)
         appData z = transport (λ i → El (B .F-ob (zpath z i))) (appRaw z)
@@ -186,16 +187,16 @@ module _ {ℓob ℓhom ℓU ℓEl : Level} (C : Category ℓob ℓhom) {U : Type
 
             -- the identity slice at each end...
             s : Fib (z .fst) .ob
-            s = z .fst , C .id
+            s = sliceob (C .id)
             s' : Fib (z' .fst) .ob
-            s' = z' .fst , C .id
+            s' = sliceob (C .id)
             -- ...and s' reindexed backward into Fib (z .fst) — same role as s'' in
             -- Nat.agda's restrictNatσData.
             s'' : Fib (z .fst) .ob
             s'' = Jφ A B ψ .F-ob s'
 
             m' : Fib (z .fst) [ s'' , s ]
-            m' = (C .id ⋆⟨ C ⟩ g) , C .⋆IdR _
+            m' = slicehom (C .id ⋆⟨ C ⟩ g) (C .⋆IdR _)
 
             -- za z transported along m' agrees with za z', up to PPath: the
             -- argument half of app's naturality, self-contained from the result
@@ -295,30 +296,30 @@ module _ {ℓob ℓhom ℓU ℓEl : Level} (C : Category ℓob ℓhom) {U : Type
         module _ {x : ∫U Γ .ob} (s : Fib (x .fst) .ob)
                  (a : El (((A ∘F κ Γ) ∘F ι {Γ} x) .F-ob s)) where
           private
-            Elᴬ : El (Γ .F-ob (s .fst)) → Type ℓEl
-            Elᴬ v = El (A .F-ob (s .fst , v))
+            Elᴬ : El (Γ .F-ob (S-ob s)) → Type ℓEl
+            Elᴬ v = El (A .F-ob (S-ob s , v))
 
             w : ∫U (Γ ▹ A) .ob
-            w = s .fst , pairSigma {B = λ u → A .F-ob (s .fst , u)}
-                           (Γ .F-hom (s .snd) (x .snd)) a
+            w = S-ob s , pairSigma {B = λ u → A .F-ob (S-ob s , u)}
+                           (Γ .F-hom (S-arr s) (x .snd)) a
 
             ψs : ∫U Γ [ x , zx w ]
-            ψs = s .snd , sym (fstPairSigma _ _)
+            ψs = S-arr s , sym (fstPairSigma _ _)
 
             s₁ : Fib (zx w .fst) .ob
-            s₁ = s .fst , C .id
+            s₁ = sliceob {S-ob = S-ob s} (C .id)
             t₁ : Fib (x .fst) .ob
             t₁ = Jφ A B ψs .F-ob s₁
 
             et : Path (Fib (x .fst) .ob) t₁ s
-            et i = s .fst , C .⋆IdL (s .snd) i
+            et i = sliceob (C .⋆IdL (S-arr s) i)
 
             a₀ : El ((((A ∘F κ Γ) ∘F ι {Γ} x) ∘F Jφ A B ψs) .F-ob s₁)
             a₀ = pull A B ψs s₁ (za w)
             aP : PathP (λ i → El (PPath A B ψs i .F-ob s₁)) a₀ (za w)
             aP = pullP A B ψs s₁ (za w)
 
-            -- a₀ ↝ za w ↝ sndSigma (w .snd) ↝ a, all inside El (A ⟅ s .fst , – ⟆)
+            -- a₀ ↝ za w ↝ sndSigma (w .snd) ↝ a, all inside El (A ⟅ S-ob s , – ⟆)
             aa : PathP (λ i → El (((A ∘F κ Γ) ∘F ι {Γ} x) .F-ob (et i))) a₀ a
             aa = ElPathP TU (compPathP' {B = Elᴬ}
                    (compPathP' {B = Elᴬ} aP (zaP w)) (sndPairSigma _ _))
@@ -361,7 +362,7 @@ module _ {ℓob ℓhom ℓU ℓEl : Level} (C : Category ℓob ℓhom) {U : Type
       appLam f = makeNatTransPath (funExt λ z → funExt λ u →
           sym (fromPathP (appβ (lam f) z))
         ∙ cong (transport (λ i → El (B .F-ob (zpath z i))))
-               (cong (λ v → v .fst (z .fst , C .id) (za z))
+               (cong (λ v → v .fst (sliceob (C .id)) (za z))
                      (secEq (Πcode (zx z) .snd) (lamElt f (zx z))))
         ∙ fromPathP (λ i → f .N-ob (zpath z i) (isContrElUnit .fst))
         ∙ cong (f .N-ob z) (isContrElUnit .snd u))

@@ -10,6 +10,7 @@ open import Cubical.Data.Sigma
 open import Cubical.Categories.Category
 open import Cubical.Categories.Functor
 open import Cubical.Categories.NaturalTransformation
+open import Cubical.Categories.Instances.Slice.Base
 open import TarskiUniverse.Base
 open import TarskiUniverse.Properties
 open import Utils.TarskiPresheaf
@@ -59,10 +60,10 @@ module _ {ℓob ℓhom ℓU ℓEl : Level} (C : Category ℓob ℓhom) {U : Type
         lamNatσData x s {a₀} {a₁} aP = ElPathP TU c
           where
             obP : Path (∫U (Γ ▹ A) .ob)
-                       (s .fst , pairSigma {B = λ u → A .F-ob (s .fst , u)}
+                       (S-ob s , pairSigma {B = λ u → A .F-ob (S-ob s , u)}
                                    (κσ σ x s i0) a₀)
                        (W₁σ A B σ x .F-ob (s , a₁))
-            obP = (λ i → s .fst , pairSigma {B = λ u → A .F-ob (s .fst , u)}
+            obP = (λ i → S-ob s , pairSigma {B = λ u → A .F-ob (S-ob s , u)}
                                     (κσ σ x s i) (aP i))
                 ∙ W₁σ-ob A B σ x s a₁
             c : PathP (λ i → El (B .F-ob (obP i)))

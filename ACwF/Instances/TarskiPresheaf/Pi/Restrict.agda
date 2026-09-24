@@ -10,6 +10,7 @@ open import Cubical.Data.Sigma
 open import Cubical.Categories.Category
 open import Cubical.Categories.Functor
 open import Cubical.Categories.NaturalTransformation
+open import Cubical.Categories.Instances.Slice.Base
 open import TarskiUniverse.Base
 open import TarskiUniverse.Properties
 open import Utils.TarskiPresheaf
@@ -57,9 +58,9 @@ module _ {ℓob ℓhom ℓU ℓEl : Level} (C : Category ℓob ℓhom) {U : Type
 
         -- … and the two fibrewise values of A differ by exactly φ's witness.
         γ : (s : Fib (y .fst) .ob)
-          → Γ .F-hom (s .snd ⋆⟨ C ⟩ φ .fst) (x .snd) ≡ Γ .F-hom (s .snd) (y .snd)
-        γ s = funExt⁻ (Γ .F-seq (φ .fst) (s .snd)) (x .snd)
-            ∙ cong (Γ .F-hom (s .snd)) (φ .snd)
+          → Γ .F-hom (S-arr s ⋆⟨ C ⟩ φ .fst) (x .snd) ≡ Γ .F-hom (S-arr s) (y .snd)
+        γ s = funExt⁻ (Γ .F-seq (φ .fst) (S-arr s)) (x .snd)
+            ∙ cong (Γ .F-hom (S-arr s)) (φ .snd)
 
         PPath : ((A ∘F κ Γ) ∘F ι x) ∘F Jφ ≡ (A ∘F κ Γ) ∘F ι y
         PPath = Functor≡
@@ -74,7 +75,7 @@ module _ {ℓob ℓhom ℓU ℓEl : Level} (C : Category ℓob ℓhom) {U : Type
 
         -- the ∫U Γ-morphism underlying PPath i ⟪ m ⟫
         mᵢ : (i : I) {s t : Fib (y .fst) .ob} (m : (Fib (y .fst) ^op) [ s , t ])
-           → ∫U Γ [ (s .fst , γ s i) , (t .fst , γ t i) ]
+           → ∫U Γ [ (S-ob s , γ s i) , (S-ob t , γ t i) ]
         mᵢ i {s} {t} m = ∫U-Hom-PathP Γ
           (κ Γ .F-hom (ι {Γ} x .F-hom (Jφ .F-hom m))) (κ Γ .F-hom (ι {Γ} y .F-hom m))
           (ΣPathP (refl , γ s)) (ΣPathP (refl , γ t)) refl i
@@ -83,8 +84,8 @@ module _ {ℓob ℓhom ℓU ℓEl : Level} (C : Category ℓob ℓhom) {U : Type
         -- them.  Stated without a boundary and glued on afterwards, because F-id and
         -- F-seq only agree with W₀/W₁'s propositionally.
         WW : (i : I) → Functor (∫U (PPath i)) (∫U (Γ ▹ A))
-        WW i .F-ob (s , v) = s .fst , pairSigma {B = λ u → A .F-ob (s .fst , u)} (γ s i) v
-        WW i .F-hom (m , p) .fst = m .fst
+        WW i .F-ob (s , v) = S-ob s , pairSigma {B = λ u → A .F-ob (S-ob s , u)} (γ s i) v
+        WW i .F-hom (m , p) .fst = m .S-hom
         WW i .F-hom (m , p) .snd = ▹witness Γ A (mᵢ i m) _ _ p
         WW i .F-id = ∫U-Hom-PathP (Γ ▹ A) _ _ refl refl refl
         WW i .F-seq _ _ = ∫U-Hom-PathP (Γ ▹ A) _ _ refl refl refl
@@ -160,7 +161,7 @@ module _ {ℓob ℓhom ℓU ℓEl : Level} (C : Category ℓob ℓhom) {U : Type
               aP = pullP idx s a
               -- the fibre reindexing is the identity, up to ⋆IdR
               e : Jφ idx .F-ob s ≡ s
-              e = ΣPathP (refl , C .⋆IdR (s .snd))
+              e = λ i → sliceob (C .⋆IdR (S-arr s) i)
               ap : PathP (λ i → El (Px .F-ob (e i))) a₀ a
               ap = ElPathP TU aP
               c : PathP (λ i → El (Qx .F-ob (e i , ap i)))
@@ -220,7 +221,7 @@ module _ {ℓob ℓhom ℓU ℓEl : Level} (C : Category ℓob ℓhom) {U : Type
               cP = pullP φ t b₀
               -- reindexing by ψ then by φ is reindexing by ψ ⋆ φ, up to ⋆Assoc
               e : Jφ φ .F-ob t ≡ Jφ φψ .F-ob s
-              e = ΣPathP (refl , C .⋆Assoc (s .snd) (ψ .fst) (φ .fst))
+              e = λ i → sliceob (C .⋆Assoc (S-arr s) (ψ .fst) (φ .fst) i)
               dP : PathP (λ i → El (Px .F-ob (e i))) c₀ a₀
               dP = ElPathP TU (compPathP' {B = El} (compPathP' {B = El} cP bP) (symP aP))
               start : El (Qx .F-ob (Jφ φ .F-ob t , c₀))

@@ -10,6 +10,7 @@ open import Cubical.Data.Sigma
 open import Cubical.Categories.Category
 open import Cubical.Categories.Functor
 open import Cubical.Categories.NaturalTransformation
+open import Cubical.Categories.Instances.Slice.Base
 open import TarskiUniverse.Base
 open import TarskiUniverse.Properties
 open import Utils.TarskiPresheaf
@@ -74,7 +75,7 @@ module _ {ℓob ℓhom ℓU ℓEl : Level} (C : Category ℓob ℓhom) {U : Type
           -- the ∫U Γ-morphism underlying PPathσ x i ⟪ m ⟫, exactly as `mᵢ` is for
           -- `PPath` in Restrict.agda
           mᵢσ : (i : I) {s t : Fib (x .fst) .ob} (m : (Fib (x .fst) ^op) [ s , t ])
-              → ∫U Γ [ (s .fst , κσ σ x s i) , (t .fst , κσ σ x t i) ]
+              → ∫U Γ [ (S-ob s , κσ σ x s i) , (S-ob t , κσ σ x t i) ]
           mᵢσ i {s} {t} m = ∫U-Hom-PathP Γ
             (κ Γ .F-hom (ι {Γ} (∫U-hom σ .F-ob x) .F-hom m)) ((∫U-hom σ ∘F κ Δ) .F-hom (ι {Δ} x .F-hom m))
             (ΣPathP (refl , κσ σ x s)) (ΣPathP (refl , κσ σ x t)) refl i
@@ -82,8 +83,8 @@ module _ {ℓob ℓhom ℓU ℓEl : Level} (C : Category ℓob ℓhom) {U : Type
           -- κ▹ reindexed along PPathσ x: same shape at every i, boundary-checked
           -- against W₀σ/W₁σ below, exactly as WW is for WPath in Restrict.agda.
           WWσ : (i : I) → Functor (∫U (PPathσ x i)) (∫U (Γ ▹ A))
-          WWσ i .F-ob (s , v) = s .fst , pairSigma {B = λ u → A .F-ob (s .fst , u)} (κσ σ x s i) v
-          WWσ i .F-hom (m , p) .fst = m .fst
+          WWσ i .F-ob (s , v) = S-ob s , pairSigma {B = λ u → A .F-ob (S-ob s , u)} (κσ σ x s i) v
+          WWσ i .F-hom (m , p) .fst = m .S-hom
           WWσ i .F-hom (m , p) .snd = ▹witness Γ A (mᵢσ i m) _ _ p
           WWσ i .F-id = ∫U-Hom-PathP (Γ ▹ A) _ _ refl refl refl
           WWσ i .F-seq _ _ = ∫U-Hom-PathP (Γ ▹ A) _ _ refl refl refl
@@ -95,9 +96,9 @@ module _ {ℓob ℓhom ℓU ℓEl : Level} (C : Category ℓob ℓhom) {U : Type
           W₁σ-ob : (s : Fib (x .fst) .ob) (v : El (((A [ σ ]Ty) ∘F κ Δ ∘F ι {Δ} x) .F-ob s))
                  → WWσ i1 .F-ob (s , v) ≡ W₁σ .F-ob (s , v)
           W₁σ-ob s v = ΣPathP (refl , sym (congP₂
-              (λ i a b → pairSigma {B = λ u → A .F-ob (s .fst , u)} a b)
-              (cong (σ .N-ob (s .fst)) (fstPairSigma (Δ .F-hom (s .snd) (x .snd)) v))
-              (sndPairSigma (Δ .F-hom (s .snd) (x .snd)) v)))
+              (λ i a b → pairSigma {B = λ u → A .F-ob (S-ob s , u)} a b)
+              (cong (σ .N-ob (S-ob s)) (fstPairSigma (Δ .F-hom (S-arr s) (x .snd)) v))
+              (sndPairSigma (Δ .F-hom (S-arr s) (x .snd)) v)))
 
           QPathσ : PathP (λ i → Functor (∫U (PPathσ x i)) (∫U (Γ ▹ A))) W₀σ W₁σ
           QPathσ = Functor≡ (λ _ → refl) (λ _ → refl)

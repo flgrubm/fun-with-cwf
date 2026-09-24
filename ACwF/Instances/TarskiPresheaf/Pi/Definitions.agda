@@ -9,6 +9,7 @@ open import Cubical.Data.Sigma
 open import Cubical.Categories.Category
 open import Cubical.Categories.Functor
 open import Cubical.Categories.NaturalTransformation
+open import Cubical.Categories.Instances.Slice.Base
 open import TarskiUniverse.Base
 open import TarskiUniverse.Properties
 open import Utils.TarskiPresheaf
@@ -29,30 +30,30 @@ module _ {ℓob ℓhom ℓU ℓEl : Level} (C : Category ℓob ℓhom) {U : Type
 
   open [_]CodedCategory
   module PiDefs (hasPiTU : hasPi TU) (hasEqTU : hasEq TU) (coded : [ TU ]CodedCategory C) where
-    -- The Γ-free fibre of the index category over I : C .ob: the slice C / I,
-    -- spelled with Σ rather than SliceCat so that solveCode can decompose it.
+    -- The Γ-free fibre of the index category over I : C .ob: the slice C / I.
     -- Restriction is the *opposite* direction, so PresheafU (Fib I) TU is exactly
     -- the restriction functor and ∫U applies to it directly.
-    private
-      FibHom≡ : {I : C .ob} {a b : Σ[ J ∈ C .ob ] C [ J , I ]}
-                {m m' : Σ[ h ∈ C [ a .fst , b .fst ] ] (h ⋆⟨ C ⟩ b .snd ≡ a .snd)}
-              → m .fst ≡ m' .fst → m ≡ m'
-      FibHom≡ = Σ≡Prop λ _ → C .isSetHom _ _
-
     Fib : C .ob → Category (ℓ-max ℓob ℓhom) ℓhom
-    Fib I .ob = Σ[ J ∈ C .ob ] C [ J , I ]
-    Fib I .Hom[_,_] a b = Σ[ h ∈ C [ a .fst , b .fst ] ] (h ⋆⟨ C ⟩ b .snd ≡ a .snd)
-    Fib I .id = C .id , C .⋆IdL _
-    Fib I ._⋆_ m m' = (m .fst ⋆⟨ C ⟩ m' .fst)
-      , C .⋆Assoc _ _ _ ∙ cong (λ z → m .fst ⋆⟨ C ⟩ z) (m' .snd) ∙ m .snd
-    Fib I .⋆IdL _ = FibHom≡ (C .⋆IdL _)
-    Fib I .⋆IdR _ = FibHom≡ (C .⋆IdR _)
-    Fib I .⋆Assoc _ _ _ = FibHom≡ (C .⋆Assoc _ _ _)
-    Fib I .isSetHom = isSetΣSndProp (C .isSetHom) λ _ → C .isSetHom _ _
+    Fib I = SliceCat C I
 
-    -- Reindexing a fibre object along a C-morphism: postcomposition.
-    _⋆*_ : {I I' : C .ob} → C [ I , I' ] → Fib I .ob → Fib I' .ob
-    φ ⋆* s = s .fst , (s .snd ⋆⟨ C ⟩ φ)
+    -- solveCode cannot see inside the records SliceOb/SliceHom, so their codes
+    -- are the Σ-codes moved across the evident isos, and passed to it as hints.
+    private
+      SliceOb-Σ-Iso : {I : C .ob} → Iso (Σ[ J ∈ C .ob ] C [ J , I ]) (SliceOb C I)
+      SliceOb-Σ-Iso .Iso.fun (J , f) = sliceob f
+      SliceOb-Σ-Iso .Iso.inv s = S-ob s , S-arr s
+      SliceOb-Σ-Iso .Iso.sec _ = refl
+      SliceOb-Σ-Iso .Iso.ret _ = refl
+
+      sliceObCode : (I : C .ob) → TU hasCodeFor (SliceOb C I)
+      sliceObCode I = code .fst , code .snd ∙ₑ isoToEquiv SliceOb-Σ-Iso
+        where code : TU hasCodeFor (Σ[ J ∈ C .ob ] C [ J , I ])
+              code = solveCode (coded .isSmallOb ◂ coded .isSmallHom ◂ hasSigmaTU ◂ ε)
+
+      sliceHomCode : (I : C .ob) (a b : SliceOb C I) → TU hasCodeFor (SliceHom C I a b)
+      sliceHomCode I a b = code .fst , code .snd ∙ₑ isoToEquiv (invIso (SliceHom-Σ-Iso C I))
+        where code : TU hasCodeFor (Σ[ h ∈ C [ S-ob a , S-ob b ] ] h ⋆⟨ C ⟩ S-arr b ≡ S-arr a)
+              code = solveCode (coded .isSmallHom ◂ hasSigmaTU ◂ hasEqTU ◂ ε)
 
     private
       -- named so that unification can recover Γ: in the raw Σ, Γ occurs only under
@@ -60,15 +61,16 @@ module _ {ℓob ℓhom ℓU ℓEl : Level} (C : Category ℓob ℓhom) {U : Type
       IdxHom : (Γ : Ctx) (Iρ I'ρ' : ∫U Γ .ob)
              → Fib (Iρ .fst) .ob → Fib (I'ρ' .fst) .ob → Type (ℓ-max ℓhom ℓEl)
       IdxHom Γ (I , ρ) (I' , ρ') s s' =
-        Σ[ f ∈ ∫U Γ [ (I' , ρ') , (I , ρ) ] ] (Fib I' [ s' , f .fst ⋆* s ])
+        Σ[ f ∈ ∫U Γ [ (I' , ρ') , (I , ρ) ] ] (Fib I' [ s' , (∑ f .fst) .F-ob s ])
 
       IdxHom≡ : (Γ : Ctx) {Iρ I'ρ' : ∫U Γ .ob}
                 {s : Fib (Iρ .fst) .ob} {s' : Fib (I'ρ' .fst) .ob}
                 {m m' : IdxHom Γ Iρ I'ρ' s s'}
-              → m .fst .fst ≡ m' .fst .fst → m .snd .fst ≡ m' .snd .fst → m ≡ m'
-      IdxHom≡ Γ {Iρ} p q = ΣPathP
+              → m .fst .fst ≡ m' .fst .fst → m .snd .S-hom ≡ m' .snd .S-hom → m ≡ m'
+      IdxHom≡ Γ {Iρ} {m = m} {m'} p q = ΣPathP
         ( ∫U-Hom-PathP Γ _ _ refl refl p
-        , ΣPathP (q , isProp→PathP (λ _ → C .isSetHom _ _) _ _) )
+        , congP (λ _ → Iso.inv (SliceHom-Σ-Iso C _))
+            (ΣPathP (q , isProp→PathP (λ _ → C .isSetHom _ _) _ _)) )
 
     -- The total index category, oriented like Fib: restriction runs from (Iρ , s) to
     -- (I'ρ' , s'), i.e. backwards in Idx, so that PresheafU (Idx Γ) TU is the
@@ -77,29 +79,29 @@ module _ {ℓob ℓhom ℓU ℓEl : Level} (C : Category ℓob ℓhom) {U : Type
     Idx : Ctx → Category (ℓ-max (ℓ-max ℓob ℓhom) ℓEl) (ℓ-max ℓhom ℓEl)
     Idx Γ .ob = Σ[ Iρ ∈ ∫U Γ .ob ] Fib (Iρ .fst) .ob
     Idx Γ .Hom[_,_] (I'ρ' , s') (Iρ , s) = IdxHom Γ Iρ I'ρ' s s'
-    Idx Γ .id = ∫U Γ .id , C .id , C .⋆IdL _ ∙ C .⋆IdR _
+    Idx Γ .id = ∫U Γ .id , slicehom (C .id) (C .⋆IdL _ ∙ C .⋆IdR _)
     Idx Γ ._⋆_ m m' =
         (m .fst ⋆⟨ ∫U Γ ⟩ m' .fst)
-      , (m .snd .fst ⋆⟨ C ⟩ m' .snd .fst)
-      , ( C .⋆Assoc _ _ _
-        ∙ cong (λ z → m .snd .fst ⋆⟨ C ⟩ (m' .snd .fst ⋆⟨ C ⟩ z)) (sym (C .⋆Assoc _ _ _))
-        ∙ cong (λ z → m .snd .fst ⋆⟨ C ⟩ z) (sym (C .⋆Assoc _ _ _))
-        ∙ cong (λ z → m .snd .fst ⋆⟨ C ⟩ (z ⋆⟨ C ⟩ m .fst .fst)) (m' .snd .snd)
-        ∙ m .snd .snd )
+      , slicehom (m .snd .S-hom ⋆⟨ C ⟩ m' .snd .S-hom)
+        ( C .⋆Assoc _ _ _
+        ∙ cong (λ z → m .snd .S-hom ⋆⟨ C ⟩ (m' .snd .S-hom ⋆⟨ C ⟩ z)) (sym (C .⋆Assoc _ _ _))
+        ∙ cong (λ z → m .snd .S-hom ⋆⟨ C ⟩ z) (sym (C .⋆Assoc _ _ _))
+        ∙ cong (λ z → m .snd .S-hom ⋆⟨ C ⟩ (z ⋆⟨ C ⟩ m .fst .fst)) (m' .snd .S-comm)
+        ∙ m .snd .S-comm )
     Idx Γ .⋆IdL _ = IdxHom≡ Γ (C .⋆IdR _) (C .⋆IdL _)
     Idx Γ .⋆IdR _ = IdxHom≡ Γ (C .⋆IdL _) (C .⋆IdR _)
     Idx Γ .⋆Assoc _ _ _ = IdxHom≡ Γ (sym (C .⋆Assoc _ _ _)) (C .⋆Assoc _ _ _)
     Idx Γ .isSetHom =
-      isSetΣ (∫U Γ .isSetHom) λ _ → isSetΣSndProp (C .isSetHom) λ _ → C .isSetHom _ _
+      isSetΣ (∫U Γ .isSetHom) λ _ → SliceCat C _ .isSetHom
 
     κ : ∀ Γ → Functor (Idx Γ ^op) (∫U Γ)
-    κ Γ .F-ob ((I , ρ) , s) = s .fst , Γ .F-hom (s .snd) ρ
-    κ Γ .F-hom (F , h , e) .fst = h
-    κ Γ .F-hom {(I , ρ) , s} {(I' , ρ') , s'} (F , h , e) .snd =
-        sym (funExt⁻ (Γ .F-seq (s .snd) h) ρ)
-      ∙ cong (Γ .F-hom (h ⋆⟨ C ⟩ s .snd)) (sym (F .snd))
-      ∙ sym (funExt⁻ (Γ .F-seq (F .fst) (h ⋆⟨ C ⟩ s .snd)) ρ')
-      ∙ cong (λ z → Γ .F-hom z ρ') (C .⋆Assoc h (s .snd) (F .fst) ∙ e)
+    κ Γ .F-ob ((I , ρ) , s) = S-ob s , Γ .F-hom (S-arr s) ρ
+    κ Γ .F-hom (F , slicehom h e) .fst = h
+    κ Γ .F-hom {(I , ρ) , s} {(I' , ρ') , s'} (F , slicehom h e) .snd =
+        sym (funExt⁻ (Γ .F-seq (S-arr s) h) ρ)
+      ∙ cong (Γ .F-hom (h ⋆⟨ C ⟩ S-arr s)) (sym (F .snd))
+      ∙ sym (funExt⁻ (Γ .F-seq (F .fst) (h ⋆⟨ C ⟩ S-arr s)) ρ')
+      ∙ cong (λ z → Γ .F-hom z ρ') (C .⋆Assoc h (S-arr s) (F .fst) ∙ e)
     κ Γ .F-id = ∫U-Hom-PathP Γ _ _ refl refl refl
     κ Γ .F-seq _ _ = ∫U-Hom-PathP Γ _ _ refl refl refl
 
@@ -109,13 +111,13 @@ module _ {ℓob ℓhom ℓU ℓEl : Level} (C : Category ℓob ℓhom) {U : Type
     -- so this single square is the whole difference between the two sides.
     -- PPathσ (Pi.agda) is built out of it.
     κσ : {Γ Δ : Ctx} (σ : Δ ⟶ Γ) (Iρ : ∫U Δ .ob) (s : Fib (Iρ .fst) .ob)
-       → Γ .F-hom (s .snd) (σ .N-ob (Iρ .fst) (Iρ .snd))
-           ≡ σ .N-ob (s .fst) (Δ .F-hom (s .snd) (Iρ .snd))
-    κσ σ Iρ s = sym (funExt⁻ (σ .N-hom (s .snd)) (Iρ .snd))
+       → Γ .F-hom (S-arr s) (σ .N-ob (Iρ .fst) (Iρ .snd))
+           ≡ σ .N-ob (S-ob s) (Δ .F-hom (S-arr s) (Iρ .snd))
+    κσ σ Iρ s = sym (funExt⁻ (σ .N-hom (S-arr s)) (Iρ .snd))
 
     ι : ∀ {Γ} (Iρ : ∫U Γ .ob) → Functor (Fib (Iρ .fst) ^op) (Idx Γ ^op)
     ι {Γ} Iρ .F-ob s = Iρ , s
-    ι {Γ} Iρ .F-hom (f , p) = ∫U Γ .id , f , cong (λ z → f ⋆⟨ C ⟩ z) (C .⋆IdR _) ∙ p
+    ι {Γ} Iρ .F-hom (slicehom f p) = ∫U Γ .id , slicehom f (cong (λ z → f ⋆⟨ C ⟩ z) (C .⋆IdR _) ∙ p)
     ι {Γ} Iρ .F-id = IdxHom≡ Γ refl refl
     ι {Γ} Iρ .F-seq f g = IdxHom≡ Γ (sym (C .⋆IdL _)) refl
 
@@ -133,21 +135,14 @@ module _ {ℓob ℓhom ℓU ℓEl : Level} (C : Category ℓob ℓhom) {U : Type
           ((λ i → F-hom-PathP A (n .fst , refl) n refl (ΣPathP (refl , n .snd)) refl i v) ▷ p))
 
     κ▹ : ∀ Γ A → Functor (∫U (A ∘F κ Γ)) (∫U (Γ ▹ A))
-    κ▹ Γ A .F-ob (((I , ρ) , J , f) , a) = J , pairSigma (Γ .F-hom f ρ) a
-    κ▹ Γ A .F-hom (m , p) .fst = m .snd .fst
+    κ▹ Γ A .F-ob (((I , ρ) , sliceob {J} f) , a) = J , pairSigma (Γ .F-hom f ρ) a
+    κ▹ Γ A .F-hom (m , p) .fst = m .snd .S-hom
     κ▹ Γ A .F-hom (m , p) .snd = ▹witness Γ A (κ Γ .F-hom m) _ _ p
     κ▹ Γ A .F-id = ∫U-Hom-PathP (Γ ▹ A) _ _ refl refl refl
     κ▹ Γ A .F-seq _ _ = ∫U-Hom-PathP (Γ ▹ A) _ _ refl refl refl
     ∫ι  : ∀ {Γ} (Iρ : ∫U Γ .ob) (R : PresheafU (Idx Γ) TU)
       → Functor (∫U (R ∘F ι Iρ)) (∫U R)
     ∫ι Iρ R = ∫U-base (ι Iρ) R
-
-    -- Reindexing a whole fibre along a C-morphism: postcomposition, functorially.
-    Fib⋆ : {I I' : C .ob} (ψ : C [ I , I' ]) → Functor (Fib I) (Fib I')
-    Fib⋆ ψ .F-ob s = ψ ⋆* s
-    Fib⋆ ψ .F-hom m = m .fst , sym (C .⋆Assoc _ _ _) ∙ cong (λ z → z ⋆⟨ C ⟩ ψ) (m .snd)
-    Fib⋆ ψ .F-id = FibHom≡ refl
-    Fib⋆ ψ .F-seq _ _ = FibHom≡ refl
 
     module _ (I : C .ob) (P : PresheafU (Fib I) TU) (Q : Functor (∫U P) (UCat TU)) where
       indexed-Πdata : Type _
@@ -169,7 +164,7 @@ module _ {ℓob ℓhom ℓU ℓEl : Level} (C : Category ℓob ℓhom) {U : Type
       indexed-Π≡ = Σ≡Prop isProp-indexed-Πnat
 
       indexed-Πcode : TU hasCodeFor indexed-Π
-      indexed-Πcode = solveCode (coded .isSmallOb ◂ coded .isSmallHom ◂ hasSigmaTU ◂ hasPiTU ◂ hasEqTU ◂ ε)
+      indexed-Πcode = solveCode (sliceObCode I ◂ sliceHomCode I ◂ hasSigmaTU ◂ hasPiTU ◂ hasEqTU ◂ ε)
 
     -- Dependent version of indexed-Π≡, for comparing indexed-Πs over genuinely
     -- different (P , Q) — needed by ΠTyNat (Pi.agda), which relates indexed-Πs

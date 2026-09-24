@@ -11,6 +11,7 @@ open import Cubical.Categories.Category
 open import Cubical.Categories.Functor
 open import Cubical.Categories.NaturalTransformation
 open import Cubical.Categories.Instances.Slice.Base
+open import Cubical.Categories.Instances.Slice.Functor using (∑_)
 open import TarskiUniverse.Base
 open import TarskiUniverse.Properties
 open import Utils.TarskiPresheaf
@@ -32,7 +33,7 @@ module _ {ℓob ℓhom ℓU ℓEl : Level} (C : Category ℓob ℓhom) {U : Type
 
   open [_]CodedCategory
   module PiRestrict (hasPiTU : hasPi TU) (hasEqTU : hasEq TU) (coded : [ TU ]CodedCategory C) where
-    -- Fib, Idx, κ, ι, κ▹, ∫ι, Fib⋆ and indexed-Π with this module's parameters
+    -- Fib, Idx, κ, ι, κ▹, ∫ι and indexed-Π with this module's parameters
     -- already applied, and re-exported so that the files downstream of this one
     -- need a single open rather than one per layer.
     open PiDefs C Univ hasPiTU hasEqTU coded public
@@ -54,7 +55,7 @@ module _ {ℓob ℓhom ℓU ℓEl : Level} (C : Category ℓob ℓhom) {U : Type
       -- Restriction along φ : ∫U Γ [ x , y ] reindexes the fibre by (_⋆ φ .fst) …
       module _ {x y : ∫U Γ .ob} (φ : ∫U Γ [ x , y ]) where
         Jφ : Functor (Fib (y .fst) ^op) (Fib (x .fst) ^op)
-        Jφ = (Fib⋆ (φ .fst)) ^opF
+        Jφ = (∑ φ .fst) ^opF
 
         -- … and the two fibrewise values of A differ by exactly φ's witness.
         γ : (s : Fib (y .fst) .ob)
@@ -136,7 +137,7 @@ module _ {ℓob ℓhom ℓU ℓEl : Level} (C : Category ℓob ℓhom) {U : Type
               → PathP (λ i → El (PPath i .F-ob s)) (pull s a) a
         pullP s a = symP (transport-filler (λ i → El (PPath (~ i) .F-ob s)) a)
 
-      -- Fib⋆ (C .id) is the identity only up to ⋆IdR, so even at φ = id the
+      -- ∑ (C .id) is the identity only up to ⋆IdR, so even at φ = id the
       -- transport is real work.  restrictβ reduces it to a path in U, and U is a
       -- set, so it can be reindexed onto the path coming from ⋆IdR itself.
       restrictId : {x : ∫U Γ .ob} (u : Πtype x) → restrict (∫U Γ .id) u ≡ u
@@ -175,7 +176,7 @@ module _ {ℓob ℓhom ℓU ℓEl : Level} (C : Category ℓob ℓhom) {U : Type
               mid = transport (λ i → El (QPath idx i .F-ob (s , aP i)))
                               (u .fst (Jφ idx .F-ob s) a₀)
 
-      -- Fib⋆ is functorial only up to ⋆Assoc, so composing two restrictions is
+      -- ∑ is functorial only up to ⋆Assoc, so composing two restrictions is
       -- again a transport question.  Both sides are routed back to one common
       -- starting element and compared there; U is a set, so the two routes may be
       -- reindexed onto a single path of codes.

@@ -16,6 +16,15 @@ module _ {ℓU ℓEl : Level} {U : Type ℓU} (TU : BareTarskiUniverse ℓEl U) 
   open Category
   open BareTarskiUniverse TU
 
+  -- U is a set, so a path of elements may be reindexed onto any other path of
+  -- codes with the same endpoints.  `e` and `e'` are inferable (from the
+  -- argument and from the goal), but `TU` is not — `El TU` is a stuck
+  -- projection — so it is the one explicit argument.
+  ElPathP : {c c' : U} {e e' : c ≡ c'} {x : El c} {y : El c'}
+    → PathP (λ i → El (e i)) x y
+    → PathP (λ i → El (e' i)) x y
+  ElPathP {c} {c'} {e} {e'} {x} {y} path = subst (λ ϵ → PathP (λ i → El (ϵ i)) x y) (isSetU _ _ e e') path
+
   UCat : Category ℓU ℓEl
   UCat .ob = U
   UCat .Hom[_,_] Δ Γ = El Δ → El Γ

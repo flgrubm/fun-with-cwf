@@ -92,6 +92,19 @@ module _ {ℓU ℓEl : Level} {U : Type ℓU} (TU : BareTarskiUniverse ℓEl U) 
     eqElim : ∀ {A} {a} {b} → El (Eq A a b) → a ≡ b
     eqElim = EqIso _ _ _ .Iso.fun
 
+  open import Cubical.Data.Empty
+  record hasEmpty : Type (ℓ-max ℓU ℓEl) where
+    field
+      Empty : U
+      EmptyIso : Iso (El Empty) ⊥
+
+  open import Cubical.Data.Bool
+  record hasBool : Type (ℓ-max ℓU ℓEl) where
+    field
+      -- named like this to avoid clashing with Bool, I'm open to name suggestions
+      Boo : U
+      BooIso : Iso (El Boo) Bool
+
 -- As we are only interested in Tarski universes with Unit and Sigma
 -- we use the name "Tarski universe" for these universes
 record TarskiUniverse {ℓU : Level} (ℓEl : Level) (U : Type ℓU) : Type (ℓ-max (ℓ-suc ℓU) (ℓ-suc ℓEl)) where

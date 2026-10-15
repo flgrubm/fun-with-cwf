@@ -9,6 +9,7 @@ open import Cubical.Functions.FunExtEquiv
 open import Cubical.Data.Sigma
 open import Cubical.Data.Unit
 open import Cubical.Data.Bool
+open import Cubical.Data.Nat using (zero ; suc)
 
 open import Cubical.Categories.Category
 
@@ -16,9 +17,10 @@ open import ACwF.Base
 open import ACwF.Sigma
 open import ACwF.Pi
 open import ACwF.Eq
-open import ACwF.Empty
+open import ACwF.Nat
 open import ACwF.Unit
 open import ACwF.Bool
+open import ACwF.Empty
 
 open import Cubical.Data.IterativeSets.Base renaming (V⁰ to V ; El⁰ to El ; isSetEl⁰ to isSetEl)
 open import Utils.VCat
@@ -26,10 +28,11 @@ open import Cubical.Data.IterativeSets.Sigma
 open import Cubical.Data.IterativeSets.Pi
 open import Cubical.Data.IterativeSets.Unit
 open import Cubical.Data.IterativeSets.Identity
+open import Cubical.Data.IterativeSets.Nat
 open import Cubical.Data.IterativeSets.Empty
 open import Cubical.Data.IterativeSets.Bool
 
-open Category
+open Category hiding (_∘_)
 
 module _ {ℓ : Level} where
 
@@ -154,3 +157,75 @@ module _ {ℓHom : Level} where
   V-Bool-Structure .Bool-Structure.Bool-elim      = V-Bool-elim
   V-Bool-Structure .Bool-Structure.Bool-elimβ     = V-Bool-elimβ
   V-Bool-Structure .Bool-Structure.Bool-elimNat   = V-Bool-elimNat
+
+  private
+    V-ℕTy : ∀ {Γ} → Ty Γ
+    V-ℕTy _ = ℕ⁰
+    V-ℕTyNat : ∀ {Δ Γ} (σ : El Δ → El Γ) → V-ℕTy [ σ ]Ty ≡ V-ℕTy
+    V-ℕTyNat _ = refl
+    V-ℕ-Ops : ℕ-Ops VCwF
+    V-ℕ-Ops .ℕ-Ops.ℕTy = V-ℕTy
+    V-ℕ-Ops .ℕ-Ops.ℕzero _ = lift zero
+    V-ℕ-Ops .ℕ-Ops.ℕsuc (_ , lift n) = lift (suc n)
+    V-ℕ-Ops .ℕ-Ops.ℕTyNat = V-ℕTyNat
+
+    open ℕ-Ops V-ℕ-Ops
+    open Category (VCat ℓHom) using (_∘_)
+
+    σ↑≡σ⁺ : ∀ {Δ Γ} (σ : El Δ → El Γ) → σ ↑ ≡ σ ⁺
+    σ↑≡σ⁺ {Δ} {Γ} σ = substRefl {B = λ X → El (Σ⁰ Δ X) → El (Σ⁰ Γ ℕTy)} (σ ⁺)
+
+    V-ℕzeroNat : ∀ {Δ Γ} (σ : El Δ → El Γ) → ⟨ ℕzero ⟩ ∘ σ ≡ σ ↑ ∘ ⟨ ℕzero ⟩
+    V-ℕzeroNat σ = cong (_∘ ⟨ ℕzero ⟩) (sym (σ↑≡σ⁺ σ))
+
+    V-ℕsucNat : ∀ {Δ Γ} (σ : El Δ → El Γ) → suc⁺ ∘ σ ↑ ≡ σ ↑ ∘ suc⁺
+    V-ℕsucNat σ = cong (suc⁺ ∘_) (σ↑≡σ⁺ σ) ∙ cong (_∘ suc⁺) (sym (σ↑≡σ⁺ σ))
+
+    V-ℕ-elim : ∀ {Γ} A
+      → Tm Γ (A [ ⟨ ℕzero ⟩ ]Ty)
+      → Tm (Γ ▹ ℕTy ▹ A) (A [ sucσ ]Ty)
+      → Tm (Γ ▹ ℕTy) A
+    V-ℕ-elim A Az As (γ , lift zero)    = Az γ
+    V-ℕ-elim A Az As (γ , lift (suc n)) = As ((γ , lift n) , V-ℕ-elim A Az As (γ , lift n))
+
+    V-ℕ-elimβ-z : ∀ {Γ} A Az As → V-ℕ-elim {Γ} A Az As [ ⟨ ℕzero ⟩ ]Tm ≡ Az
+    V-ℕ-elimβ-z _ _ _ = refl
+
+    V-ℕ-elimβ-s : ∀ {Γ} A Az As → let elim = V-ℕ-elim {Γ} A Az As in
+      As [ ⟨ elim ⟩ ]Tm ≡ elim [ suc⁺ ]Tm
+    V-ℕ-elimβ-s _ _ _ = refl
+
+    V-ℕ-elim⁺ : ∀ {Δ Γ} A (σ : El Δ → El Γ) Az As (x : El (Σ⁰ Δ ℕTy))
+      → (V-ℕ-elim A Az As [ σ ⁺ ]Tm) x ≡ V-ℕ-elim (A [ σ ⁺ ]Ty) (Az [ σ ]Tm) (As [ σ ⁺ ⁺ ]Tm) x
+    V-ℕ-elim⁺ A σ Az As (δ , lift zero)    = refl
+    V-ℕ-elim⁺ A σ Az As (δ , lift (suc n)) = cong (λ t → As ((σ δ , lift n) , t)) (V-ℕ-elim⁺ A σ Az As (δ , lift n))
+
+    -- `ℕ-elimNat` along any `τ` equal to `σ ⁺`, and over any type paths `P`, `Q`
+    ElimNatAt : ∀ {Δ Γ} (A : Ty (Γ ▹ ℕTy)) (σ : El Δ → El Γ) (τ : El (Σ⁰ Δ ℕTy) → El (Σ⁰ Γ ℕTy))
+      → Type (ℓ-suc ℓHom)
+    ElimNatAt {Δ} {Γ} A σ τ =
+      (Az : Tm Γ (A [ ⟨ ℕzero {Γ = Γ} ⟩ ]Ty)) (As : Tm (Γ ▹ ℕTy ▹ A) (A [ sucσ {Γ = Γ} {A = A} ]Ty))
+      (P : A [ ⟨ ℕzero {Γ = Γ} ⟩ ]Ty [ σ ]Ty ≡ A [ τ ]Ty [ ⟨ ℕzero {Γ = Δ} ⟩ ]Ty)
+      (Q : A [ sucσ {Γ = Γ} {A = A} ]Ty [ τ ⁺ ]Ty ≡ A [ τ ]Ty [ sucσ {Γ = Δ} {A = A [ τ ]Ty} ]Ty)
+      → V-ℕ-elim A Az As [ τ ]Tm
+      ≡ V-ℕ-elim (A [ τ ]Ty) (subst (Tm Δ) P (Az [ σ ]Tm)) (subst (Tm (Δ ▹ ℕTy ▹ A [ τ ]Ty)) Q (As [ τ ⁺ ]Tm))
+
+    -- at `τ = σ ⁺`, `P` and `Q` are loops, hence trivial since types form a set
+    V-ℕ-elimNat : ∀ {Δ Γ} A (σ : El Δ → El Γ) τ → _⁺ {A = ℕTy} σ ≡ τ → ElimNatAt {Δ} {Γ} A σ τ
+    V-ℕ-elimNat {Δ} A σ τ e = J (λ τ _ → ElimNatAt A σ τ) (λ Az As P Q →
+        V-ℕ-elim A Az As [ σ ⁺ ]Tm
+          ≡⟨ funExt (V-ℕ-elim⁺ A σ Az As) ⟩
+        V-ℕ-elim (A [ σ ⁺ ]Ty) (Az [ σ ]Tm) (As [ σ ⁺ ⁺ ]Tm)
+          ≡⟨ cong (λ z → V-ℕ-elim (A [ σ ⁺ ]Ty) z (As [ σ ⁺ ⁺ ]Tm)) (reindex (subst-filler (Tm Δ) P _)) ⟩
+        V-ℕ-elim (A [ σ ⁺ ]Ty) (subst (Tm Δ) P (Az [ σ ]Tm)) (As [ σ ⁺ ⁺ ]Tm)
+          ≡⟨ cong (V-ℕ-elim (A [ σ ⁺ ]Ty) _) (reindex (subst-filler (Tm _) Q _)) ⟩
+        V-ℕ-elim (A [ σ ⁺ ]Ty) (subst (Tm Δ) P (Az [ σ ]Tm)) (subst (Tm _) Q (As [ σ ⁺ ⁺ ]Tm)) ∎) e
+
+  V-ℕ-Structure : ℕ-Structure {ℓHom = ℓHom} VCwF
+  V-ℕ-Structure .ℕ-Structure.ℕ-Ops-field = V-ℕ-Ops
+  V-ℕ-Structure .ℕ-Structure.ℕzeroNat = V-ℕzeroNat
+  V-ℕ-Structure .ℕ-Structure.ℕsucNat = V-ℕsucNat
+  V-ℕ-Structure .ℕ-Structure.ℕ-elim = V-ℕ-elim
+  V-ℕ-Structure .ℕ-Structure.ℕ-elimβ-z = V-ℕ-elimβ-z
+  V-ℕ-Structure .ℕ-Structure.ℕ-elimβ-s A Az As = reindex (V-ℕ-elimβ-s A Az As)
+  V-ℕ-Structure .ℕ-Structure.ℕ-elimNat A σ Az As = V-ℕ-elimNat A σ (σ ↑) (sym (σ↑≡σ⁺ σ)) Az As _ _

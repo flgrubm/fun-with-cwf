@@ -127,18 +127,18 @@ module _ {ℓU ℓEl : Level} {U : Type ℓU} (Univ : TarskiUniverse ℓEl U) wh
 
   module U-Unit where
     U-Unit-Structure : Unit-Structure UCwF
-    U-Unit-Structure .Unit-Structure.UnitTy _ = Unit
-    U-Unit-Structure .Unit-Structure.UnitTyNat σ = refl
-    U-Unit-Structure .Unit-Structure.UnitTmIso .fun _       = tt
-    U-Unit-Structure .Unit-Structure.UnitTmIso .inv _ _     = isContrElUnit .fst
-    U-Unit-Structure .Unit-Structure.UnitTmIso .sec _       = refl
-    U-Unit-Structure .Unit-Structure.UnitTmIso .ret a i x   = isContrElUnit .snd (a x) i
-    U-Unit-Structure .Unit-Structure.UnitTmIsoInvNat _ _    = refl
+    U-Unit-Structure .Unit-Structure.UnitTy _             = Unit
+    U-Unit-Structure .Unit-Structure.UnitTyNat _          = refl
+    U-Unit-Structure .Unit-Structure.UnitTmIso .fun _     = tt
+    U-Unit-Structure .Unit-Structure.UnitTmIso .inv _ _   = isContrElUnit .fst
+    U-Unit-Structure .Unit-Structure.UnitTmIso .sec _     = refl
+    U-Unit-Structure .Unit-Structure.UnitTmIso .ret a i x = isContrElUnit .snd (a x) i
+    U-Unit-Structure .Unit-Structure.UnitTmIsoInvNat _ _  = refl
 
   module U-⊥ (hasEmptyTU : hasEmpty TU) where
     open hasEmpty hasEmptyTU
     U-⊥-Structure : ⊥-Structure UCwF
-    U-⊥-Structure .⊥-Structure.⊥Ty _              = Empty
-    U-⊥-Structure .⊥-Structure.⊥TyNat _           = refl
-    U-⊥-Structure .⊥-Structure.⊥-elim _ x         = ⊥.rec (EmptyIso .fun (sndSigma x))
-    U-⊥-Structure .⊥-Structure.⊥-elimNat _ _      = funExt λ x → ⊥.rec (EmptyIso .fun (sndSigma x))
+    U-⊥-Structure .⊥-Structure.⊥Ty _         = Empty
+    U-⊥-Structure .⊥-Structure.⊥TyNat _      = refl
+    U-⊥-Structure .⊥-Structure.⊥-elim _ x    = ⊥.rec (EmptyIso .fun (sndSigma x))
+    U-⊥-Structure .⊥-Structure.⊥-elimNat _ _ = funExt λ x → ⊥.rec (EmptyIso .fun (sndSigma x))

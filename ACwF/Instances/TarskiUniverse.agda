@@ -9,6 +9,7 @@ open import Cubical.Foundations.Equiv.Properties
 open import Cubical.Foundations.Function
 open import Cubical.Functions.FunExtEquiv
 open import Cubical.Data.Sigma
+open import Cubical.Data.Empty as ⊥ using (⊥)
 
 open import Cubical.Categories.Category
 
@@ -16,6 +17,8 @@ open import ACwF.Base
 open import ACwF.Sigma
 open import ACwF.Pi
 open import ACwF.Eq
+open import ACwF.Unit
+open import ACwF.Empty
 
 open import TarskiUniverse.Base
 open import TarskiUniverse.Properties
@@ -121,3 +124,21 @@ module _ {ℓU ℓEl : Level} {U : Type ℓU} (Univ : TarskiUniverse ℓEl U) wh
       ((x : El Γ) → a x ≡ b x)                 Iso⟨ funExtIso ⟩
       (a ≡ b)                                  ∎Iso
     U-Eq-Structure .Eq-Structure.EqTmIsoInvNat _ _ _ _ _ = refl
+
+  module U-Unit where
+    U-Unit-Structure : Unit-Structure UCwF
+    U-Unit-Structure .Unit-Structure.UnitTy _             = Unit
+    U-Unit-Structure .Unit-Structure.UnitTyNat _          = refl
+    U-Unit-Structure .Unit-Structure.UnitTmIso .fun _     = tt
+    U-Unit-Structure .Unit-Structure.UnitTmIso .inv _ _   = isContrElUnit .fst
+    U-Unit-Structure .Unit-Structure.UnitTmIso .sec _     = refl
+    U-Unit-Structure .Unit-Structure.UnitTmIso .ret a i x = isContrElUnit .snd (a x) i
+    U-Unit-Structure .Unit-Structure.UnitTmIsoInvNat _ _  = refl
+
+  module U-⊥ (hasEmptyTU : hasEmpty TU) where
+    open hasEmpty hasEmptyTU
+    U-⊥-Structure : ⊥-Structure UCwF
+    U-⊥-Structure .⊥-Structure.⊥Ty _         = Empty
+    U-⊥-Structure .⊥-Structure.⊥TyNat _      = refl
+    U-⊥-Structure .⊥-Structure.⊥-elim _ x    = ⊥.rec (EmptyIso .fun (sndSigma x))
+    U-⊥-Structure .⊥-Structure.⊥-elimNat _ _ = funExt λ x → ⊥.rec (EmptyIso .fun (sndSigma x))

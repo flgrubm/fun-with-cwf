@@ -45,11 +45,12 @@ module _ {ℓ : Level} where
   hasPiV : hasPi BareTarskiUniverseV
   hasPiV = transportStructure hasPi (hasPiV⁰ ℓ)
 
--- The internal universe at a successor level depends on the universe and,
--- through its closure, on Π and Σ: transport all of them together.  The
--- transported Π and Σ are definitionally `hasPiV` and the Σ of
--- `TarskiUniverseV`.  (Without `--lossy-unification` this block exhausts
--- memory, as the V⁰ universe does.)
+-- The internal universe of V at a successor level.  `hasUniversePi` and
+-- `hasUniverseSigma` are stated over a universe, a Π and a Σ, so the five
+-- structures are transported as one tuple.  Its Π and Σ components are
+-- definitionally `hasPiV` and the Σ of `TarskiUniverseV`; the types of
+-- `hasUniversePiV` and `hasUniverseSigmaV` rely on this.  (Without
+-- `--lossy-unification` this block exhausts memory.)
 module _ {ℓ : Level} where
   private
     UnivStructure : {X : Type (ℓ-suc (ℓ-suc ℓ))} → BareTarskiUniverse (ℓ-suc ℓ) X → Type (ℓ-suc (ℓ-suc ℓ))

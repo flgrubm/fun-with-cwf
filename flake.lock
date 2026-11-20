@@ -1,12 +1,29 @@
 {
   "nodes": {
+    "cubical": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1795095276,
+        "narHash": "sha256-BPd/C4pt2siRB/cLU4tijf/MfgDiSNOhdiZiYAG/PN4=",
+        "owner": "agda",
+        "repo": "cubical",
+        "rev": "8f0a71b3b3c2435cd1f579328314ae10233b1308",
+        "type": "github"
+      },
+      "original": {
+        "owner": "agda",
+        "repo": "cubical",
+        "rev": "8f0a71b3b3c2435cd1f579328314ae10233b1308",
+        "type": "github"
+      }
+    },
     "nixpkgs": {
       "locked": {
-        "lastModified": 1780749050,
-        "narHash": "sha256-3av0pIjlOWQ6rDbNOmpUSvbNnJkGORQKKjb4LtCZsIY=",
+        "lastModified": 1794890597,
+        "narHash": "sha256-lME2lHoDHAaSHP3/okgiVoJ0icVEvsQH8LeU3We7tcc=",
         "owner": "nixos",
         "repo": "nixpkgs",
-        "rev": "a799d3e3886da994fa307f817a6bc705ae538eeb",
+        "rev": "04906337b6d53e8bb0eaf0470ae9f070a4d4eb55",
         "type": "github"
       },
       "original": {
@@ -18,6 +35,7 @@
     },
     "root": {
       "inputs": {
+        "cubical": "cubical",
         "nixpkgs": "nixpkgs"
       }
     }

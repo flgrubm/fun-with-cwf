@@ -9,6 +9,7 @@ open import Cubical.Data.IterativeSets.Sigma
 open import Cubical.Data.IterativeSets.Pi
 open import Cubical.Data.IterativeSets.Unit
 open import Cubical.Data.IterativeSets.Identity
+open import Cubical.Data.IterativeSets.Quotient
 
 open import TarskiUniverse.Base
 
@@ -38,3 +39,7 @@ module _ (ℓ : Level) where
   hasEqV : hasEq BareTarskiUniverseV
   hasEqV .hasEq.Eq          = Id⁰
   hasEqV .hasEq.EqIso _ _ _ = idIso
+
+  hasQuotientV : hasQuotient BareTarskiUniverseV
+  hasQuotientV .hasQuotient.Quot A R    = A /⁰ (λ a b → El⁰ (R a b))
+  hasQuotientV .hasQuotient.QuotIso _ _ = idIso

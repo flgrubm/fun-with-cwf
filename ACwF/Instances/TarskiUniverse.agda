@@ -160,11 +160,7 @@ module _ {ℓU ℓEl : Level} {U : Type ℓU} (Univ : TarskiUniverse ℓEl U) wh
       Γ Δ : U
 
     private
-      -- the relation `R` in the fibre over `x`
-      rel : {A : Ty Γ} (R : Ty (Γ ▹ A ▹ A [ p ]Ty)) (x : El Γ) → El (A x) → El (A x) → U
-      rel {A = A} R x a b = R (pair² A (x , a , b))
-
-      module QF {Γ : U} {A : Ty Γ} (R : Ty (Γ ▹ A ▹ A [ p ]Ty)) = QuotFibres TU-Quot A (rel R)
+      module QF {Γ : U} {A : Ty Γ} (R : Ty (Γ ▹ A ▹ A [ p ]Ty)) = QuotRel TU-Quot A R
 
     U-QTy : (A : Ty Γ) (R : Ty (Γ ▹ A ▹ A [ p ]Ty))
           → -------------------------------------------
@@ -215,35 +211,10 @@ module _ {ℓU ℓEl : Level} {U : Type ℓU} (Univ : TarskiUniverse ℓEl U) wh
 
     -- the class of the first variable of a related pair is that of the second
     U-classSubSound : {A : Ty Γ} {R : Ty (Γ ▹ A ▹ A [ p ]Ty)}
-                    → ------------------------------------------------------------------------------------
+                    → ------------------------------------------------------------------
                       Path (El (Γ ▹ A ▹ A [ p ]Ty ▹ R) → El (Γ ▹ U-QTy A R))
-                           (λ z → QF.cls R (fstSigma (fstSigma z)))
-                           (λ z → QF.cls R (pairSigma (fstSigma (fstSigma (fstSigma z))) (sndSigma (fstSigma z))))
-    U-classSubSound {A = A} {R = R} = funExt λ z →
-        cong (QF.cls R) (sym (ηSigma (fstSigma (fstSigma z))))
-      ∙ QF.cls-eq R _ _ _ (subst (λ w → El (R w)) (sym (pair²-unpair² A (fstSigma z))) (sndSigma z))
-
-    -- a term that respects `R` (in the sense of `Quot-Structure`) respects it
-    -- at each related pair over `x`
-    U-toRespects : {A : Ty Γ} {R : Ty (Γ ▹ A ▹ A [ p ]Ty)} (P : Ty (Γ ▹ U-QTy A R))
-                   (m : Tm (Γ ▹ A) (P [ QF.cls R ]Ty))
-                 → PathP (λ i → Tm (Γ ▹ A ▹ A [ p ]Ty ▹ R) (λ z → P (U-classSubSound i z)))
-                         (λ z → m (fstSigma (fstSigma z)))
-                         (λ z → m (pairSigma (fstSigma (fstSigma (fstSigma z))) (sndSigma (fstSigma z))))
-                 → -----------------------------------------------------------------------------
-                   QF.Respects R P m
-    U-toRespects {A = A} {R = R} P m r x a b rel' =
-      over P (   congO P m (sym e₁)
-                   ∙O overPath (λ i → U-classSubSound i z) (λ i → r i z)
-                   ∙O congO P m e₂)
-                  (QF.cls-eq R x a b rel')
-      where
-        z = pairSigma {B = R} (pair² A (x , a , b)) rel'
-        e₁ : fstSigma (fstSigma z) ≡ pairSigma x a
-        e₁ = cong fstSigma (fstPairSigma {B = R} _ rel') ∙ fstPairSigma {B = λ s → A (fstSigma s)} _ _
-        e₂ : pairSigma {B = A} (fstSigma (fstSigma (fstSigma z))) (sndSigma (fstSigma z)) ≡ pairSigma x b
-        e₂ =  cong (λ w → pairSigma {B = A} (fstSigma (fstSigma w)) (sndSigma w)) (fstPairSigma {B = R} _ rel')
-            ∙ cong (λ t → pairSigma {B = A} (t .fst) (t .snd .snd)) (unpair²-pair² A (x , a , b))
+                           (λ z → QF.cls R (QF.fstVar R z)) (λ z → QF.cls R (QF.sndVar R z))
+    U-classSubSound {R = R} = funExt (QF.cls-sound R)
 
     U-Quot-Structure : Quot-Structure UCwF
     U-Quot-Structure .Quot-Structure.QTy                    = U-QTy
@@ -259,4 +230,4 @@ module _ {ℓU ℓEl : Level} {U : Type ℓU} (Univ : TarskiUniverse ℓEl U) wh
     U-Quot-Structure .Quot-Structure.classSubSound          = U-classSubSound
     U-Quot-Structure .Quot-Structure.isEquivQuotCases A R P =
       QF.isEquivPrecompCls R P _ (λ _ → isOfHLevelPathP' 1 (isSetTm _ _) _ _)
-        (λ m r → U-toRespects P m (reindex r)) _ (λ _ → refl)
+        (λ m r → QF.toRespects R P m (λ z i → reindex {e' = λ i z → P (U-classSubSound i z)} r i z)) _ (λ _ → refl)

@@ -5,6 +5,7 @@ open import Cubical.Foundations.Isomorphism
 open import Cubical.Foundations.Function
 
 open import Cubical.Data.Sigma
+open import Cubical.HITs.SetQuotients using (_/_ ; [_])
 open import Cubical.Data.Unit hiding (Unit)
 
 -- A "bare Tarski universe" is a set U of codes with a set-valued
@@ -104,6 +105,17 @@ module _ {ℓU ℓEl : Level} {U : Type ℓU} (TU : BareTarskiUniverse ℓEl U) 
       -- named like this to avoid clashing with Bool, I'm open to name suggestions
       Boo : U
       BooIso : Iso (El Boo) Bool
+
+  -- | Set quotients: a code for the quotient of `A` by a relation `R`,
+  -- decoding to the set quotient (up to an iso; `idIso` for V⁰).
+  record hasQuotient : Type (ℓ-max ℓU ℓEl) where
+    field
+      Quot    : (A : U) (R : El A → El A → U) → U
+      QuotIso : (A : U) (R : El A → El A → U)
+              → Iso (El (Quot A R)) (El A / (λ a b → El (R a b)))
+
+    classQuot : {A : U} {R : El A → El A → U} → El A → El (Quot A R)
+    classQuot a = QuotIso _ _ .inv [ a ]
 
 -- As we are only interested in Tarski universes with Unit and Sigma
 -- we use the name "Tarski universe" for these universes

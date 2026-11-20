@@ -38,3 +38,15 @@ module _ (ℓ : Level) where
   hasPiUnit .hasPi.PiIso _ _ .Iso.sec _ _ _ = tt*
   hasPiUnit .hasPi.PiIso _ _ .Iso.ret tt* = refl
 
+  -- the universe is again the unit type, and everything decodes to `tt*`
+  hasUniverseUnit : hasUniverse Unit-TarskiUniverse-Base
+  hasUniverseUnit .hasUniverse.Univ     = tt*
+  hasUniverseUnit .hasUniverse.decode _ = tt*
+
+  hasUniversePiUnit : hasUniversePi Unit-TarskiUniverse-Base hasUniverseUnit hasPiUnit
+  hasUniversePiUnit .hasUniversePi.piU _ _        = tt*
+  hasUniversePiUnit .hasUniversePi.decode-piU _ _ = refl
+
+  hasUniverseSigmaUnit : hasUniverseSigma Unit-TarskiUniverse-Base hasUniverseUnit hasSigmaUnit
+  hasUniverseSigmaUnit .hasUniverseSigma.sigU _ _        = tt*
+  hasUniverseSigmaUnit .hasUniverseSigma.decode-sigU _ _ = refl

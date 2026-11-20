@@ -13,6 +13,7 @@ open import CCwF.Base
 open import ACwF.Morphism
 open import ACwF.Sigma
 open import ACwF.Instances.TarskiPresheaf
+open import ACwF.Instances.TarskiPresheaf.Quotient
 open import ACwF.Instances.TarskiUniverse
 open import ACwF.Instances.IterativePresheaf
 open import ACwF.Instances.IterativeSets
@@ -20,10 +21,12 @@ open import ACwF.FromCCwF
 open import ACwF.Pi
 open import ACwF.Base
 open import ACwF.Eq
+open import ACwF.Quotient
 open import ACwF-CCwF
 open import Utils.VCat
 open import Utils.Reflection
 open import Utils.InternalCategory
 open import Utils.TarskiPresheaf
+open import Utils.TarskiQuotient
 open import Utils.IterativePresheaf
 open import Utils.InductiveRecursiveUniverse

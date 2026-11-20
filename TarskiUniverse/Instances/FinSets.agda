@@ -34,3 +34,6 @@ module _ where
   hasPiℕ : hasPi BareTarskiUniverseℕ
   hasPiℕ .hasPi.Pi _      = totalProd
   hasPiℕ .hasPi.PiIso _ _ = equivToIso (invEquiv (SumFinΠ≃ _ _))
+
+  -- No `hasW`: a W-type of finite sets need not be finite (W with labels
+  -- `Fin 2` and branchings `Fin 0`, `Fin 1` is ℕ).

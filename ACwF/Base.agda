@@ -144,6 +144,13 @@ module Algebraic {ℓOb ℓHom : Level} (C : Category ℓOb ℓHom) where
     reindex {Γ = Γ} {e = e} {e' = e'} {x = x} {y = y} =
       subst (λ ε → PathP (λ i → Tm Γ (ε i)) x y) (isSetTy Γ _ _ e e')
 
+    -- `reindex` for morphisms out of a context extension: a path over `e` is
+    -- also a path over any `e'` with the same endpoints.
+    reindex⟶ : {A B : Ty Γ} {e e' : A ≡ B} {f : Γ ▹ A ⟶ Θ} {g : Γ ▹ B ⟶ Θ}
+             → PathP (λ i → Γ ▹ e i ⟶ Θ) f g → PathP (λ i → Γ ▹ e' i ⟶ Θ) f g
+    reindex⟶ {Γ = Γ} {Θ = Θ} {e = e} {e' = e'} {f = f} {g = g} =
+      subst (λ ε → PathP (λ i → Γ ▹ ε i ⟶ Θ) f g) (isSetTy Γ _ _ e e')
+
     -- Composition of dependent paths of terms.  `compPathP'` cannot infer its
     -- `B`, so pin it here once and for all.
     infixr 30 _∙Tm_

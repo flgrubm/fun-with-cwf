@@ -36,3 +36,6 @@ module _ {ℓ : Level} where
   TarskiUniverseU .TarskiUniverse.TU = BareTarskiUniverseU
   TarskiUniverseU .TarskiUniverse.hasUnitTU = hasUnitU
   TarskiUniverseU .TarskiUniverse.hasSigmaTU  = hasSigmaU
+
+  -- No `hasW`: every `El` is contractible, but W with one label and one
+  -- branch is empty.

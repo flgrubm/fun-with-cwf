@@ -13,6 +13,7 @@ open import CCwF.Base
 open import ACwF.Morphism
 open import ACwF.Sigma
 open import ACwF.Instances.TarskiPresheaf
+open import ACwF.Instances.TarskiPresheaf.Quotient
 open import ACwF.Instances.TarskiUniverse
 open import ACwF.Instances.IterativePresheaf
 open import ACwF.Instances.IterativeSets

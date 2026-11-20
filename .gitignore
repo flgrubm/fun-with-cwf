@@ -7,3 +7,7 @@ tmp/
 .direnv
 
 _build/
+
+# nix build
+result
+result-*

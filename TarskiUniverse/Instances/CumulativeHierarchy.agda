@@ -11,7 +11,8 @@ open import Cubical.HITs.CumulativeHierarchy
 
 open import TarskiUniverse.Instances.IterativeSets renaming ( BareTarskiUniverseV to BareTarskiUniverseV⁰
                                                             ; TarskiUniverseV     to TarskiUniverseV⁰
-                                                            ; hasPiV              to hasPiV⁰ )
+                                                            ; hasPiV              to hasPiV⁰
+                                                            ; hasQuotientV        to hasQuotientV⁰ )
 open import TarskiUniverse.Base
 
 -- The Tarski universe instance for the cumulative hierarchy
@@ -37,3 +38,7 @@ private
                      → S (BareTarskiUniverseV⁰ ℓ) → S BareTarskiUniverseV
   transportStructure {ℓ} S s =
     subst⁻ (λ X → Σ[ TU ∈ BareTarskiUniverse ℓ X ] S TU) V≡V⁰ (BareTarskiUniverseV⁰ ℓ , s) .snd
+
+module _ {ℓ : Level} where
+  hasQuotientV : hasQuotient BareTarskiUniverseV
+  hasQuotientV = transportStructure hasQuotient (hasQuotientV⁰ ℓ)

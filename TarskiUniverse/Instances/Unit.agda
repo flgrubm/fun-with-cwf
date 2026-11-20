@@ -4,6 +4,7 @@ open import Cubical.Foundations.Prelude
 open import Cubical.Foundations.Isomorphism
 
 open import Cubical.Data.Unit
+open import Cubical.HITs.SetQuotients as SQ using ([_] ; squash/)
 
 open import TarskiUniverse.Base
 
@@ -38,3 +39,11 @@ module _ (ℓ : Level) where
   hasPiUnit .hasPi.PiIso _ _ .Iso.sec _ _ _ = tt*
   hasPiUnit .hasPi.PiIso _ _ .Iso.ret tt* = refl
 
+
+  -- a set quotient of the point is the point
+  hasQuotientUnit : hasQuotient Unit-TarskiUniverse-Base
+  hasQuotientUnit .hasQuotient.Quot A R                 = tt*
+  hasQuotientUnit .hasQuotient.QuotIso _ _ .Iso.fun _   = [ tt* ]
+  hasQuotientUnit .hasQuotient.QuotIso _ _ .Iso.inv _   = tt*
+  hasQuotientUnit .hasQuotient.QuotIso _ _ .Iso.sec     = SQ.elimProp (λ _ → squash/ _ _) λ _ → refl
+  hasQuotientUnit .hasQuotient.QuotIso _ _ .Iso.ret tt* = refl

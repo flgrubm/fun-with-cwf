@@ -4,7 +4,6 @@ module ACwF.Instances.IterativeSets  where
 open import Cubical.Foundations.Prelude
 open import Cubical.Foundations.HLevels
 open import Cubical.Foundations.Isomorphism
-open import Cubical.Foundations.Equiv using (isEquiv)
 open import Cubical.Functions.FunExtEquiv
 
 open import Cubical.Data.Sigma
@@ -193,25 +192,13 @@ module _ {ℓHom : Level} where
                    Tm (Γ ▹ V-QTy A R) P
       V-quotElim m r (x , u) = SQ.elim (λ u → isSetEl (P (x , u))) (λ a → m (x , a)) (r x) u
 
-      -- A map `f` that sends `t` to `t [ V-classSub ]Tm` together with a proof
-      -- of some propositional condition `Resp` that implies `V-Respects` is an
-      -- equivalence: its inverse is `V-quotElim`.
-      V-isEquivQuotCases : (Resp : Tm (Γ ▹ A) (P [ V-classSub ]Ty) → Type ℓHom)
-                           (isPropResp : (m : Tm (Γ ▹ A) (P [ V-classSub ]Ty)) → isProp (Resp m))
-                           (pointwise : (m : Tm (Γ ▹ A) (P [ V-classSub ]Ty)) → Resp m → V-Respects m)
-                           (f : Tm (Γ ▹ V-QTy A R) P → Σ (Tm (Γ ▹ A) (P [ V-classSub ]Ty)) Resp)
-                         → ((t : Tm (Γ ▹ V-QTy A R) P) → f t .fst ≡ t [ V-classSub ]Tm)
-                         → ------------------------------------------------------------
-                           isEquiv f
-      V-isEquivQuotCases Resp isPropResp pointwise f f≡ = isoToIsEquiv quotCasesIso
-        where
-          quotCasesIso : Iso _ _
-          quotCasesIso .Iso.fun          = f
-          quotCasesIso .Iso.inv (m , r)  = V-quotElim m (pointwise m r)
-          quotCasesIso .Iso.sec (m , r)  = Σ≡Prop isPropResp (f≡ _)
-          quotCasesIso .Iso.ret t        = funExt λ (x , u) →
-            SQ.elimProp {P = λ u → V-quotElim (f t .fst) (pointwise _ (f t .snd)) (x , u) ≡ t (x , u)}
-                        (λ u → isSetEl (P (x , u)) _ _) (λ a i → f≡ t i (x , a)) u
+      -- the η-law: a term is the eliminator of its instance at classes
+      V-quotElim-η : (t : Tm (Γ ▹ V-QTy A R) P) (r : V-Respects (t [ V-classSub ]Tm))
+                   → -----------------------------------------------------------
+                     V-quotElim (t [ V-classSub ]Tm) r ≡ t
+      V-quotElim-η t r = funExt λ (x , u) →
+        SQ.elimProp {P = λ u → V-quotElim (t [ V-classSub ]Tm) r (x , u) ≡ t (x , u)}
+                    (λ u → isSetEl (P (x , u)) _ _) (λ a → refl) u
 
   V-Quot-Structure : Quot-Structure VCwF
   V-Quot-Structure .Quot-Structure.QTy                     = V-QTy
@@ -227,6 +214,6 @@ module _ {ℓHom : Level} where
   V-Quot-Structure .Quot-Structure.classSubSound           = V-classSubSound
   -- `respects` at `(((x , a) , b) , r)` is a path over `eq/ a b r`
   V-Quot-Structure .Quot-Structure.isEquivQuotCases A R P  =
-    V-isEquivQuotCases P _ (λ _ → isOfHLevelPathP' 1 (isSetTm _ _) _ _)
+    isEquivCases (V-quotElim P) (λ _ _ → refl) (V-quotElim-η P)
+      (λ _ → isOfHLevelPathP' 1 (isSetTm _ _) _ _)
       (λ m r x a b rel i → reindex {e' = λ i z → P (V-classSubSound i z)} r i (((x , a) , b) , rel))
-      _ (λ _ → refl)

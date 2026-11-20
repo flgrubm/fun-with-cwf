@@ -2,11 +2,34 @@ module ACwF.Quotient where
 
 open import Cubical.Foundations.Prelude
 open import Cubical.Foundations.Equiv
+open import Cubical.Foundations.Isomorphism using (Iso ; isoToIsEquiv)
 open import Cubical.Data.Sigma
 
 open import Cubical.Categories.Category
 
 open import ACwF.Base
+
+-- | A map `f` into a subtype `Σ M Resp` is an equivalence if its first
+-- component has an inverse `elim` that needs only a weaker condition `Resp'`.
+-- The models prove `isEquivQuotCases` this way: `f` is `QuotCases`, `Resp'`
+-- is the model's own statement that a term respects the relation, and `β`,
+-- `η` are the laws of its eliminator.
+isEquivCases : {ℓT ℓM ℓR ℓR' : Level} {T : Type ℓT} {M : Type ℓM}
+               {Resp : M → Type ℓR} {Resp' : M → Type ℓR'} {f : T → Σ M Resp}
+               (elim : (m : M) → Resp' m → T)
+             → ((m : M) (r : Resp' m) → f (elim m r) .fst ≡ m)
+             → ((t : T) (r : Resp' (f t .fst)) → elim (f t .fst) r ≡ t)
+             → ((m : M) → isProp (Resp m))
+             → ((m : M) → Resp m → Resp' m)
+             → --------------------------------------------------------
+               isEquiv f
+isEquivCases {f = f} elim β η isPropResp weaken = isoToIsEquiv casesIso
+  where
+    casesIso : Iso _ _
+    casesIso .Iso.fun         = f
+    casesIso .Iso.inv (m , r) = elim m (weaken m r)
+    casesIso .Iso.sec (m , r) = Σ≡Prop isPropResp (β m (weaken m r))
+    casesIso .Iso.ret t       = η t (weaken _ (f t .snd))
 
 module _ {ℓOb ℓHom ℓTy ℓTm : Level} {C : Category ℓOb ℓHom} (cwf : Algebraic.CwF C ℓTy ℓTm) where
 
@@ -50,7 +73,7 @@ module _ {ℓOb ℓHom ℓTy ℓTm : Level} {C : Category ℓOb ℓHom} (cwf : A
              → ----------------------------------------------------
                QTy A R [ σ ]Ty ≡ QTy (A [ σ ]Ty) (R [ σ ⁺² ]Ty)
 
-      -- | Introduction: the class of a term ...
+      -- | Introduction: the class of a term.
       classTm : {A : Ty Γ} {R : Ty (Γ ▹ A ▹ A [ p ]Ty)}
               → Tm Γ A
               → ----------------
@@ -61,9 +84,10 @@ module _ {ℓOb ℓHom ℓTy ℓTm : Level} {C : Category ℓOb ℓHom} (cwf : A
                    PathP (λ i → Tm Δ (QTyNat A R σ i))
                          (classTm a [ σ ]Tm) (classTm (a [ σ ]Tm))
 
-      -- ... and generically, the substitution `(γ , a) ↦ (γ , [ a ])`.  It is
-      -- determined by the next two fields, but is a field (Fording) so that a
-      -- model can supply one that computes.
+      -- The class of the last variable as a substitution,
+      -- `(γ , a) ↦ (γ , [ a ])`.  It is determined by `p∘classSub` and
+      -- `q[classSub]`, but is a field (Fording) so that a model can supply one
+      -- that computes.
       classSub : {A : Ty Γ} {R : Ty (Γ ▹ A ▹ A [ p ]Ty)}
                → -------------------------
                  Γ ▹ A ⟶ Γ ▹ QTy A R
@@ -72,7 +96,8 @@ module _ {ℓOb ℓHom ℓTy ℓTm : Level} {C : Category ℓOb ℓHom} (cwf : A
                  → -----------------------------------
                    p ∘ classSub {A = A} {R = R} ≡ p
 
-    -- the type of the variable, after `classSub`
+    -- the type of `q [ classSub ]Tm` is that of `classTm q`; `q[classSub]` lies
+    -- over this path
     classSubTy : (A : Ty Γ) (R : Ty (Γ ▹ A ▹ A [ p ]Ty))
                → ----------------------------------------------------------------
                  QTy A R [ p ]Ty [ classSub {A = A} {R = R} ]Ty ≡ QTy (A [ p ]Ty) (R [ p ⁺² ]Ty)
@@ -93,6 +118,7 @@ module _ {ℓOb ℓHom ℓTy ℓTm : Level} {C : Category ℓOb ℓHom} (cwf : A
     sndVar A R = (p {A = A}) ⁺ ∘ p {A = R}
 
     field
+      -- the last component of `classSub` is the class of the variable
       q[classSub] : {A : Ty Γ} {R : Ty (Γ ▹ A ▹ A [ p ]Ty)}
                   → ------------------------------------------------------------------
                     PathP (λ i → Tm (Γ ▹ A) (classSubTy A R i)) (q [ classSub ]Tm) (classTm q)
@@ -102,8 +128,10 @@ module _ {ℓOb ℓHom ℓTy ℓTm : Level} {C : Category ℓOb ℓHom} (cwf : A
                     → ---------------------------------------------------------
                       classSub {A = A} {R = R} ∘ fstVar A R ≡ classSub ∘ sndVar A R
 
-    -- | Elimination.  A term `m` over a variable of `A` respects `R` if its
-    -- instances at two related variables agree.
+    -- | Elimination.
+
+    -- `P` at the class of the first related variable is `P` at the class of
+    -- the second, by `classSubSound`
     respectsTy : (A : Ty Γ) (R : Ty (Γ ▹ A ▹ A [ p ]Ty)) (P : Ty (Γ ▹ QTy A R))
                → ---------------------------------------------------------------------
                  P [ classSub {A = A} {R = R} ]Ty [ fstVar A R ]Ty ≡ P [ classSub ]Ty [ sndVar A R ]Ty
@@ -112,6 +140,7 @@ module _ {ℓOb ℓHom ℓTy ℓTm : Level} {C : Category ℓOb ℓHom} (cwf : A
       ∙ cong (P [_]Ty) classSubSound
       ∙ [][]Ty P (sndVar A R) classSub
 
+    -- `m` respects `R`: its instances at two related variables agree
     respects : (A : Ty Γ) (R : Ty (Γ ▹ A ▹ A [ p ]Ty)) (P : Ty (Γ ▹ QTy A R))
              → Tm (Γ ▹ A) (P [ classSub {A = A} {R = R} ]Ty)
              → -----------------------------
@@ -155,5 +184,5 @@ module _ {ℓOb ℓHom ℓTy ℓTm : Level} {C : Category ℓOb ℓHom} (cwf : A
     quotElim-η : (A : Ty Γ) (R : Ty (Γ ▹ A ▹ A [ p ]Ty)) (P : Ty (Γ ▹ QTy A R))
                  (t : Tm (Γ ▹ QTy A R) P)
                → -------------------------------------------------------------
-                 quotElim A R P (QuotCases A R P t .fst) (QuotCases A R P t .snd) ≡ t
+                 quotElim A R P (t [ classSub {A = A} {R = R} ]Tm) (QuotCases A R P t .snd) ≡ t
     quotElim-η A R P t = retEq (_ , isEquivQuotCases A R P) t

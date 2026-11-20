@@ -39,7 +39,6 @@ module _ (ℓ : Level) where
   hasPiUnit .hasPi.PiIso _ _ .Iso.sec _ _ _ = tt*
   hasPiUnit .hasPi.PiIso _ _ .Iso.ret tt* = refl
 
-
   -- a set quotient of the point is the point
   hasQuotientUnit : hasQuotient Unit-TarskiUniverse-Base
   hasQuotientUnit .hasQuotient.Quot A R                 = tt*

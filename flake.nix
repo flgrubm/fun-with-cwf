@@ -3,10 +3,10 @@
 
   inputs = {
     nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
-    # The development needs `Cubical.Data.IterativeSets.*` from cubical master; the
-    # revision is pinned in flake.lock (update with `nix flake update cubical`).
+    # The development needs `Cubical.Data.IterativeSets.*` from cubical master
+    # (2026-11). To use another revision of cubical, change the hash here.
     cubical = {
-      url = "github:agda/cubical";
+      url = "github:agda/cubical/8f0a71b3b3c2435cd1f579328314ae10233b1308";
       flake = false;
     };
   };

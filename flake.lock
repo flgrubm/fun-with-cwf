@@ -13,6 +13,7 @@
       "original": {
         "owner": "agda",
         "repo": "cubical",
+        "rev": "8f0a71b3b3c2435cd1f579328314ae10233b1308",
         "type": "github"
       }
     },

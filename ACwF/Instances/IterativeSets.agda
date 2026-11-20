@@ -19,6 +19,7 @@ open import ACwF.Eq
 open import ACwF.Empty
 open import ACwF.Unit
 open import ACwF.Bool
+open import ACwF.Universe
 
 open import Cubical.Data.IterativeSets.Base renaming (V⁰ to V ; El⁰ to El ; isSetEl⁰ to isSetEl)
 open import Utils.VCat
@@ -28,6 +29,8 @@ open import Cubical.Data.IterativeSets.Unit
 open import Cubical.Data.IterativeSets.Identity
 open import Cubical.Data.IterativeSets.Empty
 open import Cubical.Data.IterativeSets.Bool
+open import Cubical.Data.IterativeSets.Universes
+open import TarskiUniverse.Instances.IterativeSets using (piU⁰ ; decode-piU⁰ ; sigU⁰ ; decode-sigU⁰)
 
 open Category
 
@@ -154,3 +157,69 @@ module _ {ℓHom : Level} where
   V-Bool-Structure .Bool-Structure.Bool-elim      = V-Bool-elim
   V-Bool-Structure .Bool-Structure.Bool-elimβ     = V-Bool-elimβ
   V-Bool-Structure .Bool-Structure.Bool-elimNat   = V-Bool-elimNat
+
+-- | At a successor level, families of iterative sets have a universe: the
+-- codes are the constant family `universe⁰`, and a code decodes by raising.
+-- Substituting only precomposes, so the naturality laws are `refl`, and
+-- `ElNat` is chosen pointwise so that the closure laws are plain compositions
+-- of the given paths.
+module _ {ℓ : Level} where
+
+  open Algebraic
+  open CwF {ℓHom = ℓ-suc ℓ} VCwF
+
+  V-Univ-Structure : Univ-Structure (VCwF {ℓ-suc ℓ})
+  V-Univ-Structure .Univ-Structure.UTy _         = universe⁰ {ℓ}
+  V-Univ-Structure .Univ-Structure.UTyNat _      = refl
+  V-Univ-Structure .Univ-Structure.ElTy (_ , c)  = lift-V⁰ (ℓ-suc ℓ) c
+  V-Univ-Structure .Univ-Structure.ElTyNat _     = refl
+  V-Univ-Structure .Univ-Structure.ElNat _ e i x = lift-V⁰ (ℓ-suc ℓ) (e i x)
+
+  open Univ-Structure V-Univ-Structure renaming (El to ElU)
+
+  private variable
+    Δ Γ : V {ℓ-suc ℓ}
+
+  -- | A code former on the internal universe of V⁰, applied pointwise, is
+  -- natural: first move the family along `d [ σ ⁺ ] ≡ d₀`, then code and
+  -- family together along `e` and the family's `PathP` over `ElNat σ e`.
+  pointwiseUNat : (F : (c : V {ℓ}) → (El (lift-V⁰ (ℓ-suc ℓ) c) → V {ℓ}) → V {ℓ})
+                  (σ : El Δ → El Γ) {c : Tm Γ UTy} {c' : Tm Δ UTy} (e : c [ σ ]U≈ c')
+                  {d : Tm (Γ ▹ ElU c) UTy} {d' : Tm (Δ ▹ ElU c') UTy}
+                → _[_]Fam≈_ VCwF V-Univ-Structure d (σ , e) d'
+                → ------------------------------------------------------------------
+                  Path (Tm Δ UTy) (λ x → F (c (σ x)) (λ y → d (σ x , y)))
+                                  (λ x → F (c' x) (λ y → d' (x , y)))
+  pointwiseUNat F σ e (d₀ , e₁ , e₂) =
+      (λ i x → F (e i0 x) (λ y → e₁ i (x , y)))
+    ∙ (λ i x → F (e i x) (λ y → e₂ i (x , y)))
+
+  module _ where
+    open Π-Structure (V-Π-Structure {ℓHom = ℓ-suc ℓ})
+
+    -- `piU` decodes to the Π of the decodings, pointwise
+    El-piU-at : (c : Tm Γ UTy) (d : Tm (Γ ▹ ElU c) UTy) (x : El Γ)
+              → ---------------------------------------------------------------------
+                lift-V⁰ (ℓ-suc ℓ) (piU⁰ ℓ (c x) (λ y → d (x , y)))
+              ≡ Π⁰ (lift-V⁰ (ℓ-suc ℓ) (c x)) (λ y → lift-V⁰ (ℓ-suc ℓ) (d (x , y)))
+    El-piU-at c d x = decode-piU⁰ ℓ (c x) (λ y → d (x , y))
+
+    V-Univ-Π-Structure : Univ-Π-Structure (VCwF {ℓ-suc ℓ}) V-Univ-Structure V-Π-Structure
+    V-Univ-Π-Structure .Univ-Π-Structure.piU c d x                   = piU⁰ ℓ (c x) (λ y → d (x , y))
+    V-Univ-Π-Structure .Univ-Π-Structure.El-piU c d                  = funExt (El-piU-at c d)
+    V-Univ-Π-Structure .Univ-Π-Structure.piUNat σ {c} {c'} e {d} {d'} = pointwiseUNat (piU⁰ ℓ) σ {c} {c'} e {d} {d'}
+
+  module _ where
+    open Σ-Structure (V-Σ-Structure {ℓHom = ℓ-suc ℓ})
+
+    -- `sigU` decodes to the Σ of the decodings, pointwise
+    El-sigU-at : (c : Tm Γ UTy) (d : Tm (Γ ▹ ElU c) UTy) (x : El Γ)
+               → ---------------------------------------------------------------------
+                 lift-V⁰ (ℓ-suc ℓ) (sigU⁰ ℓ (c x) (λ y → d (x , y)))
+               ≡ Σ⁰ (lift-V⁰ (ℓ-suc ℓ) (c x)) (λ y → lift-V⁰ (ℓ-suc ℓ) (d (x , y)))
+    El-sigU-at c d x = decode-sigU⁰ ℓ (c x) (λ y → d (x , y))
+
+    V-Univ-Σ-Structure : Univ-Σ-Structure (VCwF {ℓ-suc ℓ}) V-Univ-Structure V-Σ-Structure
+    V-Univ-Σ-Structure .Univ-Σ-Structure.sigU c d x                   = sigU⁰ ℓ (c x) (λ y → d (x , y))
+    V-Univ-Σ-Structure .Univ-Σ-Structure.El-sigU c d                  = funExt (El-sigU-at c d)
+    V-Univ-Σ-Structure .Univ-Σ-Structure.sigUNat σ {c} {c'} e {d} {d'} = pointwiseUNat (sigU⁰ ℓ) σ {c} {c'} e {d} {d'}

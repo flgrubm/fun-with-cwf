@@ -19,9 +19,11 @@ open import ACwF.Pi
 open import ACwF.Eq
 open import ACwF.Unit
 open import ACwF.Empty
+open import ACwF.Quotient
 
 open import TarskiUniverse.Base
 open import TarskiUniverse.Properties
+open import Utils.TarskiQuotient
 
 open import Agda.Builtin.Unit
 
@@ -142,3 +144,119 @@ module _ {ℓU ℓEl : Level} {U : Type ℓU} (Univ : TarskiUniverse ℓEl U) wh
     U-⊥-Structure .⊥-Structure.⊥TyNat _      = refl
     U-⊥-Structure .⊥-Structure.⊥-elim _ x    = ⊥.rec (EmptyIso .fun (sndSigma x))
     U-⊥-Structure .⊥-Structure.⊥-elimNat _ _ = funExt λ x → ⊥.rec (EmptyIso .fun (sndSigma x))
+
+  -- | Quotients, fibrewise: `QTy A R x` is the code for the quotient of
+  -- `A x` by `R` at `x`.  Two variables over `x` are re-paired into an
+  -- element of `Γ ▹ A ▹ A [ p ]Ty` by `pair²` (Utils.TarskiQuotient), and
+  -- `σ ⁺²` re-pairs, so that the relation of a substituted quotient is `R`
+  -- at a re-paired triple.  Elimination is `isEquivPrecompCls`.
+  module U-Quot (TU-Quot : hasQuotient TU) where
+    open hasQuotient TU-Quot
+    open Algebraic
+    open CwF UCwF
+    open Fibrewise Univ
+
+    private variable
+      Γ Δ : U
+
+    private
+      -- the relation `R` in the fibre over `x`
+      rel : {A : Ty Γ} (R : Ty (Γ ▹ A ▹ A [ p ]Ty)) (x : El Γ) → El (A x) → El (A x) → U
+      rel {A = A} R x a b = R (pair² A (x , a , b))
+
+      module QF {Γ : U} {A : Ty Γ} (R : Ty (Γ ▹ A ▹ A [ p ]Ty)) = QuotFibres TU-Quot A (rel R)
+
+    U-QTy : (A : Ty Γ) (R : Ty (Γ ▹ A ▹ A [ p ]Ty))
+          → -------------------------------------------
+            Ty Γ
+    U-QTy A R = QF.Q R
+
+    -- re-pair the three components, with `σ` applied to the first
+    U-⁺² : {A : Ty Γ} (σ : El Δ → El Γ)
+         → ------------------------------------------------------------
+           El (Δ ▹ A [ σ ]Ty ▹ A [ σ ]Ty [ p ]Ty) → El (Γ ▹ A ▹ A [ p ]Ty)
+    U-⁺² {A = A} σ w = pair² A (σ (t .fst) , t .snd)
+      where t = unpair² (λ x → A (σ x)) w
+
+    -- `(σ ⁺) ⁺` and `σ ⁺²` differ only in the third component, which `σ ⁺²`
+    -- moves along the β-law of the inner pair
+    U-⁺²≡ : {A : Ty Γ} (σ : El Δ → El Γ)
+          → -----------------------------------------------------------------------------
+            PathP (λ i → El (Δ ▹ A [ σ ]Ty ▹ [p][⁺]Ty {A = A} A σ i) → El (Γ ▹ A ▹ A [ p ]Ty))
+                  (_⁺ {A = A [ p ]Ty} (_⁺ {A = A} σ)) (U-⁺² σ)
+    U-⁺²≡ {A = A} σ i w = pairSigma (pairSigma (σ x) a) (transp (λ j → El (A (β (i ∧ ~ j)))) (~ i) (sndSigma w))
+      where
+        x = fstSigma (fstSigma w)
+        a = sndSigma (fstSigma w)
+        β : fstSigma (pairSigma {B = A} (σ x) a) ≡ σ x
+        β = fstPairSigma (σ x) a
+
+    -- the relations agree at each pair of elements: unpairing a re-paired
+    -- triple gives it back
+    U-QTyNat : (A : Ty Γ) (R : Ty (Γ ▹ A ▹ A [ p ]Ty)) (σ : El Δ → El Γ)
+             → -------------------------------------------------------------
+               U-QTy A R [ σ ]Ty ≡ U-QTy (A [ σ ]Ty) (R [ U-⁺² σ ]Ty)
+    U-QTyNat A R σ = funExt λ x → cong (Quot (A (σ x))) (funExt λ a → funExt λ b →
+      cong (λ t → R (pair² A (σ (t .fst) , t .snd)))
+           (sym (unpair²-pair² (λ x → A (σ x)) (x , a , b))))
+
+    -- a class lies over `U-QTyNat`
+    U-classQuotNat : (A : Ty Γ) (R : Ty (Γ ▹ A ▹ A [ p ]Ty)) (σ : El Δ → El Γ) (a : Tm Δ (A [ σ ]Ty))
+                   → ---------------------------------------------------------------------------------
+                     PathP (λ i → Tm Δ (U-QTyNat A R σ i)) (λ x → classQuot (a x)) (λ x → classQuot (a x))
+    U-classQuotNat A R σ a i x = classQuot (a x)
+
+    -- `q [ classSub ]Tm` is the second component of a canonical pair
+    U-q[classSub] : {A : Ty Γ} {R : Ty (Γ ▹ A ▹ A [ p ]Ty)}
+                  → -----------------------------------------------------------------------------------
+                    PathP (λ i → Tm (Γ ▹ A) (λ w → U-QTy A R (fstPairSigma {B = U-QTy A R} (fstSigma w) (classQuot (sndSigma w)) i)))
+                          (q [ QF.cls R ]Tm) (λ w → classQuot (sndSigma w))
+    U-q[classSub] {R = R} i w = sndPairSigma {B = U-QTy _ R} (fstSigma w) (classQuot (sndSigma w)) i
+
+    -- the class of the first variable of a related pair is that of the second
+    U-classSubSound : {A : Ty Γ} {R : Ty (Γ ▹ A ▹ A [ p ]Ty)}
+                    → ------------------------------------------------------------------------------------
+                      Path (El (Γ ▹ A ▹ A [ p ]Ty ▹ R) → El (Γ ▹ U-QTy A R))
+                           (λ z → QF.cls R (fstSigma (fstSigma z)))
+                           (λ z → QF.cls R (pairSigma (fstSigma (fstSigma (fstSigma z))) (sndSigma (fstSigma z))))
+    U-classSubSound {A = A} {R = R} = funExt λ z →
+        cong (QF.cls R) (sym (ηSigma (fstSigma (fstSigma z))))
+      ∙ QF.cls-eq R _ _ _ (subst (λ w → El (R w)) (sym (pair²-unpair² A (fstSigma z))) (sndSigma z))
+
+    -- a term that respects `R` (in the sense of `Quot-Structure`) respects it
+    -- at each related pair over `x`
+    U-toRespects : {A : Ty Γ} {R : Ty (Γ ▹ A ▹ A [ p ]Ty)} (P : Ty (Γ ▹ U-QTy A R))
+                   (m : Tm (Γ ▹ A) (P [ QF.cls R ]Ty))
+                 → PathP (λ i → Tm (Γ ▹ A ▹ A [ p ]Ty ▹ R) (λ z → P (U-classSubSound i z)))
+                         (λ z → m (fstSigma (fstSigma z)))
+                         (λ z → m (pairSigma (fstSigma (fstSigma (fstSigma z))) (sndSigma (fstSigma z))))
+                 → -----------------------------------------------------------------------------
+                   QF.Respects R P m
+    U-toRespects {A = A} {R = R} P m r x a b rel' =
+      over P (   congO P m (sym e₁)
+                   ∙O overPath (λ i → U-classSubSound i z) (λ i → r i z)
+                   ∙O congO P m e₂)
+                  (QF.cls-eq R x a b rel')
+      where
+        z = pairSigma {B = R} (pair² A (x , a , b)) rel'
+        e₁ : fstSigma (fstSigma z) ≡ pairSigma x a
+        e₁ = cong fstSigma (fstPairSigma {B = R} _ rel') ∙ fstPairSigma {B = λ s → A (fstSigma s)} _ _
+        e₂ : pairSigma {B = A} (fstSigma (fstSigma (fstSigma z))) (sndSigma (fstSigma z)) ≡ pairSigma x b
+        e₂ =  cong (λ w → pairSigma {B = A} (fstSigma (fstSigma w)) (sndSigma w)) (fstPairSigma {B = R} _ rel')
+            ∙ cong (λ t → pairSigma {B = A} (t .fst) (t .snd .snd)) (unpair²-pair² A (x , a , b))
+
+    U-Quot-Structure : Quot-Structure UCwF
+    U-Quot-Structure .Quot-Structure.QTy                    = U-QTy
+    U-Quot-Structure .Quot-Structure._⁺²                    = U-⁺²
+    U-Quot-Structure .Quot-Structure.⁺²≡                    = U-⁺²≡
+    U-Quot-Structure .Quot-Structure.QTyNat                 = U-QTyNat
+    U-Quot-Structure .Quot-Structure.classTm a x            = classQuot (a x)
+    U-Quot-Structure .Quot-Structure.classTmNat {A = A} {R = R} a σ = U-classQuotNat A R σ (a [ σ ]Tm)
+    U-Quot-Structure .Quot-Structure.classSub {R = R}       = QF.cls R
+    U-Quot-Structure .Quot-Structure.p∘classSub             = funExt λ w → fstPairSigma _ _
+    U-Quot-Structure .Quot-Structure.q[classSub] {A = A} {R = R} =
+      reindex (U-q[classSub] {A = A} {R = R} ∙Tm U-classQuotNat A R p q)
+    U-Quot-Structure .Quot-Structure.classSubSound          = U-classSubSound
+    U-Quot-Structure .Quot-Structure.isEquivQuotCases A R P =
+      QF.isEquivPrecompCls R P _ (λ _ → isOfHLevelPathP' 1 (isSetTm _ _) _ _)
+        (λ m r → U-toRespects P m (reindex r)) _ (λ _ → refl)

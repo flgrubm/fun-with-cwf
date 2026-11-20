@@ -26,5 +26,6 @@ open import Utils.VCat
 open import Utils.Reflection
 open import Utils.InternalCategory
 open import Utils.TarskiPresheaf
+open import Utils.TarskiQuotient
 open import Utils.IterativePresheaf
 open import Utils.InductiveRecursiveUniverse

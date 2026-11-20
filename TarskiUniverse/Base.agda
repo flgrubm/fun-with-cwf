@@ -64,6 +64,14 @@ module _ {ℓU ℓEl : Level} {U : Type ℓU} (TU : BareTarskiUniverse ℓEl U) 
     SigmaPathP {x = x} {y = y} fst≡ snd≡ =
       sym (ηSigma x) ∙∙ cong (uncurry pairSigma) (ΣPathP (fst≡ , snd≡)) ∙∙ ηSigma y
 
+    -- a canonical pair equals `p` as soon as its components do (β-laws absorbed)
+    pairSigma≡ : {A : U} {B : El A → U} {x : El A} {y : El (B x)} {p : El (Sigma A B)}
+                 (fst≡ : x ≡ fstSigma p)
+               → PathP (λ i → El (B (fst≡ i))) y (sndSigma p) → pairSigma x y ≡ p
+    pairSigma≡ {B = B} fst≡ snd≡ =
+      SigmaPathP (fstPairSigma _ _ ∙ fst≡)
+                 (compPathP' {B = λ x → El (B x)} (sndPairSigma _ _) snd≡)
+
   record hasPi : Type (ℓ-max ℓU ℓEl) where
     field
       Pi : (A : U) (B : El A → U) → U

@@ -20,6 +20,7 @@ open import ACwF.FromCCwF
 open import ACwF.Pi
 open import ACwF.Base
 open import ACwF.Eq
+open import ACwF.W
 open import ACwF-CCwF
 open import Utils.VCat
 open import Utils.Reflection

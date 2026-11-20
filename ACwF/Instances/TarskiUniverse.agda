@@ -149,7 +149,7 @@ module _ {ℓU ℓEl : Level} {U : Type ℓU} (Univ : TarskiUniverse ℓEl U) wh
   -- `A x` by `R` at `x`.  Two variables over `x` are re-paired into an
   -- element of `Γ ▹ A ▹ A [ p ]Ty` by `pair²` (Utils.TarskiQuotient), and
   -- `σ ⁺²` re-pairs, so that the relation of a substituted quotient is `R`
-  -- at a re-paired triple.  Elimination is `isEquivPrecompCls`.
+  -- at a re-paired triple.  Elimination is `QuotFibres.elim` with its laws `elim-β` and `elim-η`.
   module U-Quot (TU-Quot : hasQuotient TU) where
     open hasQuotient TU-Quot
     open Algebraic
@@ -171,8 +171,7 @@ module _ {ℓU ℓEl : Level} {U : Type ℓU} (Univ : TarskiUniverse ℓEl U) wh
     U-⁺² : {A : Ty Γ} (σ : El Δ → El Γ)
          → ------------------------------------------------------------
            El (Δ ▹ A [ σ ]Ty ▹ A [ σ ]Ty [ p ]Ty) → El (Γ ▹ A ▹ A [ p ]Ty)
-    U-⁺² {A = A} σ w = pair² A (σ (t .fst) , t .snd)
-      where t = unpair² (λ x → A (σ x)) w
+    U-⁺² {A = A} σ = sub² A σ
 
     -- `(σ ⁺) ⁺` and `σ ⁺²` differ only in the third component, which `σ ⁺²`
     -- moves along the β-law of the inner pair
@@ -180,21 +179,13 @@ module _ {ℓU ℓEl : Level} {U : Type ℓU} (Univ : TarskiUniverse ℓEl U) wh
           → -----------------------------------------------------------------------------
             PathP (λ i → El (Δ ▹ A [ σ ]Ty ▹ [p][⁺]Ty {A = A} A σ i) → El (Γ ▹ A ▹ A [ p ]Ty))
                   (_⁺ {A = A [ p ]Ty} (_⁺ {A = A} σ)) (U-⁺² σ)
-    U-⁺²≡ {A = A} σ i w = pairSigma (pairSigma (σ x) a) (transp (λ j → El (A (β (i ∧ ~ j)))) (~ i) (sndSigma w))
-      where
-        x = fstSigma (fstSigma w)
-        a = sndSigma (fstSigma w)
-        β : fstSigma (pairSigma {B = A} (σ x) a) ≡ σ x
-        β = fstPairSigma (σ x) a
+    U-⁺²≡ {A = A} σ i w = sub²-filler A σ i (fstSigma (fstSigma w)) (sndSigma (fstSigma w)) (sndSigma w)
 
-    -- the relations agree at each pair of elements: unpairing a re-paired
-    -- triple gives it back
+    -- the relations agree at each pair of elements (`relSub²`)
     U-QTyNat : (A : Ty Γ) (R : Ty (Γ ▹ A ▹ A [ p ]Ty)) (σ : El Δ → El Γ)
              → -------------------------------------------------------------
                U-QTy A R [ σ ]Ty ≡ U-QTy (A [ σ ]Ty) (R [ U-⁺² σ ]Ty)
-    U-QTyNat A R σ = funExt λ x → cong (Quot (A (σ x))) (funExt λ a → funExt λ b →
-      cong (λ t → R (pair² A (σ (t .fst) , t .snd)))
-           (sym (unpair²-pair² (λ x → A (σ x)) (x , a , b))))
+    U-QTyNat A R σ = funExt λ x → cong (Quot (A (σ x))) (relSub² A σ R x)
 
     -- a class lies over `U-QTyNat`
     U-classQuotNat : (A : Ty Γ) (R : Ty (Γ ▹ A ▹ A [ p ]Ty)) (σ : El Δ → El Γ) (a : Tm Δ (A [ σ ]Ty))
@@ -229,5 +220,6 @@ module _ {ℓU ℓEl : Level} {U : Type ℓU} (Univ : TarskiUniverse ℓEl U) wh
       reindex (U-q[classSub] {A = A} {R = R} ∙Tm U-classQuotNat A R p q)
     U-Quot-Structure .Quot-Structure.classSubSound          = U-classSubSound
     U-Quot-Structure .Quot-Structure.isEquivQuotCases A R P =
-      QF.isEquivPrecompCls R P _ (λ _ → isOfHLevelPathP' 1 (isSetTm _ _) _ _)
-        (λ m r → QF.toRespects R P m (λ z i → reindex {e' = λ i z → P (U-classSubSound i z)} r i z)) _ (λ _ → refl)
+      isEquivCases (QF.elim R P) (λ m r → funExt (QF.elim-β R P m r)) (QF.elim-η R P)
+        (λ _ → isOfHLevelPathP' 1 (isSetTm _ _) _ _)
+        (λ m r → QF.toRespects R P m (λ z i → reindex {e' = λ i z → P (U-classSubSound i z)} r i z))

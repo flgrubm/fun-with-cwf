@@ -3,9 +3,9 @@ module Utils.TarskiQuotient where
 open import Cubical.Foundations.Prelude
 open import Cubical.Foundations.HLevels
 open import Cubical.Foundations.Isomorphism
-open import Cubical.Foundations.Equiv using (isEquiv ; fiber)
+open import Cubical.Foundations.Equiv using (fiber)
 open import Cubical.Data.Sigma
-open import Cubical.HITs.PropositionalTruncation as PT using (∥_∥₁ ; ∣_∣₁)
+open import Cubical.HITs.PropositionalTruncation as PT using (∥_∥₁)
 open import Cubical.HITs.SetQuotients as SQ using (_/_ ; [_] ; eq/)
 
 open import TarskiUniverse.Base
@@ -13,12 +13,12 @@ open import TarskiUniverse.Base
 open Iso
 
 -- | Set quotients in a Tarski universe, fibrewise over a base: the common
--- core of the quotient types in the families model (`ACwF.Instances.
--- TarskiUniverse`) and, stage by stage, in the presheaf model
--- (`ACwF.Instances.TarskiPresheaf.Quotient`).  Contexts there are iterated
--- `Sigma`s, so a variable of a quotient over a base `X` is an element of
--- `Sigma X (λ x → Quot (A x) (rel x))`, and elimination is a statement about
--- functions out of it.
+-- core of the quotient types in the families model
+-- (`ACwF.Instances.TarskiUniverse`) and, stage by stage, in the presheaf
+-- model (`ACwF.Instances.TarskiPresheaf.Quotient`).  Contexts there are
+-- iterated `Sigma`s, so a variable of a quotient over a base `X` is an
+-- element of `Sigma X (λ x → Quot (A x) (rel x))`, and elimination is a
+-- statement about functions out of it.
 module Fibrewise {ℓU ℓEl : Level} {U : Type ℓU} (Univ : TarskiUniverse ℓEl U) where
   open TarskiUniverse Univ
 
@@ -59,7 +59,7 @@ module Fibrewise {ℓU ℓEl : Level} {U : Type ℓU} (Univ : TarskiUniverse ℓ
           → Over F (g y) (g y')
     congO {f = f} g e = overPath (cong f e) (λ i → g (e i))
 
-    -- moving along a path of the base
+    -- an element and its transport along `e` form a dependent path
     substO : {x y : El X} (e : x ≡ y) (u : El (F x)) → Over F u (subst (λ x → El (F x)) e u)
     substO e u = overPath e (subst-filler (λ x → El (F x)) e u)
 
@@ -67,7 +67,7 @@ module Fibrewise {ℓU ℓEl : Level} {U : Type ℓU} (Univ : TarskiUniverse ℓ
     sndPairO : (x : El X) (u : El (F x)) → Over F (sndSigma (pairSigma {B = F} x u)) u
     sndPairO x u = overPath (fstPairSigma x u) (sndPairSigma x u)
 
-    -- canonical pairs of dependent-path-related components are equal
+    -- canonical pairs are equal if their second components are related by a dependent path
     pairO : {x y : El X} {u : El (F x)} {v : El (F y)} → Over F u v → pairSigma {B = F} x u ≡ pairSigma y v
     pairO (overPath e h) i = pairSigma (e i) (h i)
 
@@ -85,16 +85,16 @@ module Fibrewise {ℓU ℓEl : Level} {U : Type ℓU} (Univ : TarskiUniverse ℓ
     Sigma² : U
     Sigma² = Sigma (Sigma X A) (λ s → A (fstSigma s))
 
-    Two : Type ℓEl
-    Two = Σ[ x ∈ El X ] El (A x) × El (A x)
+    Triple : Type ℓEl
+    Triple = Σ[ x ∈ El X ] El (A x) × El (A x)
 
-    pair² : Two → El Sigma²
+    pair² : Triple → El Sigma²
     pair² (x , a , b) = pairSigma (pairSigma x a) (subst (λ y → El (A y)) (sym (fstPairSigma x a)) b)
 
-    unpair² : El Sigma² → Two
+    unpair² : El Sigma² → Triple
     unpair² w = fstSigma (fstSigma w) , sndSigma (fstSigma w) , sndSigma w
 
-    unpair²-pair² : (t : Two) → unpair² (pair² t) ≡ t
+    unpair²-pair² : (t : Triple) → unpair² (pair² t) ≡ t
     unpair²-pair² (x , a , b) i = base i , a≡ i , b≡ i
       where
         γ : fstSigma (pair² (x , a , b)) ≡ pairSigma x a
@@ -110,10 +110,10 @@ module Fibrewise {ℓU ℓEl : Level} {U : Type ℓU} (Univ : TarskiUniverse ℓ
                                               (symP (subst-filler (λ y → El (A y)) (sym β) b))
 
     -- the second and the third component of `unpair²-pair²`
-    unpair²-pair²O₂ : (t : Two) → Over A (unpair² (pair² t) .snd .fst) (t .snd .fst)
+    unpair²-pair²O₂ : (t : Triple) → Over A (unpair² (pair² t) .snd .fst) (t .snd .fst)
     unpair²-pair²O₂ t = overPath (cong fst (unpair²-pair² t)) (cong (λ s → s .snd .fst) (unpair²-pair² t))
 
-    unpair²-pair²O₃ : (t : Two) → Over A (unpair² (pair² t) .snd .snd) (t .snd .snd)
+    unpair²-pair²O₃ : (t : Triple) → Over A (unpair² (pair² t) .snd .snd) (t .snd .snd)
     unpair²-pair²O₃ t = overPath (cong fst (unpair²-pair² t)) (cong (λ s → s .snd .snd) (unpair²-pair² t))
 
     pair²-unpair² : (w : El Sigma²) → pair² (unpair² w) ≡ w
@@ -122,7 +122,35 @@ module Fibrewise {ℓU ℓEl : Level} {U : Type ℓU} (Univ : TarskiUniverse ℓ
         (over A (symO (substO A (sym (fstPairSigma (fstSigma (fstSigma w)) (sndSigma (fstSigma w)))) (sndSigma w)))
                 (cong fstSigma (ηSigma (fstSigma w))))
 
-  -- | Quotients, fibrewise over a base `X`.
+  -- | Substitution under two variables: `σ ⁺²` on codes.
+  module _ {X Y : U} (A : El X → U) (σ : El Y → El X) where
+
+    -- unpair, apply `σ` to the first component, re-pair
+    sub² : El (Sigma² (λ y → A (σ y))) → El (Sigma² A)
+    sub² w = pair² A (σ (t .fst) , t .snd)
+      where t = unpair² (λ y → A (σ y)) w
+
+    -- Plain pairing at `i0`, `sub²` at `i1`.  The two differ in the third
+    -- component, which `sub²` moves back along the β-law of the inner pair;
+    -- at `i` it lies over that law at `i`.
+    sub²-filler : (i : I) (y : El Y) (a : El (A (σ y)))
+                → El (A (fstPairSigma {B = A} (σ y) a i))
+                → --------------------------------------
+                  El (Sigma² A)
+    sub²-filler i y a b =
+      pairSigma (pairSigma (σ y) a) (transp (λ j → El (A (fstPairSigma {B = A} (σ y) a (i ∧ ~ j)))) (~ i) b)
+
+    -- `R` at the re-paired triple with `σ` applied is `R` at `sub²` of the
+    -- re-paired triple
+    relSub² : (R : El (Sigma² A) → U) (y : El Y)
+            → ------------------------------------------------------------
+              Path (El (A (σ y)) → El (A (σ y)) → U)
+                   (λ a b → R (pair² A (σ y , a , b)))
+                   (λ a b → R (sub² (pair² (λ z → A (σ z)) (y , a , b))))
+    relSub² R y = funExt λ a → funExt λ b →
+      cong (λ t → R (pair² A (σ (t .fst) , t .snd))) (sym (unpair²-pair² (λ z → A (σ z)) (y , a , b)))
+
+  -- | Constructions that need codes for set quotients.
   module _ (TU-Quot : hasQuotient TU) where
     open hasQuotient TU-Quot
 
@@ -131,60 +159,75 @@ module Fibrewise {ℓU ℓEl : Level} {U : Type ℓU} (Univ : TarskiUniverse ℓ
                → classQuot {R = R} a ≡ classQuot b
     classQuot≡ a b r = cong (QuotIso _ _ .inv) (eq/ a b r)
 
+    -- `g` sends related elements to equal classes.  This is a proposition
+    -- (`isPropPreserves`), so `quotMap g` does not depend on its proof.
+    Preserves : {X Y : U} (RX : El X → El X → U) (RY : El Y → El Y → U) (g : El X → El Y) → Type ℓEl
+    Preserves {X} {Y} RX RY g =
+      (a b : El X) → El (RX a b) → Path (El Y / (λ a b → El (RY a b))) [ g a ] [ g b ]
+
+    isPropPreserves : {X Y : U} {RX : El X → El X → U} {RY : El Y → El Y → U} {g : El X → El Y}
+                    → ----------------------------
+                      isProp (Preserves RX RY g)
+    isPropPreserves {g = g} = isPropΠ3 λ a b _ → SQ.squash/ [ g a ] [ g b ]
+
     -- | The action of a relation-preserving map on quotients, and how it
     -- acts on classes, identities and composites.
     module _ {X Y : U} {RX : El X → El X → U} {RY : El Y → El Y → U} where
 
-      quotMap : (g : El X → El Y)
-              → ((a b : El X) → El (RX a b) → Path (El Y / (λ a b → El (RY a b))) [ g a ] [ g b ])
-              → ------------------------------------------------------------------
+      -- `quotMap` on the set quotients
+      quotMap/ : (g : El X → El Y) → Preserves RX RY g
+               → ------------------------------------------------------------
+                 El X / (λ a b → El (RX a b)) → El Y / (λ a b → El (RY a b))
+      quotMap/ g h = SQ.rec SQ.squash/ (λ a → [ g a ]) h
+
+      quotMap : (g : El X → El Y) → Preserves RX RY g
+              → ---------------------------------
                 El (Quot X RX) → El (Quot Y RY)
-      quotMap g h u = QuotIso _ _ .inv (SQ.rec SQ.squash/ (λ a → [ g a ]) h (QuotIso _ _ .fun u))
+      quotMap g h u = QuotIso _ _ .inv (quotMap/ g h (QuotIso _ _ .fun u))
 
-      quotMap-class : (g : El X → El Y)
-                      (h : (a b : El X) → El (RX a b) → Path (El Y / (λ a b → El (RY a b))) [ g a ] [ g b ])
-                      (a : El X)
-                    → ------------------------------------------------------------------
+      quotMap-class : (g : El X → El Y) (h : Preserves RX RY g) (a : El X)
+                    → ---------------------------------------------
                       quotMap g h (classQuot a) ≡ classQuot (g a)
-      quotMap-class g h a = cong (λ v → QuotIso _ _ .inv (SQ.rec SQ.squash/ (λ a → [ g a ]) h v)) (QuotIso _ _ .sec [ a ])
+      quotMap-class g h a = cong (λ v → QuotIso _ _ .inv (quotMap/ g h v)) (QuotIso _ _ .sec [ a ])
 
-    -- over paths of relations, `quotMap g` with whatever proofs of preservation
+    -- along paths of relations, the maps `quotMap g` at the two ends form a
+    -- dependent path, for any two proofs of preservation
     quotMap-PathP : {X Y : U} {RX : I → El X → El X → U} {RY : I → El Y → El Y → U} (g : El X → El Y)
-                    (h₀ : (a b : El X) → El (RX i0 a b) → Path (El Y / (λ a b → El (RY i0 a b))) [ g a ] [ g b ])
-                    (h₁ : (a b : El X) → El (RX i1 a b) → Path (El Y / (λ a b → El (RY i1 a b))) [ g a ] [ g b ])
+                    (h₀ : Preserves (RX i0) (RY i0) g) (h₁ : Preserves (RX i1) (RY i1) g)
                   → ------------------------------------------------------------------
                     PathP (λ i → El (Quot X (RX i)) → El (Quot Y (RY i))) (quotMap g h₀) (quotMap g h₁)
-    quotMap-PathP {X} {Y} {RX} {RY} g h₀ h₁ i = quotMap {RX = RX i} {RY = RY i} g (hs i)
+    quotMap-PathP {RX = RX} {RY} g h₀ h₁ i = quotMap {RX = RX i} {RY = RY i} g (hs i)
       where
-        Pres : I → Type ℓEl
-        Pres i = (a b : El X) → El (RX i a b) → Path (El Y / (λ a b → El (RY i a b))) [ g a ] [ g b ]
-        hs : PathP Pres h₀ h₁
-        hs = isProp→PathP (λ i → isPropΠ3 λ a b _ → SQ.squash/ [ g a ] [ g b ]) h₀ h₁
+        hs : PathP (λ i → Preserves (RX i) (RY i) g) h₀ h₁
+        hs = isProp→PathP (λ i → isPropPreserves {RX = RX i} {RY = RY i} {g = g}) h₀ h₁
 
-    quotMap-id : {X : U} {R : El X → El X → U} (g : El X → El X)
-                 (h : (a b : El X) → El (R a b) → Path (El X / (λ a b → El (R a b))) [ g a ] [ g b ])
+    -- `quotMap` of a map that is pointwise the identity is the identity
+    quotMap-id : {X : U} {R : El X → El X → U} {g : El X → El X} {h : Preserves R R g}
                → ((a : El X) → g a ≡ a)
-               → ------------------------------------------------------------------
+               → ---------------------------------------
                  (u : El (Quot X R)) → quotMap g h u ≡ u
-    quotMap-id g h e u = goal (QuotIso _ _ .fun u) ∙ QuotIso _ _ .ret u
+    quotMap-id {g = g} {h} e u = goal (QuotIso _ _ .fun u) ∙ QuotIso _ _ .ret u
       where
-        goal : (v : _) → QuotIso _ _ .inv (SQ.rec SQ.squash/ (λ a → [ g a ]) h v) ≡ QuotIso _ _ .inv v
+        goal : (v : _) → QuotIso _ _ .inv (quotMap/ g h v) ≡ QuotIso _ _ .inv v
         goal = SQ.elimProp (λ _ → isSetEl _ _ _) (λ a → cong (λ a → QuotIso _ _ .inv [ a ]) (e a))
 
+    -- `quotMap` of a map that is pointwise a composite is the composite
     quotMap-seq : {X Y Z : U} {RX : El X → El X → U} {RY : El Y → El Y → U} {RZ : El Z → El Z → U}
-                  (g₁ : El X → El Y) (h₁ : (a b : El X) → El (RX a b) → Path (El Y / (λ a b → El (RY a b))) [ g₁ a ] [ g₁ b ])
-                  (g₂ : El Y → El Z) (h₂ : (a b : El Y) → El (RY a b) → Path (El Z / (λ a b → El (RZ a b))) [ g₂ a ] [ g₂ b ])
-                  (g : El X → El Z) (h : (a b : El X) → El (RX a b) → Path (El Z / (λ a b → El (RZ a b))) [ g a ] [ g b ])
+                  {g₁ : El X → El Y} {h₁ : Preserves RX RY g₁}
+                  {g₂ : El Y → El Z} {h₂ : Preserves RY RZ g₂}
+                  {g : El X → El Z} {h : Preserves RX RZ g}
                 → ((a : El X) → g a ≡ g₂ (g₁ a))
-                → ------------------------------------------------------------------
+                → ----------------------------------------------------------------------
                   (u : El (Quot X RX)) → quotMap g h u ≡ quotMap g₂ h₂ (quotMap g₁ h₁ u)
-    quotMap-seq g₁ h₁ g₂ h₂ g h e u = goal (QuotIso _ _ .fun u)
+    quotMap-seq {g₁ = g₁} {h₁} {g₂} {h₂} {g} {h} e u = goal (QuotIso _ _ .fun u)
       where
-        goal : (v : _) → QuotIso _ _ .inv (SQ.rec SQ.squash/ (λ a → [ g a ]) h v)
-                       ≡ quotMap g₂ h₂ (QuotIso _ _ .inv (SQ.rec SQ.squash/ (λ a → [ g₁ a ]) h₁ v))
+        goal : (v : _) → QuotIso _ _ .inv (quotMap/ g h v)
+                       ≡ quotMap g₂ h₂ (QuotIso _ _ .inv (quotMap/ g₁ h₁ v))
         goal = SQ.elimProp (λ _ → isSetEl _ _ _) (λ a →
           cong (λ c → QuotIso _ _ .inv [ c ]) (e a) ∙ sym (quotMap-class g₂ h₂ (g₁ a)))
 
+    -- | Quotients, fibrewise over a base `X`: `Q x` is the quotient of `A x`
+    -- by `rel x`, and `cls` takes the class of the second component of a pair.
     module QuotFibres {X : U} (A : El X → U) (rel : (x : El X) → El (A x) → El (A x) → U) where
 
       Q : El X → U
@@ -194,7 +237,7 @@ module Fibrewise {ℓU ℓEl : Level} {U : Type ℓU} (Univ : TarskiUniverse ℓ
       cls : El (Sigma X A) → El (Sigma X Q)
       cls w = pairSigma (fstSigma w) (classQuot (sndSigma w))
 
-      -- on a canonical pair
+      -- `cls` of a canonical pair is the canonical pair with the class
       cls-pair : (x : El X) (a : El (A x)) → cls (pairSigma x a) ≡ pairSigma x (classQuot a)
       cls-pair x a i = pairSigma {B = Q} (fstPairSigma {B = A} x a i) (classQuot (sndPairSigma {B = A} x a i))
 
@@ -230,7 +273,7 @@ module Fibrewise {ℓU ℓEl : Level} {U : Type ℓU} (Univ : TarskiUniverse ℓ
 
         module _ (m : (w : El (Sigma X A)) → El (P (cls w))) (resp : Respects m) where
 
-          -- in the fibre over `x`, on the set quotient
+          -- the eliminator on the set quotient in the fibre over `x` (`elimQ`), and on its code (`elimFib`)
           private
             elimQ : (x : El X) (v : El (A x) / (λ a b → El (rel x a b)))
                   → El (P (pairSigma x (QuotIso _ _ .inv v)))
@@ -248,6 +291,7 @@ module Fibrewise {ℓU ℓEl : Level} {U : Type ℓU} (Univ : TarskiUniverse ℓ
           elim : (s : El (Sigma X Q)) → El (P s)
           elim s = subst (λ s → El (P s)) (ηSigma s) (elimFib (fstSigma s) (sndSigma s))
 
+          -- `elimFib` at a class is `m` at the canonical pair
           private
             elimFib-class : (x : El X) (a : El (A x)) → Over P (elimFib x (classQuot a)) (m (pairSigma x a))
             elimFib-class x a =
@@ -268,25 +312,11 @@ module Fibrewise {ℓU ℓEl : Level} {U : Type ℓU} (Univ : TarskiUniverse ℓ
               x = fstSigma w
               c = classQuot {R = rel x} (sndSigma w)
 
-        -- | Precomposition with `cls` is an equivalence onto the respecting
-        -- maps, for any propositional notion of respecting that implies
-        -- `Respects`.  (Stated for an arbitrary `f` whose first component is
-        -- precomposition, so that a model can pass its own `QuotCases`.)
-        isEquivPrecompCls : (Resp : ((w : El (Sigma X A)) → El (P (cls w))) → Type ℓEl)
-                            (isPropResp : (m : (w : El (Sigma X A)) → El (P (cls w))) → isProp (Resp m))
-                            (toRespects : (m : (w : El (Sigma X A)) → El (P (cls w))) → Resp m → Respects m)
-                            (f : ((s : El (Sigma X Q)) → El (P s)) → Σ ((w : El (Sigma X A)) → El (P (cls w))) Resp)
-                          → ((t : (s : El (Sigma X Q)) → El (P s)) → f t .fst ≡ (λ w → t (cls w)))
-                          → ----------------------------------------------------------------------
-                            isEquiv f
-        isEquivPrecompCls Resp isPropResp toRespects f f≡ = isoToIsEquiv precompIso
-          where
-            precompIso : Iso _ _
-            precompIso .fun         = f
-            precompIso .inv (m , r) = elim m (toRespects m r)
-            precompIso .sec (m , r) = Σ≡Prop isPropResp (f≡ _ ∙ funExt (elim-β m (toRespects m r)))
-            precompIso .ret t       = cls-ext (elim (f t .fst) (toRespects _ (f t .snd))) t
-              (λ w → elim-β (f t .fst) (toRespects _ (f t .snd)) w ∙ funExt⁻ (f≡ t) w)
+        -- the η-law: a section is the eliminator of its restriction to classes
+        elim-η : (t : (s : El (Sigma X Q)) → El (P s)) (resp : Respects (λ w → t (cls w)))
+               → ---------------------------------------------------------------
+                 elim (λ w → t (cls w)) resp ≡ t
+        elim-η t resp = cls-ext (elim (λ w → t (cls w)) resp) t (elim-β (λ w → t (cls w)) resp)
 
     -- | The relation is a code `R` over two variables: the context
     -- `X ▹ A ▹ A [ p ] ▹ R` with its projections to the first and to the
@@ -306,18 +336,18 @@ module Fibrewise {ℓU ℓEl : Level} {U : Type ℓU} (Univ : TarskiUniverse ℓ
           cong cls (sym (ηSigma (fstSigma (fstSigma z))))
         ∙ cls-eq _ _ _ (subst (λ w → El (R w)) (sym (pair²-unpair² A (fstSigma z))) (sndSigma z))
 
-      -- respecting `R` at each element of `RelCtx` is respecting it at each
-      -- related pair: instantiate at the re-paired pair
+      -- a map that respects `R` at every element of `RelCtx` respects it at
+      -- every related pair (`Respects`)
       toRespects : (P : El (Sigma X Q) → U) (m : (w : El (Sigma X A)) → El (P (cls w)))
                  → ((z : El RelCtx) → PathP (λ i → El (P (cls-sound z i))) (m (fstVar z)) (m (sndVar z)))
                  → ---------------------------------------------------------------------------------
                    Respects P m
-      toRespects P m r x a b rel =
-        over P (congO P m (sym e₁) ∙O overPath (cls-sound z) (r z) ∙O congO P m e₂) (cls-eq x a b rel)
+      toRespects P m resp x a b r =
+        over P (congO P m (sym e₁) ∙O overPath (cls-sound z) (resp z) ∙O congO P m e₂) (cls-eq x a b r)
         where
-          z = pairSigma {B = R} (pair² A (x , a , b)) rel
+          z = pairSigma {B = R} (pair² A (x , a , b)) r
           e₁ : fstVar z ≡ pairSigma x a
-          e₁ = cong fstSigma (fstPairSigma {B = R} _ rel) ∙ fstPairSigma {B = λ s → A (fstSigma s)} _ _
+          e₁ = cong fstSigma (fstPairSigma {B = R} _ r) ∙ fstPairSigma {B = λ s → A (fstSigma s)} _ _
           e₂ : sndVar z ≡ pairSigma x b
-          e₂ =  cong (λ w → pairSigma {B = A} (fstSigma (fstSigma w)) (sndSigma w)) (fstPairSigma {B = R} _ rel)
+          e₂ =  cong (λ w → pairSigma {B = A} (fstSigma (fstSigma w)) (sndSigma w)) (fstPairSigma {B = R} _ r)
               ∙ cong (λ t → pairSigma {B = A} (t .fst) (t .snd .snd)) (unpair²-pair² A (x , a , b))

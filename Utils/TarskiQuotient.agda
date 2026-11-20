@@ -212,3 +212,37 @@ module Fibrewise {ℓU ℓEl : Level} {U : Type ℓU} (Univ : TarskiUniverse ℓ
             precompIso .sec (m , r) = Σ≡Prop isPropResp (f≡ _ ∙ funExt (elim-β m (toRespects m r)))
             precompIso .ret t       = cls-ext (elim (f t .fst) (toRespects _ (f t .snd))) t
               (λ w → elim-β (f t .fst) (toRespects _ (f t .snd)) w ∙ funExt⁻ (f≡ t) w)
+
+    -- | The relation is a code `R` over two variables: the context
+    -- `X ▹ A ▹ A [ p ] ▹ R` with its projections to the first and to the
+    -- second variable, whose classes agree.
+    module QuotRel {X : U} (A : El X → U) (R : El (Sigma² A) → U) where
+      open QuotFibres A (λ x a b → R (pair² A (x , a , b))) public
+
+      RelCtx : U
+      RelCtx = Sigma (Sigma² A) R
+
+      fstVar sndVar : El RelCtx → El (Sigma X A)
+      fstVar z = fstSigma (fstSigma z)
+      sndVar z = pairSigma (fstSigma (fstSigma (fstSigma z))) (sndSigma (fstSigma z))
+
+      cls-sound : (z : El RelCtx) → cls (fstVar z) ≡ cls (sndVar z)
+      cls-sound z =
+          cong cls (sym (ηSigma (fstSigma (fstSigma z))))
+        ∙ cls-eq _ _ _ (subst (λ w → El (R w)) (sym (pair²-unpair² A (fstSigma z))) (sndSigma z))
+
+      -- respecting `R` at each element of `RelCtx` is respecting it at each
+      -- related pair: instantiate at the re-paired pair
+      toRespects : (P : El (Sigma X Q) → U) (m : (w : El (Sigma X A)) → El (P (cls w)))
+                 → ((z : El RelCtx) → PathP (λ i → El (P (cls-sound z i))) (m (fstVar z)) (m (sndVar z)))
+                 → ---------------------------------------------------------------------------------
+                   Respects P m
+      toRespects P m r x a b rel =
+        over P (congO P m (sym e₁) ∙O overPath (cls-sound z) (r z) ∙O congO P m e₂) (cls-eq x a b rel)
+        where
+          z = pairSigma {B = R} (pair² A (x , a , b)) rel
+          e₁ : fstVar z ≡ pairSigma x a
+          e₁ = cong fstSigma (fstPairSigma {B = R} _ rel) ∙ fstPairSigma {B = λ s → A (fstSigma s)} _ _
+          e₂ : sndVar z ≡ pairSigma x b
+          e₂ =  cong (λ w → pairSigma {B = A} (fstSigma (fstSigma w)) (sndSigma w)) (fstPairSigma {B = R} _ rel)
+              ∙ cong (λ t → pairSigma {B = A} (t .fst) (t .snd .snd)) (unpair²-pair² A (x , a , b))

@@ -181,45 +181,25 @@ module _ {ℓ : Level} where
     Δ Γ : V {ℓ-suc ℓ}
 
   -- | A code former on the internal universe of V⁰, applied pointwise, is
-  -- natural: first move the family along `d [ σ ⁺ ] ≡ d₀`, then code and
-  -- family together along `e` and the family's `PathP` over `ElNat σ e`.
+  -- natural: first move the family to `d₀`, then code and family together
+  -- along `e` and the `PathP` from `d₀` to `d'`.
   pointwiseUNat : (F : (c : V {ℓ}) → (El (lift-V⁰ (ℓ-suc ℓ) c) → V {ℓ}) → V {ℓ})
                   (σ : El Δ → El Γ) {c : Tm Γ UTy} {c' : Tm Δ UTy} (e : c [ σ ]U≈ c')
                   {d : Tm (Γ ▹ ElU c) UTy} {d' : Tm (Δ ▹ ElU c') UTy}
-                → _[_]Fam≈_ VCwF V-Univ-Structure d (σ , e) d'
+                → d [ σ , e ]Fam≈ d'
                 → ------------------------------------------------------------------
                   Path (Tm Δ UTy) (λ x → F (c (σ x)) (λ y → d (σ x , y)))
                                   (λ x → F (c' x) (λ y → d' (x , y)))
-  pointwiseUNat F σ e (d₀ , e₁ , e₂) =
-      (λ i x → F (e i0 x) (λ y → e₁ i (x , y)))
+  pointwiseUNat F σ {c} e (d₀ , e₁ , e₂) =
+      (λ i x → F (c (σ x)) (λ y → e₁ i (x , y)))
     ∙ (λ i x → F (e i x) (λ y → e₂ i (x , y)))
 
-  module _ where
-    open Π-Structure (V-Π-Structure {ℓHom = ℓ-suc ℓ})
+  V-Univ-Π-Structure : Univ-Π-Structure (VCwF {ℓ-suc ℓ}) V-Univ-Structure V-Π-Structure
+  V-Univ-Π-Structure .Univ-Π-Structure.piU c d x                    = piU⁰ ℓ (c x) (λ y → d (x , y))
+  V-Univ-Π-Structure .Univ-Π-Structure.El-piU c d                   = funExt λ x → decode-piU⁰ ℓ (c x) (λ y → d (x , y))
+  V-Univ-Π-Structure .Univ-Π-Structure.piUNat σ {c} {c'} e {d} {d'} = pointwiseUNat (piU⁰ ℓ) σ {c} {c'} e {d} {d'}
 
-    -- `piU` decodes to the Π of the decodings, pointwise
-    El-piU-at : (c : Tm Γ UTy) (d : Tm (Γ ▹ ElU c) UTy) (x : El Γ)
-              → ---------------------------------------------------------------------
-                lift-V⁰ (ℓ-suc ℓ) (piU⁰ ℓ (c x) (λ y → d (x , y)))
-              ≡ Π⁰ (lift-V⁰ (ℓ-suc ℓ) (c x)) (λ y → lift-V⁰ (ℓ-suc ℓ) (d (x , y)))
-    El-piU-at c d x = decode-piU⁰ ℓ (c x) (λ y → d (x , y))
-
-    V-Univ-Π-Structure : Univ-Π-Structure (VCwF {ℓ-suc ℓ}) V-Univ-Structure V-Π-Structure
-    V-Univ-Π-Structure .Univ-Π-Structure.piU c d x                   = piU⁰ ℓ (c x) (λ y → d (x , y))
-    V-Univ-Π-Structure .Univ-Π-Structure.El-piU c d                  = funExt (El-piU-at c d)
-    V-Univ-Π-Structure .Univ-Π-Structure.piUNat σ {c} {c'} e {d} {d'} = pointwiseUNat (piU⁰ ℓ) σ {c} {c'} e {d} {d'}
-
-  module _ where
-    open Σ-Structure (V-Σ-Structure {ℓHom = ℓ-suc ℓ})
-
-    -- `sigU` decodes to the Σ of the decodings, pointwise
-    El-sigU-at : (c : Tm Γ UTy) (d : Tm (Γ ▹ ElU c) UTy) (x : El Γ)
-               → ---------------------------------------------------------------------
-                 lift-V⁰ (ℓ-suc ℓ) (sigU⁰ ℓ (c x) (λ y → d (x , y)))
-               ≡ Σ⁰ (lift-V⁰ (ℓ-suc ℓ) (c x)) (λ y → lift-V⁰ (ℓ-suc ℓ) (d (x , y)))
-    El-sigU-at c d x = decode-sigU⁰ ℓ (c x) (λ y → d (x , y))
-
-    V-Univ-Σ-Structure : Univ-Σ-Structure (VCwF {ℓ-suc ℓ}) V-Univ-Structure V-Σ-Structure
-    V-Univ-Σ-Structure .Univ-Σ-Structure.sigU c d x                   = sigU⁰ ℓ (c x) (λ y → d (x , y))
-    V-Univ-Σ-Structure .Univ-Σ-Structure.El-sigU c d                  = funExt (El-sigU-at c d)
-    V-Univ-Σ-Structure .Univ-Σ-Structure.sigUNat σ {c} {c'} e {d} {d'} = pointwiseUNat (sigU⁰ ℓ) σ {c} {c'} e {d} {d'}
+  V-Univ-Σ-Structure : Univ-Σ-Structure (VCwF {ℓ-suc ℓ}) V-Univ-Structure V-Σ-Structure
+  V-Univ-Σ-Structure .Univ-Σ-Structure.sigU c d x                    = sigU⁰ ℓ (c x) (λ y → d (x , y))
+  V-Univ-Σ-Structure .Univ-Σ-Structure.El-sigU c d                   = funExt λ x → decode-sigU⁰ ℓ (c x) (λ y → d (x , y))
+  V-Univ-Σ-Structure .Univ-Σ-Structure.sigUNat σ {c} {c'} e {d} {d'} = pointwiseUNat (sigU⁰ ℓ) σ {c} {c'} e {d} {d'}

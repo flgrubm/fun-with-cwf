@@ -50,19 +50,20 @@ module _ (ℓ : Level) where
 -- them (`lift-V⁰-Π⁰`, `lift-V⁰-Σ⁰`); a family over a decoded code is
 -- precomposed with `liftEl⁰`, which `lowerEl⁰` undoes.
 --
--- (`--lossy-unification`: without it, checking `lift-V⁰-Π⁰` at the level
--- `ℓ-suc ℓ` against its own statement unfolds the iterativity proofs of
--- both sides and exhausts memory.)
+-- (`--lossy-unification`: without it, checking the use of `lift-V⁰-Π⁰` in
+-- `decode-piU⁰` unfolds the iterativity proofs of both sides and exhausts
+-- memory.)
 module _ (ℓ : Level) where
   hasUniverseV : hasUniverse (BareTarskiUniverseV (ℓ-suc ℓ))
   hasUniverseV .hasUniverse.Univ   = universe⁰ {ℓ}
   hasUniverseV .hasUniverse.decode = lift-V⁰ (ℓ-suc ℓ)
 
-  -- raising an element after lowering it gives it back
-  liftEl⁰-lowerEl⁰ : (c : V⁰ {ℓ}) (x : El⁰ (lift-V⁰ (ℓ-suc ℓ) c))
-                   → -----------------------------------------------------------
-                     liftEl⁰ (ℓ-suc ℓ) c (lowerEl⁰ (ℓ-suc ℓ) c x) ≡ x
-  liftEl⁰-lowerEl⁰ c = retEq (El⁰-lift-V⁰≃El⁰ (ℓ-suc ℓ) c)
+  -- a family of codes over a raised code is unchanged when its argument is lowered and raised again
+  liftFam-lowerEl⁰ : (c : V⁰ {ℓ}) (d : El⁰ (lift-V⁰ (ℓ-suc ℓ) c) → V⁰ {ℓ})
+                   → --------------------------------------------------------------------------------
+                     (λ x → lift-V⁰ (ℓ-suc ℓ) (d (liftEl⁰ (ℓ-suc ℓ) c (lowerEl⁰ (ℓ-suc ℓ) c x))))
+                   ≡ (λ x → lift-V⁰ (ℓ-suc ℓ) (d x))
+  liftFam-lowerEl⁰ c d = funExt λ x → cong (lift-V⁰ (ℓ-suc ℓ) ∘ d) (retEq (El⁰-lift-V⁰≃El⁰ (ℓ-suc ℓ) c) x)
 
   -- the small Π of a code and a family over its raising
   piU⁰ : (c : V⁰ {ℓ}) → (El⁰ (lift-V⁰ (ℓ-suc ℓ) c) → V⁰ {ℓ}) → V⁰ {ℓ}
@@ -74,7 +75,7 @@ module _ (ℓ : Level) where
                 lift-V⁰ (ℓ-suc ℓ) (piU⁰ c d) ≡ Π⁰ (lift-V⁰ (ℓ-suc ℓ) c) (λ x → lift-V⁰ (ℓ-suc ℓ) (d x))
   decode-piU⁰ c d =
       lift-V⁰-Π⁰ (ℓ-suc ℓ) c (λ y → d (liftEl⁰ (ℓ-suc ℓ) c y))
-    ∙ cong (Π⁰ (lift-V⁰ (ℓ-suc ℓ) c)) (funExt λ x → cong (lift-V⁰ (ℓ-suc ℓ) ∘ d) (liftEl⁰-lowerEl⁰ c x))
+    ∙ cong (Π⁰ (lift-V⁰ (ℓ-suc ℓ) c)) (liftFam-lowerEl⁰ c d)
 
   -- the small Σ of a code and a family over its raising
   sigU⁰ : (c : V⁰ {ℓ}) → (El⁰ (lift-V⁰ (ℓ-suc ℓ) c) → V⁰ {ℓ}) → V⁰ {ℓ}
@@ -86,7 +87,7 @@ module _ (ℓ : Level) where
                  lift-V⁰ (ℓ-suc ℓ) (sigU⁰ c d) ≡ Σ⁰ (lift-V⁰ (ℓ-suc ℓ) c) (λ x → lift-V⁰ (ℓ-suc ℓ) (d x))
   decode-sigU⁰ c d =
       lift-V⁰-Σ⁰ (ℓ-suc ℓ) c (λ y → d (liftEl⁰ (ℓ-suc ℓ) c y))
-    ∙ cong (Σ⁰ (lift-V⁰ (ℓ-suc ℓ) c)) (funExt λ x → cong (lift-V⁰ (ℓ-suc ℓ) ∘ d) (liftEl⁰-lowerEl⁰ c x))
+    ∙ cong (Σ⁰ (lift-V⁰ (ℓ-suc ℓ) c)) (liftFam-lowerEl⁰ c d)
 
   hasUniversePiV : hasUniversePi (BareTarskiUniverseV (ℓ-suc ℓ)) hasUniverseV (hasPiV (ℓ-suc ℓ))
   hasUniversePiV .hasUniversePi.piU        = piU⁰

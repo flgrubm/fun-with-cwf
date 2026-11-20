@@ -40,28 +40,42 @@ module _ {ℓOb ℓHom ℓTy ℓTm : Level} {C : Category ℓOb ℓHom} (cwf : A
               → -------------------------------------------------------------------
                 PathP (λ i → Ty (Δ ▹ UTyNat σ i)) (ElTy [ σ ⁺ ]Ty) (ElTy {Δ})
 
-    -- | Decoding a code.
     El : Tm Γ UTy → Ty Γ
     El c = ElTy [ ⟨ c ⟩ ]Ty
 
-    -- `c' : Tm Δ UTy` is `c [ σ ]Tm`, along `UTyNat`.  Naturality is stated
-    -- relationally ("if the inputs are related along σ, so are the outputs"),
-    -- which needs no transport to move `c [ σ ]Tm` into `Tm Δ UTy`.
+    -- `c [ σ ]U≈ c'`: `c'` is `c [ σ ]Tm`, over `UTyNat σ`.  Stating
+    -- naturality through this relation avoids transporting `c [ σ ]Tm` into
+    -- `Tm Δ UTy`.
     _[_]U≈_ : Tm Γ UTy → (σ : Δ ⟶ Γ) → Tm Δ UTy → Type ℓTm
     c [ σ ]U≈ c' = PathP (λ i → Tm _ (UTyNat σ i)) (c [ σ ]Tm) c'
 
-    -- Decoding commutes with substitution.  It follows from `ElTyNat`
-    -- (`ElNat-default` below), but is a field (Fording) so that a model can
-    -- choose the path, e.g. pointwise `refl`, along which the `PathP`s of
-    -- the closure structures are stated.
+    -- Decoding commutes with substitution.  This follows from `ElTyNat`
+    -- (`ElNat-default`), but is a field so that a model can choose the path
+    -- over which `_[_]Fam≈_` is stated, e.g. the decoding applied pointwise
+    -- to the path between the codes.
     field
       ElNat : (σ : Δ ⟶ Γ) {c : Tm Γ UTy} {c' : Tm Δ UTy}
             → c [ σ ]U≈ c'
             → ---------------------------
               El c [ σ ]Ty ≡ El c'
 
-  -- | The decoding is natural as a consequence of `ElTyNat`: push σ through
-  -- `⟨ c ⟩` and move along the two naturality squares.
+    -- `d [ σ , e ]Fam≈ d'`: the family of codes `d'` is `d [ σ ⁺ ]Tm`.  The
+    -- two live over different contexts, `Δ ▹ El c'` and `Δ ▹ El c [ σ ]Ty`,
+    -- so they are related through an intermediate `d₀`: first along
+    -- `UTyNat (σ ⁺)`, then along the context `Δ ▹ ElNat σ e i`.  Each step is
+    -- a `PathP` over a single path.
+    _[_]Fam≈_ : {c : Tm Γ UTy} {c' : Tm Δ UTy} (d : Tm (Γ ▹ El c) UTy)
+              → (σe : Σ[ σ ∈ Δ ⟶ Γ ] c [ σ ]U≈ c')
+              → Tm (Δ ▹ El c') UTy → Type ℓTm
+    _[_]Fam≈_ {Δ = Δ} {c = c} d (σ , e) d' =
+      Σ[ d₀ ∈ Tm (Δ ▹ El c [ σ ]Ty) UTy ]
+          (d [ σ ⁺ ]U≈ d₀)
+        × PathP (λ i → Tm (Δ ▹ ElNat σ e i) UTy) d₀ d'
+
+  -- | `ElNat` follows from the other fields: rewrite `⟨ c ⟩ ∘ σ` as
+  -- `σ ⁺ ∘ ⟨ c [ σ ]Tm ⟩` (`⟨⟩∘`), then move along `ElTyNat σ` and the path
+  -- between the codes at once.  The other fields are parameters, so that a
+  -- model can use this to fill the field `ElNat`.
   module _ (UTy : {Γ : Ctx} → Ty Γ)
            (UTyNat : {Δ Γ : Ctx} (σ : Δ ⟶ Γ) → UTy [ σ ]Ty ≡ UTy)
            (ElTy : {Γ : Ctx} → Ty (Γ ▹ UTy))
@@ -80,26 +94,11 @@ module _ {ℓOb ℓHom ℓTy ℓTm : Level} {C : Category ℓOb ℓHom} (cwf : A
       ∙ λ i → ElTyNat σ i [ ⟨ e i ⟩ ]Ty
 
   -- | Closure of a universe under Π and Σ (Angiuli–Gratzer, Structure 6.4.17,
-  -- last three points, for these two connectives): a code for the Π (Σ) of
-  -- a code and a family of codes over its decoding, decoding to the Π (Σ) of
-  -- the decodings, and stable under substitution.
-  --
-  -- The family of codes `d` lives over `Γ ▹ El c`, and its substitution over
-  -- `Δ ▹ El c [ σ ]Ty`, while a code over the substituted code `c'` lives
-  -- over `Δ ▹ El c'`.  Naturality relates the two through an intermediate
-  -- `d₀`: first along `UTyNat (σ ⁺)` in a fixed context, then along the
-  -- context `Δ ▹ El _` moved by `ElNat`.  Both steps are `PathP`s over a
-  -- single path, so no transport appears.
+  -- last three points, for these two connectives): a code for the Π (Σ) of a
+  -- code and a family of codes over its decoding, which decodes to the Π (Σ)
+  -- of the decodings and is stable under substitution.
   module _ (U : Univ-Structure) where
     open Univ-Structure U
-
-    _[_]Fam≈_ : {c : Tm Γ UTy} {c' : Tm Δ UTy} (d : Tm (Γ ▹ El c) UTy)
-              → (σc : Σ[ σ ∈ Δ ⟶ Γ ] c [ σ ]U≈ c')
-              → Tm (Δ ▹ El c') UTy → Type ℓTm
-    _[_]Fam≈_ {Δ = Δ} {c = c} d (σ , e) d' =
-      Σ[ d₀ ∈ Tm (Δ ▹ El c [ σ ]Ty) UTy ]
-          (d [ σ ⁺ ]U≈ d₀)
-        × PathP (λ i → Tm (Δ ▹ ElNat σ e i) UTy) d₀ d'
 
     module _ (Πs : Π-Structure C cwf) where
       open Π-Structure Πs

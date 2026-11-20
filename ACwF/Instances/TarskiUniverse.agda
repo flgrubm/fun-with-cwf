@@ -147,9 +147,9 @@ module _ {ℓU ℓEl : Level} {U : Type ℓU} (Univ : TarskiUniverse ℓEl U) wh
   -- | An internal universe of the Tarski universe is a universe in the CwF
   -- of families: the codes are the constant family `UnivCode`, and the
   -- family over the extension by codes decodes the second component.
-  -- Extending the context by codes goes through `pairSigma`, so a code `c`
-  -- is seen by `El c` as `codeAt c` (its round trip through the pair),
-  -- equal to `c` by `sndPairSigma`.
+  -- Extending the context by codes goes through `pairSigma`, so `El c`
+  -- decodes `codeAt c = q [ ⟨ c ⟩ ]Tm` rather than `c`; the two agree by
+  -- `codeβ`.
   module U-Univ (𝒰 : hasUniverse TU) where
     open hasUniverse 𝒰 renaming (Univ to UnivCode)
     open Algebraic
@@ -158,28 +158,25 @@ module _ {ℓU ℓEl : Level} {U : Type ℓU} (Univ : TarskiUniverse ℓEl U) wh
     private variable
       Δ Γ : U
 
-    -- `σ ⁺` is built from `pairSigma`: pushing a pair through `σ` and
-    -- re-pairing gives the pair back
-    pairσ : {A : El Γ → U} (σ : El Δ → El Γ) (x : El Δ) (y : El (A (σ x)))
-          → --------------------------------------------------------------------
-            pairSigma {B = A} (σ x) y
-          ≡ pairSigma {B = A} (σ (fstSigma (pairSigma {B = λ v → A (σ v)} x y)))
-                              (sndSigma (pairSigma {B = λ v → A (σ v)} x y))
-    pairσ {A = A} σ x y =
-      cong₂ (pairSigma {B = A}) (cong σ (sym (fstPairSigma {B = λ v → A (σ v)} x y)))
-                                (symP (sndPairSigma {B = λ v → A (σ v)} x y))
+    -- `σ ⁺` sends the pair of `x` and `y` to the pair of `σ x` and `y`
+    pair⁺ : {A : El Γ → U} (σ : El Δ → El Γ) (x : El Δ) (y : El (A (σ x)))
+          → ----------------------------------------------------------------------------
+            pairSigma {B = A} (σ x) y ≡ (_⁺ {A = A} σ) (pairSigma {B = A [ σ ]Ty} x y)
+    pair⁺ {A = A} σ x y =
+      cong₂ (pairSigma {B = A}) (cong σ (sym (fstPairSigma {B = A [ σ ]Ty} x y)))
+                                (symP (sndPairSigma {B = A [ σ ]Ty} x y))
 
-    -- the code of `c` at `x`, read back from the context extension
+    -- `q [ ⟨ c ⟩ ]Tm`: the code `c x` paired with `x` and projected out again
     codeAt : ((x : El Γ) → El UnivCode) → (x : El Γ) → El UnivCode
     codeAt c x = sndSigma (pairSigma {B = λ _ → UnivCode} x (c x))
 
-    -- reading a code back from the context extension does not change it
+    -- `q[⟨⟩]Tm` at a point: pairing a code with `x` and projecting it out again gives the code
     codeβ : (x : El Γ) (c : El UnivCode)
           → ------------------------------------------------------------
             sndSigma (pairSigma {B = λ _ → UnivCode} x c) ≡ c
     codeβ x c = sndPairSigma {B = λ _ → UnivCode} x c
 
-    -- codes related along σ are related after the round trip
+    -- codes related along σ stay related under `codeAt`
     codeAtNat : (σ : El Δ → El Γ) {c : (x : El Γ) → El UnivCode} {c' : (x : El Δ) → El UnivCode}
               → (λ x → c (σ x)) ≡ c' → (x : El Δ)
               → ----------------------------------------------
@@ -195,62 +192,62 @@ module _ {ℓU ℓEl : Level} {U : Type ℓU} (Univ : TarskiUniverse ℓEl U) wh
 
     open Univ-Structure U-Univ-Structure renaming (El to ElU)
 
-    -- | A code former applied pointwise (to the code at `x` and the family
-    -- over it) is natural: first move the family along `d [ σ ⁺ ] ≡ d₀`
-    -- (through `pairσ`), then code and family together along `codeAtNat`
-    -- and the family's `PathP` over `ElNat σ e`.
+    -- a code former applied at each point, to the code there and the family of codes over its decoding
+    pointwiseU : (F : (c : El UnivCode) → (El (decode c) → El UnivCode) → El UnivCode)
+                 (c : Tm Γ UTy) (d : Tm (Γ ▹ ElU c) UTy)
+               → -----------------------------------------------------------------------------
+                 Tm Γ UTy
+    pointwiseU F c d x = F (codeAt c x) (λ y → d (pairSigma {B = ElU c} x y))
+
+    -- | A pointwise code former is natural.  The path has two steps: the
+    -- family alone, from `d [ σ ⁺ ]Tm` to `d₀` (`famStep`), then the code
+    -- along `codeAtNat σ e` together with the family along its `PathP` from
+    -- `d₀` to `d'`.
     pointwiseUNat : (F : (c : El UnivCode) → (El (decode c) → El UnivCode) → El UnivCode)
                     (σ : El Δ → El Γ) {c : Tm Γ UTy} {c' : Tm Δ UTy} (e : c [ σ ]U≈ c')
                     {d : Tm (Γ ▹ ElU c) UTy} {d' : Tm (Δ ▹ ElU c') UTy}
-                  → _[_]Fam≈_ UCwF U-Univ-Structure d (σ , e) d'
+                  → d [ σ , e ]Fam≈ d'
                   → -----------------------------------------------------------------------------
-                    Path (Tm Δ UTy) (λ x → F (codeAt c (σ x)) (λ y → d (pairSigma {B = ElU c} (σ x) y)))
-                                    (λ x → F (codeAt c' x) (λ y → d' (pairSigma {B = ElU c'} x y)))
+                    pointwiseU F c d [ σ ]U≈ pointwiseU F c' d'
     pointwiseUNat {Δ = Δ} F σ {c} {c'} e {d} (d₀ , e₁ , e₂) =
         (λ i x → F (codeAt c (σ x)) (λ y → famStep x y i))
       ∙ (λ i x → F (codeAtNat σ {c} {c'} e x i) (λ y → e₂ i (pairSigma {B = ElNat σ {c} {c'} e i} x y)))
       where
+        -- `d` at the pair of `σ x` and `y` is `d₀` at the pair of `x` and `y`
         famStep : (x : El Δ) (y : El (ElU c (σ x)))
-                → d (pairSigma {B = ElU c} (σ x) y) ≡ d₀ (pairSigma {B = ElU c [ σ ]Ty} x y)
-        famStep x y = cong d (pairσ {A = ElU c} σ x y) ∙ funExt⁻ e₁ (pairSigma {B = ElU c [ σ ]Ty} x y)
+                → ----------------------------------------------------------------------------
+                  d (pairSigma {B = ElU c} (σ x) y) ≡ d₀ (pairSigma {B = ElU c [ σ ]Ty} x y)
+        famStep x y = cong d (pair⁺ {A = ElU c} σ x y) ∙ funExt⁻ e₁ (pairSigma {B = ElU c [ σ ]Ty} x y)
+
+    -- if `F` decodes to `G`, then `pointwiseU F` decodes to `G` at every point
+    El-pointwiseU : (F : (c : El UnivCode) → (El (decode c) → El UnivCode) → El UnivCode)
+                    (G : (A : U) → (El A → U) → U)
+                    (decode-F : (c : El UnivCode) (d : El (decode c) → El UnivCode)
+                              → decode (F c d) ≡ G (decode c) (λ y → decode (d y)))
+                    (c : Tm Γ UTy) (d : Tm (Γ ▹ ElU c) UTy) (x : El Γ)
+                  → ----------------------------------------------------------------------------------
+                    ElU (pointwiseU F c d) x ≡ G (ElU c x) (λ y → ElU d (pairSigma {B = ElU c} x y))
+    El-pointwiseU {Γ} F G decode-F c d x =
+         cong decode (codeβ x _)
+      ∙∙ decode-F (codeAt c x) (λ y → d (pairSigma {B = ElU c} x y))
+      ∙∙ cong (G (decode (codeAt c x)))
+              (funExt λ y → cong decode (sym (codeβ {Γ = Γ ▹ ElU c} (pairSigma {B = ElU c} x y) _)))
 
     module U-Univ-Π (TU-Pi : hasPi TU) (𝒰-Pi : hasUniversePi TU 𝒰 TU-Pi) where
       open hasPi TU-Pi
       open hasUniversePi 𝒰-Pi
       open U-Π TU-Pi
 
-      -- `piU` decodes to the Π of the decodings, after the round trips
-      El-piU-at : (c : Tm Γ UTy) (d : Tm (Γ ▹ ElU c) UTy) (x : El Γ)
-                → ------------------------------------------------------------------------------
-                  decode (codeAt (λ x → piU (codeAt c x) (λ y → d (pairSigma {B = ElU c} x y))) x)
-                ≡ Pi (decode (codeAt c x)) (λ y → decode (codeAt {Γ = Γ ▹ ElU c} d (pairSigma {B = ElU c} x y)))
-      El-piU-at {Γ} c d x =
-          cong decode (codeβ x _)
-        ∙∙ decode-piU (codeAt c x) (λ y → d (pairSigma {B = ElU c} x y))
-        ∙∙ cong (Pi (decode (codeAt c x)))
-                (funExt λ y → cong decode (sym (codeβ {Γ = Γ ▹ ElU c} (pairSigma {B = ElU c} x y) _)))
-
       U-Univ-Π-Structure : Univ-Π-Structure UCwF U-Univ-Structure U-Π-Structure
-      U-Univ-Π-Structure .Univ-Π-Structure.piU c d x                   = piU (codeAt c x) (λ y → d (pairSigma {B = ElU c} x y))
-      U-Univ-Π-Structure .Univ-Π-Structure.El-piU c d                  = funExt (El-piU-at c d)
+      U-Univ-Π-Structure .Univ-Π-Structure.piU                          = pointwiseU piU
+      U-Univ-Π-Structure .Univ-Π-Structure.El-piU c d                   = funExt (El-pointwiseU piU Pi decode-piU c d)
       U-Univ-Π-Structure .Univ-Π-Structure.piUNat σ {c} {c'} e {d} {d'} = pointwiseUNat piU σ {c} {c'} e {d} {d'}
 
     module U-Univ-Σ (𝒰-Sigma : hasUniverseSigma TU 𝒰 hasSigmaTU) where
       open hasUniverseSigma 𝒰-Sigma
       open U-Σ
 
-      -- `sigU` decodes to the Σ of the decodings, after the round trips
-      El-sigU-at : (c : Tm Γ UTy) (d : Tm (Γ ▹ ElU c) UTy) (x : El Γ)
-                 → ------------------------------------------------------------------------------
-                   decode (codeAt (λ x → sigU (codeAt c x) (λ y → d (pairSigma {B = ElU c} x y))) x)
-                 ≡ Sigma (decode (codeAt c x)) (λ y → decode (codeAt {Γ = Γ ▹ ElU c} d (pairSigma {B = ElU c} x y)))
-      El-sigU-at {Γ} c d x =
-          cong decode (codeβ x _)
-        ∙∙ decode-sigU (codeAt c x) (λ y → d (pairSigma {B = ElU c} x y))
-        ∙∙ cong (Sigma (decode (codeAt c x)))
-                (funExt λ y → cong decode (sym (codeβ {Γ = Γ ▹ ElU c} (pairSigma {B = ElU c} x y) _)))
-
       U-Univ-Σ-Structure : Univ-Σ-Structure UCwF U-Univ-Structure U-Σ-Structure
-      U-Univ-Σ-Structure .Univ-Σ-Structure.sigU c d x                   = sigU (codeAt c x) (λ y → d (pairSigma {B = ElU c} x y))
-      U-Univ-Σ-Structure .Univ-Σ-Structure.El-sigU c d                  = funExt (El-sigU-at c d)
+      U-Univ-Σ-Structure .Univ-Σ-Structure.sigU                          = pointwiseU sigU
+      U-Univ-Σ-Structure .Univ-Σ-Structure.El-sigU c d                   = funExt (El-pointwiseU sigU Sigma decode-sigU c d)
       U-Univ-Σ-Structure .Univ-Σ-Structure.sigUNat σ {c} {c'} e {d} {d'} = pointwiseUNat sigU σ {c} {c'} e {d} {d'}

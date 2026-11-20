@@ -36,10 +36,8 @@ module _ where
   hasPiℕ .hasPi.Pi _      = totalProd
   hasPiℕ .hasPi.PiIso _ _ = equivToIso (invEquiv (SumFinΠ≃ _ _))
 
-  -- | The decidable propositions form an internal universe: codes `Fin 2`,
-  -- decoding to the sizes `0` and `1`.  Π and Σ over a proposition are
-  -- computed by cases on it: over `0` they are `1` and `0`, over `1` they are
-  -- the single fibre.
+  -- | The decidable propositions form an internal universe: the codes are `Fin 2`,
+  -- decoding to the sizes `0` and `1`.
   decodeProp : Fin 2 → ℕ
   decodeProp fzero        = 0
   decodeProp (fsuc fzero) = 1
@@ -48,6 +46,7 @@ module _ where
   hasUniverseℕ .hasUniverse.Univ   = 2
   hasUniverseℕ .hasUniverse.decode = decodeProp
 
+  -- Π over a proposition: the true proposition over the false one, the single fibre over the true one
   piProp : (c : Fin 2) → (Fin (decodeProp c) → Fin 2) → Fin 2
   piProp fzero        _ = fsuc fzero
   piProp (fsuc fzero) d = d fzero
@@ -59,6 +58,7 @@ module _ where
   decode-piProp fzero        _ = refl
   decode-piProp (fsuc fzero) d = sym (·-identityʳ (decodeProp (d fzero)))
 
+  -- Σ over a proposition: the false proposition over the false one, the single fibre over the true one
   sigProp : (c : Fin 2) → (Fin (decodeProp c) → Fin 2) → Fin 2
   sigProp fzero        _ = fzero
   sigProp (fsuc fzero) d = d fzero

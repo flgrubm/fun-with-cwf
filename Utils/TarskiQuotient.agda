@@ -63,6 +63,20 @@ module Fibrewise {ℓU ℓEl : Level} {U : Type ℓU} (Univ : TarskiUniverse ℓ
     substO : {x y : El X} (e : x ≡ y) (u : El (F x)) → Over F u (subst (λ x → El (F x)) e u)
     substO e u = overPath e (subst-filler (λ x → El (F x)) e u)
 
+    -- the β-law of the second component
+    sndPairO : (x : El X) (u : El (F x)) → Over F (sndSigma (pairSigma {B = F} x u)) u
+    sndPairO x u = overPath (fstPairSigma x u) (sndPairSigma x u)
+
+    -- canonical pairs of dependent-path-related components are equal
+    pairO : {x y : El X} {u : El (F x)} {v : El (F y)} → Over F u v → pairSigma {B = F} x u ≡ pairSigma y v
+    pairO (overPath e h) i = pairSigma (e i) (h i)
+
+  -- a fibrewise map applied along a dependent path
+  mapO : {X : U} {F G : El X → U} (h : (x : El X) → El (F x) → El (G x))
+         {x y : El X} {u : El (F x)} {v : El (F y)}
+       → Over F u v → Over G (h x u) (h y v)
+  mapO h (overPath e k) = overPath e (λ i → h (e i) (k i))
+
   -- | Two variables of type `A` over a point of `X`: the context
   -- `X ▹ A ▹ A [ p ]` as a code, and its elements as triples.  The third
   -- component has to be moved along the β-law of the inner pair.
@@ -95,6 +109,13 @@ module Fibrewise {ℓU ℓEl : Level} {U : Type ℓU} (Univ : TarskiUniverse ℓ
         b≡ = compPathP' {B = λ y → El (A y)} (sndPairSigma {B = λ s → A (fstSigma s)} _ _)
                                               (symP (subst-filler (λ y → El (A y)) (sym β) b))
 
+    -- the second and the third component of `unpair²-pair²`
+    unpair²-pair²O₂ : (t : Two) → Over A (unpair² (pair² t) .snd .fst) (t .snd .fst)
+    unpair²-pair²O₂ t = overPath (cong fst (unpair²-pair² t)) (cong (λ s → s .snd .fst) (unpair²-pair² t))
+
+    unpair²-pair²O₃ : (t : Two) → Over A (unpair² (pair² t) .snd .snd) (t .snd .snd)
+    unpair²-pair²O₃ t = overPath (cong fst (unpair²-pair² t)) (cong (λ s → s .snd .snd) (unpair²-pair² t))
+
     pair²-unpair² : (w : El Sigma²) → pair² (unpair² w) ≡ w
     pair²-unpair² w =
       pairSigma≡ (ηSigma (fstSigma w))
@@ -109,6 +130,60 @@ module Fibrewise {ℓU ℓEl : Level} {U : Type ℓU} (Univ : TarskiUniverse ℓ
     classQuot≡ : {A : U} {R : El A → El A → U} (a b : El A) → El (R a b)
                → classQuot {R = R} a ≡ classQuot b
     classQuot≡ a b r = cong (QuotIso _ _ .inv) (eq/ a b r)
+
+    -- | The action of a relation-preserving map on quotients, and how it
+    -- acts on classes, identities and composites.
+    module _ {X Y : U} {RX : El X → El X → U} {RY : El Y → El Y → U} where
+
+      quotMap : (g : El X → El Y)
+              → ((a b : El X) → El (RX a b) → Path (El Y / (λ a b → El (RY a b))) [ g a ] [ g b ])
+              → ------------------------------------------------------------------
+                El (Quot X RX) → El (Quot Y RY)
+      quotMap g h u = QuotIso _ _ .inv (SQ.rec SQ.squash/ (λ a → [ g a ]) h (QuotIso _ _ .fun u))
+
+      quotMap-class : (g : El X → El Y)
+                      (h : (a b : El X) → El (RX a b) → Path (El Y / (λ a b → El (RY a b))) [ g a ] [ g b ])
+                      (a : El X)
+                    → ------------------------------------------------------------------
+                      quotMap g h (classQuot a) ≡ classQuot (g a)
+      quotMap-class g h a = cong (λ v → QuotIso _ _ .inv (SQ.rec SQ.squash/ (λ a → [ g a ]) h v)) (QuotIso _ _ .sec [ a ])
+
+    -- over paths of relations, `quotMap g` with whatever proofs of preservation
+    quotMap-PathP : {X Y : U} {RX : I → El X → El X → U} {RY : I → El Y → El Y → U} (g : El X → El Y)
+                    (h₀ : (a b : El X) → El (RX i0 a b) → Path (El Y / (λ a b → El (RY i0 a b))) [ g a ] [ g b ])
+                    (h₁ : (a b : El X) → El (RX i1 a b) → Path (El Y / (λ a b → El (RY i1 a b))) [ g a ] [ g b ])
+                  → ------------------------------------------------------------------
+                    PathP (λ i → El (Quot X (RX i)) → El (Quot Y (RY i))) (quotMap g h₀) (quotMap g h₁)
+    quotMap-PathP {X} {Y} {RX} {RY} g h₀ h₁ i = quotMap {RX = RX i} {RY = RY i} g (hs i)
+      where
+        Pres : I → Type ℓEl
+        Pres i = (a b : El X) → El (RX i a b) → Path (El Y / (λ a b → El (RY i a b))) [ g a ] [ g b ]
+        hs : PathP Pres h₀ h₁
+        hs = isProp→PathP (λ i → isPropΠ3 λ a b _ → SQ.squash/ [ g a ] [ g b ]) h₀ h₁
+
+    quotMap-id : {X : U} {R : El X → El X → U} (g : El X → El X)
+                 (h : (a b : El X) → El (R a b) → Path (El X / (λ a b → El (R a b))) [ g a ] [ g b ])
+               → ((a : El X) → g a ≡ a)
+               → ------------------------------------------------------------------
+                 (u : El (Quot X R)) → quotMap g h u ≡ u
+    quotMap-id g h e u = goal (QuotIso _ _ .fun u) ∙ QuotIso _ _ .ret u
+      where
+        goal : (v : _) → QuotIso _ _ .inv (SQ.rec SQ.squash/ (λ a → [ g a ]) h v) ≡ QuotIso _ _ .inv v
+        goal = SQ.elimProp (λ _ → isSetEl _ _ _) (λ a → cong (λ a → QuotIso _ _ .inv [ a ]) (e a))
+
+    quotMap-seq : {X Y Z : U} {RX : El X → El X → U} {RY : El Y → El Y → U} {RZ : El Z → El Z → U}
+                  (g₁ : El X → El Y) (h₁ : (a b : El X) → El (RX a b) → Path (El Y / (λ a b → El (RY a b))) [ g₁ a ] [ g₁ b ])
+                  (g₂ : El Y → El Z) (h₂ : (a b : El Y) → El (RY a b) → Path (El Z / (λ a b → El (RZ a b))) [ g₂ a ] [ g₂ b ])
+                  (g : El X → El Z) (h : (a b : El X) → El (RX a b) → Path (El Z / (λ a b → El (RZ a b))) [ g a ] [ g b ])
+                → ((a : El X) → g a ≡ g₂ (g₁ a))
+                → ------------------------------------------------------------------
+                  (u : El (Quot X RX)) → quotMap g h u ≡ quotMap g₂ h₂ (quotMap g₁ h₁ u)
+    quotMap-seq g₁ h₁ g₂ h₂ g h e u = goal (QuotIso _ _ .fun u)
+      where
+        goal : (v : _) → QuotIso _ _ .inv (SQ.rec SQ.squash/ (λ a → [ g a ]) h v)
+                       ≡ quotMap g₂ h₂ (QuotIso _ _ .inv (SQ.rec SQ.squash/ (λ a → [ g₁ a ]) h₁ v))
+        goal = SQ.elimProp (λ _ → isSetEl _ _ _) (λ a →
+          cong (λ c → QuotIso _ _ .inv [ c ]) (e a) ∙ sym (quotMap-class g₂ h₂ (g₁ a)))
 
     module QuotFibres {X : U} (A : El X → U) (rel : (x : El X) → El (A x) → El (A x) → U) where
 

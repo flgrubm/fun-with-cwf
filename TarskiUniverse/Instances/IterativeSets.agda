@@ -9,6 +9,7 @@ open import Cubical.Data.IterativeSets.Sigma
 open import Cubical.Data.IterativeSets.Pi
 open import Cubical.Data.IterativeSets.Unit
 open import Cubical.Data.IterativeSets.Identity
+open import Cubical.Data.IterativeSets.W
 
 open import TarskiUniverse.Base
 
@@ -38,3 +39,8 @@ module _ (ℓ : Level) where
   hasEqV : hasEq BareTarskiUniverseV
   hasEqV .hasEq.Eq          = Id⁰
   hasEqV .hasEq.EqIso _ _ _ = idIso
+
+  -- `El⁰ (W⁰ A B)` is `W (El⁰ A) (El⁰ ∘ B)` by definition.
+  hasWV : hasW BareTarskiUniverseV
+  hasWV .hasW.W        = W⁰
+  hasWV .hasW.WIso _ _ = idIso

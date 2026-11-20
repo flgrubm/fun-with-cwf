@@ -144,7 +144,8 @@ module Algebraic {ℓOb ℓHom : Level} (C : Category ℓOb ℓHom) where
     reindex {Γ = Γ} {e = e} {e' = e'} {x = x} {y = y} =
       subst (λ ε → PathP (λ i → Tm Γ (ε i)) x y) (isSetTy Γ _ _ e e')
 
-    -- The same for morphisms out of a context extension.
+    -- `reindex` for morphisms out of a context extension: a path over `e` is
+    -- also a path over any `e'` with the same endpoints.
     reindex⟶ : {A B : Ty Γ} {e e' : A ≡ B} {f : Γ ▹ A ⟶ Θ} {g : Γ ▹ B ⟶ Θ}
              → PathP (λ i → Γ ▹ e i ⟶ Θ) f g → PathP (λ i → Γ ▹ e' i ⟶ Θ) f g
     reindex⟶ {Γ = Γ} {Θ = Θ} {e = e} {e' = e'} {f = f} {g = g} =

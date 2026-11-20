@@ -5,7 +5,7 @@ open import Cubical.Foundations.Isomorphism
 open import Cubical.Foundations.Function
 
 open import Cubical.Data.Sigma
-open import Cubical.Data.W.W using (sup-W) renaming (W to 𝕎)
+open import Cubical.Data.W.W using () renaming (W to 𝕎)
 open import Cubical.Data.Unit hiding (Unit)
 
 -- A "bare Tarski universe" is a set U of codes with a set-valued
@@ -115,9 +115,6 @@ module _ {ℓU ℓEl : Level} {U : Type ℓU} (TU : BareTarskiUniverse ℓEl U) 
       W    : (A : U) (B : El A → U) → U
       WIso : (A : U) (B : El A → U)
            → Iso (El (W A B)) (𝕎 (El A) (λ a → El (B a)))
-
-    supW : {A : U} {B : El A → U} (a : El A) → (El (B a) → El (W A B)) → El (W A B)
-    supW a f = WIso _ _ .inv (sup-W a (λ b → WIso _ _ .fun (f b)))
 
 -- As we are only interested in Tarski universes with Unit and Sigma
 -- we use the name "Tarski universe" for these universes

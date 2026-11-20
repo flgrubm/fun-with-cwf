@@ -1,12 +1,11 @@
 module Utils.TarskiHEq where
 
 open import Cubical.Foundations.Prelude
-open import Cubical.Foundations.HLevels
 open import Cubical.Foundations.Equiv
 open import Cubical.Foundations.Isomorphism
-open import Cubical.Data.Sigma
 
 open import TarskiUniverse.Base
+open import TarskiUniverse.Properties
 
 -- | Heterogeneous equality of elements of a Tarski universe.
 --
@@ -27,21 +26,21 @@ module TarskiHEq {ℓU ℓEl : Level} {U : Type ℓU} (Univ : TarskiUniverse ℓ
   ⟪_⟫ : {X : U} → El X → ∫El
   ⟪ u ⟫ = _ , u
 
-  -- a path of elements over a path of codes
+  -- a path of elements over a path of codes is a heterogeneous equation
   toHEq : {X Y : U} {c : X ≡ Y} {u : El X} {v : El Y}
         → PathP (λ i → El (c i)) u v
         → --------------------------
           ⟪ u ⟫ ≡ ⟪ v ⟫
   toHEq {c = c} e i = c i , e i
 
-  -- ... and back, over any path of codes
+  -- a heterogeneous equation is a path of elements over any path of codes
   fromHEq : {X Y : U} (c : X ≡ Y) {u : El X} {v : El Y}
           → ⟪ u ⟫ ≡ ⟪ v ⟫
           → ---------------------------
             PathP (λ i → El (c i)) u v
-  fromHEq c {u} {v} h =
-    subst (λ c' → PathP (λ i → El (c' i)) u v) (isSetU _ _ (cong fst h) c) (cong snd h)
+  fromHEq c h = ElPathP TU (cong snd h)
 
+  -- a heterogeneous equation between elements of one code is a path
   HEq→≡ : {X : U} {u v : El X}
         → ⟪ u ⟫ ≡ ⟪ v ⟫
         → --------------
@@ -54,7 +53,8 @@ module TarskiHEq {ℓU ℓEl : Level} {U : Type ℓU} (Univ : TarskiUniverse ℓ
              ⟪ subst (λ z → El (T z)) e u ⟫ ≡ ⟪ u ⟫
   substHEq T e u = sym (toHEq (subst-filler (λ z → El (T z)) e u))
 
-  -- a section is the same, heterogeneously, over equal family-codes
+  -- sections that agree pointwise, heterogeneously, are equal over any path
+  -- between their families of codes
   ΠPathP : {ℓ : Level} {X : Type ℓ} {T T' : X → U} (e : T ≡ T')
            {f : (x : X) → El (T x)} {f' : (x : X) → El (T' x)}
          → ((x : X) → ⟪ f x ⟫ ≡ ⟪ f' x ⟫)
@@ -62,16 +62,17 @@ module TarskiHEq {ℓU ℓEl : Level} {U : Type ℓU} (Univ : TarskiUniverse ℓ
            PathP (λ i → (x : X) → El (e i x)) f f'
   ΠPathP e h i x = fromHEq (λ j → e j x) (h x) i
 
-  -- | Pairs.  A function of the components of a point of `Sigma Γ A`, at a
-  -- pair, is the function at the components of that pair.
+  -- | Pairs
   module _ {Γ : U} {A : El Γ → U} where
 
+    -- `F (fstSigma s) (sndSigma s)` at `s = pairSigma x a` is `F x a`
     Sigma-β : {ℓ : Level} {R : Type ℓ} (F : (x : El Γ) → El (A x) → R) (x : El Γ) (a : El (A x))
             → -------------------------------------------------------------------------------
               F (fstSigma (pairSigma {B = A} x a)) (sndSigma (pairSigma {B = A} x a)) ≡ F x a
     Sigma-β F x a i = F (fstPairSigma {B = A} x a i) (sndPairSigma {B = A} x a i)
 
-    -- the same with a further argument over the first component
+    -- `Sigma-β` for a function with a further argument whose type depends on
+    -- the first component
     Sigma-β-dep : {ℓ ℓ' : Level} {D : El Γ → Type ℓ'} {R : Type ℓ}
                   (F : (x : El Γ) → El (A x) → D x → R) (x : El Γ) (a : El (A x))
                   (d : D (fstSigma (pairSigma {B = A} x a)))
@@ -103,7 +104,8 @@ module TarskiHEq {ℓU ℓEl : Level} {U : Type ℓU} (Univ : TarskiUniverse ℓ
                       isProp (Splitting s)
     isPropSplitting s = isContr→isProp (isoToIsEquiv (invIso (SigmaIso Γ A)) .equiv-proof s)
 
-  -- maps out of `Sigma Γ T` along a path of the family `T`, pointwise
+  -- maps out of `Sigma Γ T` and `Sigma Γ T'` are equal over a path `T ≡ T'`
+  -- if they agree on pairs with heterogeneously equal second components
   module _ {Γ : U} where
 
     SigmaMapPathP : {ℓ : Level} {R : Type ℓ} {T T' : El Γ → U} (e : T ≡ T')

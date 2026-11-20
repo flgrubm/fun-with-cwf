@@ -200,26 +200,23 @@ module _ {ℓHom : Level} where
     V-ℕ-elim⁺ A σ Az As (δ , lift zero)    = refl
     V-ℕ-elim⁺ A σ Az As (δ , lift (suc n)) = cong (λ t → As ((σ δ , lift n) , t)) (V-ℕ-elim⁺ A σ Az As (δ , lift n))
 
-    -- `ℕ-elimNat` along any `τ` equal to `σ ⁺`, and over any type paths `P`, `Q`
+    -- `ℕ-elimNat` along any `τ` equal to `σ ⁺` (`P`, `Q` must be general since they depend on `τ`)
     ElimNatAt : ∀ {Δ Γ} (A : Ty (Γ ▹ ℕTy)) (σ : El Δ → El Γ) (τ : El (Σ⁰ Δ ℕTy) → El (Σ⁰ Γ ℕTy))
       → Type (ℓ-suc ℓHom)
     ElimNatAt {Δ} {Γ} A σ τ =
       (Az : Tm Γ (A [ ⟨ ℕzero {Γ = Γ} ⟩ ]Ty)) (As : Tm (Γ ▹ ℕTy ▹ A) (A [ sucσ {Γ = Γ} {A = A} ]Ty))
       (P : A [ ⟨ ℕzero {Γ = Γ} ⟩ ]Ty [ σ ]Ty ≡ A [ τ ]Ty [ ⟨ ℕzero {Γ = Δ} ⟩ ]Ty)
       (Q : A [ sucσ {Γ = Γ} {A = A} ]Ty [ τ ⁺ ]Ty ≡ A [ τ ]Ty [ sucσ {Γ = Δ} {A = A [ τ ]Ty} ]Ty)
-      → V-ℕ-elim A Az As [ τ ]Tm
-      ≡ V-ℕ-elim (A [ τ ]Ty) (subst (Tm Δ) P (Az [ σ ]Tm)) (subst (Tm (Δ ▹ ℕTy ▹ A [ τ ]Ty)) Q (As [ τ ⁺ ]Tm))
+      (Az' : Tm Δ (A [ τ ]Ty [ ⟨ ℕzero {Γ = Δ} ⟩ ]Ty))
+      (As' : Tm (Δ ▹ ℕTy ▹ A [ τ ]Ty) (A [ τ ]Ty [ sucσ {Γ = Δ} {A = A [ τ ]Ty} ]Ty))
+      → PathP (λ i → Tm Δ (P i)) (Az [ σ ]Tm) Az'
+      → PathP (λ i → Tm (Δ ▹ ℕTy ▹ A [ τ ]Ty) (Q i)) (As [ τ ⁺ ]Tm) As'
+      → V-ℕ-elim A Az As [ τ ]Tm ≡ V-ℕ-elim (A [ τ ]Ty) Az' As'
 
-    -- at `τ = σ ⁺`, `P` and `Q` are loops, hence trivial since types form a set
+    -- at `τ = σ ⁺`, `P` and `Q` are loops, so reindexing turns them into plain paths
     V-ℕ-elimNat : ∀ {Δ Γ} A (σ : El Δ → El Γ) τ → _⁺ {A = ℕTy} σ ≡ τ → ElimNatAt {Δ} {Γ} A σ τ
-    V-ℕ-elimNat {Δ} A σ τ e = J (λ τ _ → ElimNatAt A σ τ) (λ Az As P Q →
-        V-ℕ-elim A Az As [ σ ⁺ ]Tm
-          ≡⟨ funExt (V-ℕ-elim⁺ A σ Az As) ⟩
-        V-ℕ-elim (A [ σ ⁺ ]Ty) (Az [ σ ]Tm) (As [ σ ⁺ ⁺ ]Tm)
-          ≡⟨ cong (λ z → V-ℕ-elim (A [ σ ⁺ ]Ty) z (As [ σ ⁺ ⁺ ]Tm)) (reindex (subst-filler (Tm Δ) P _)) ⟩
-        V-ℕ-elim (A [ σ ⁺ ]Ty) (subst (Tm Δ) P (Az [ σ ]Tm)) (As [ σ ⁺ ⁺ ]Tm)
-          ≡⟨ cong (V-ℕ-elim (A [ σ ⁺ ]Ty) _) (reindex (subst-filler (Tm _) Q _)) ⟩
-        V-ℕ-elim (A [ σ ⁺ ]Ty) (subst (Tm Δ) P (Az [ σ ]Tm)) (subst (Tm _) Q (As [ σ ⁺ ⁺ ]Tm)) ∎) e
+    V-ℕ-elimNat A σ τ e = J (λ τ _ → ElimNatAt A σ τ) (λ Az As P Q Az' As' pz ps →
+        funExt (V-ℕ-elim⁺ A σ Az As) ∙ cong₂ (V-ℕ-elim (A [ σ ⁺ ]Ty)) (reindex pz) (reindex ps)) e
 
   V-ℕ-Structure : ℕ-Structure {ℓHom = ℓHom} VCwF
   V-ℕ-Structure .ℕ-Structure.ℕ-Ops-field = V-ℕ-Ops

@@ -31,6 +31,32 @@ module _ {ℓOb ℓHom ℓTy ℓTm : Level} {C : Category ℓOb ℓHom} (cwf : A
     sucσ : ∀ {A} → Γ ▹ ℕTy ▹ A ⟶ Γ ▹ ℕTy
     sucσ = suc⁺ ∘ p
 
+  module _ (ℕ-Ops-field : ℕ-Ops) where
+    open ℕ-Ops ℕ-Ops-field
+
+    ℕ-ElimTy : Type (ℓ-max ℓOb (ℓ-max ℓTy ℓTm))
+    ℕ-ElimTy = ∀ {Γ} A
+      → (Az : Tm Γ (A [ ⟨ ℕzero ⟩ ]Ty))
+      → (As : Tm (Γ ▹ ℕTy ▹ A) (A [ sucσ ]Ty))
+      → Tm (Γ ▹ ℕTy) A
+
+    -- naturality of `elim` along `σ ↑`, the reindexed arguments being related
+    -- to the new ones over the type paths `P` and `Q`
+    ℕ-ElimNatOver : (elim : ℕ-ElimTy) (A : Ty (Γ ▹ ℕTy)) (σ : Δ ⟶ Γ)
+      (Az : Tm Γ (A [ ⟨ ℕzero ⟩ ]Ty)) (As : Tm (Γ ▹ ℕTy ▹ A) (A [ sucσ ]Ty))
+      → A [ ⟨ ℕzero ⟩ ]Ty [ σ ]Ty ≡ A [ σ ↑ ]Ty [ ⟨ ℕzero ⟩ ]Ty
+      → A [ sucσ {A = A} ]Ty [ σ ↑ ⁺ ]Ty ≡ A [ σ ↑ ]Ty [ sucσ {A = A [ σ ↑ ]Ty} ]Ty
+      → Type ℓTm
+    ℕ-ElimNatOver elim A σ Az As P Q = ∀ Az' As'
+      → PathP (λ i → Tm _ (P i)) (Az [ σ ]Tm) Az'
+      → PathP (λ i → Tm _ (Q i)) (As [ σ ↑ ⁺ ]Tm) As'
+      → elim A Az As [ σ ↑ ]Tm ≡ elim (A [ σ ↑ ]Ty) Az' As'
+
+    -- types form a set, so `ℕ-ElimNatOver` may be proved over any type paths
+    mkElimNatOver : ∀ {elim : ℕ-ElimTy} {A} {σ : Δ ⟶ Γ} {Az As P Q P' Q'}
+      → ℕ-ElimNatOver elim A σ Az As P Q → ℕ-ElimNatOver elim A σ Az As P' Q'
+    mkElimNatOver h Az' As' pz ps = h Az' As' (reindex pz) (reindex ps)
+
   record ℕ-Structure : Type (ℓ-max ℓOb (ℓ-max ℓHom (ℓ-max ℓTy ℓTm))) where
     field
       ℕ-Ops-field : ℕ-Ops
@@ -53,7 +79,7 @@ module _ {ℓOb ℓHom ℓTy ℓTm : Level} {C : Category ℓOb ℓHom} (cwf : A
 
     -- `sucσ` commutes with lifting `σ`, by `ℕsucNat`
     [sucσ][↑⁺]Ty : (A : Ty (Γ ▹ ℕTy)) (σ : Δ ⟶ Γ)
-                 → A [ sucσ ]Ty [ σ ↑ ⁺ ]Ty ≡ A [ σ ↑ ]Ty [ sucσ ]Ty
+                 → A [ sucσ {A = A} ]Ty [ σ ↑ ⁺ ]Ty ≡ A [ σ ↑ ]Ty [ sucσ {A = A [ σ ↑ ]Ty} ]Ty
     [sucσ][↑⁺]Ty A σ = sym ([][]Ty A (σ ↑ ⁺) sucσ)
       ∙ cong (A [_]Ty) ( sym (⋆Assoc (σ ↑ ⁺) p suc⁺)
                        ∙ cong (suc⁺ ∘_) (p∘⁺ (σ ↑))
@@ -63,10 +89,7 @@ module _ {ℓOb ℓHom ℓTy ℓTm : Level} {C : Category ℓOb ℓHom} (cwf : A
       ∙ [][]Ty A sucσ (σ ↑)
 
     field
-      ℕ-elim : ∀ A
-        → (Az : Tm Γ (A [ ⟨ ℕzero ⟩ ]Ty))
-        → (As : Tm (Γ ▹ ℕTy ▹ A) (A [ sucσ ]Ty))
-        → Tm (Γ ▹ ℕTy) A
+      ℕ-elim : ℕ-ElimTy ℕ-Ops-field
       ℕ-elimβ-z : ∀ A Az As →
         ℕ-elim {Γ} A Az As [ ⟨ ℕzero ⟩ ]Tm ≡ Az
       ℕ-elimβ-s : ∀ A Az As →
@@ -74,9 +97,6 @@ module _ {ℓOb ℓHom ℓTy ℓTm : Level} {C : Category ℓOb ℓHom} (cwf : A
         PathP (λ i → Tm (Γ ▹ ℕTy) ([sucσ][⟨⟩]Ty A elim i))
           (As [ ⟨ elim ⟩ ]Tm)
           (elim [ suc⁺ ]Tm)
-
-    field
+      -- `mkElimNatOver` lets this be proved over more convenient type paths
       ℕ-elimNat : ∀ A (σ : Δ ⟶ Γ) Az As →
-          ℕ-elim A Az As [ σ ↑ ]Tm
-        ≡ ℕ-elim (A [ σ ↑ ]Ty) (subst (Tm Δ) ([⟨ℕzero⟩][]Ty A σ) (Az [ σ ]Tm))
-                               (subst (Tm _) ([sucσ][↑⁺]Ty A σ) (As [ σ ↑ ⁺ ]Tm))
+        ℕ-ElimNatOver ℕ-Ops-field ℕ-elim A σ Az As ([⟨ℕzero⟩][]Ty A σ) ([sucσ][↑⁺]Ty A σ)

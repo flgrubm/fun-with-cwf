@@ -105,6 +105,34 @@ module _ {ℓU ℓEl : Level} {U : Type ℓU} (TU : BareTarskiUniverse ℓEl U) 
       Boo : U
       BooIso : Iso (El Boo) Bool
 
+  -- | An internal universe: a code `Univ` whose elements decode to codes.  On
+  -- its own this is no constraint (any code with any map will do); what makes
+  -- it a universe is closure under the type formers, `hasUniversePi` and
+  -- `hasUniverseSigma` below (cf. Angiuli–Gratzer, Structure 6.4.17).
+  record hasUniverse : Type (ℓ-max ℓU ℓEl) where
+    field
+      Univ   : U
+      decode : El Univ → U
+
+  module _ (𝒰 : hasUniverse) where
+    open hasUniverse 𝒰
+
+    -- the internal universe is closed under Π
+    record hasUniversePi (P : hasPi) : Type (ℓ-max ℓU ℓEl) where
+      open hasPi P
+      field
+        piU        : (c : El Univ) → (El (decode c) → El Univ) → El Univ
+        decode-piU : (c : El Univ) (d : El (decode c) → El Univ)
+                   → decode (piU c d) ≡ Pi (decode c) (λ x → decode (d x))
+
+    -- the internal universe is closed under Σ
+    record hasUniverseSigma (S : hasSigma) : Type (ℓ-max ℓU ℓEl) where
+      open hasSigma S
+      field
+        sigU        : (c : El Univ) → (El (decode c) → El Univ) → El Univ
+        decode-sigU : (c : El Univ) (d : El (decode c) → El Univ)
+                    → decode (sigU c d) ≡ Sigma (decode c) (λ x → decode (d x))
+
 -- As we are only interested in Tarski universes with Unit and Sigma
 -- we use the name "Tarski universe" for these universes
 record TarskiUniverse {ℓU : Level} (ℓEl : Level) (U : Type ℓU) : Type (ℓ-max (ℓ-suc ℓU) (ℓ-suc ℓEl)) where

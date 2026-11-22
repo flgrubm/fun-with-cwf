@@ -19,6 +19,7 @@ open import ACwF.Eq
 open import ACwF.Empty
 open import ACwF.Unit
 open import ACwF.Bool
+open import ACwF.W
 
 open import Cubical.Data.IterativeSets.Base renaming (V⁰ to V ; El⁰ to El ; isSetEl⁰ to isSetEl)
 open import Utils.VCat
@@ -28,6 +29,8 @@ open import Cubical.Data.IterativeSets.Unit
 open import Cubical.Data.IterativeSets.Identity
 open import Cubical.Data.IterativeSets.Empty
 open import Cubical.Data.IterativeSets.Bool
+open import Cubical.Data.IterativeSets.W
+open import Cubical.Data.W.W using (sup-W)
 
 open Category
 
@@ -154,3 +157,100 @@ module _ {ℓHom : Level} where
   V-Bool-Structure .Bool-Structure.Bool-elim      = V-Bool-elim
   V-Bool-Structure .Bool-Structure.Bool-elimβ     = V-Bool-elimβ
   V-Bool-Structure .Bool-Structure.Bool-elimNat   = V-Bool-elimNat
+
+  -- | W-types.  `El (W⁰ A B)` *is* `W`, so the constructor is `sup-W`, the
+  -- subtree at a branch is application of the subtree function, and the
+  -- eliminator is structural recursion on the tree.  The paths `SubtreesTyNat`
+  -- and `branchTy`, along which the record states `supSubNat` and
+  -- `q[branchSub]`, are composites of `refl`s here: these two laws hold over
+  -- `refl` and are moved onto those paths by `reindex⟶` / `reindex`.
+  module _ where
+    open Π-Structure (V-Π-Structure {ℓHom = ℓHom})
+
+    WTyV : {Γ : V} (A : Ty Γ) (B : Ty (Γ ▹ A))
+         → -------------------------------------
+           Ty Γ
+    WTyV A B x = W⁰ (A x) (λ a → B (x , a))
+
+    -- the type of subtree functions of a node whose label is the variable of `Γ ▹ A`
+    SubtreesTyV : {Γ : V} (A : Ty Γ) (B : Ty (Γ ▹ A))
+                → -------------------------------------
+             Ty (Γ ▹ A)
+    SubtreesTyV A B = ΠTy B (WTyV A B [ p ]Ty [ p ]Ty)
+
+    -- a node: a label with its subtree function
+    NodeV : {Γ : V} (A : Ty Γ) (B : Ty (Γ ▹ A))
+          → -------------------------------------
+            V
+    NodeV A B = _ ▹ A ▹ SubtreesTyV A B
+
+    module _ {Γ : V} {A : Ty Γ} {B : Ty (Γ ▹ A)} where
+
+      supSubV : El (NodeV A B) → El (Γ ▹ WTyV A B)
+      supSubV ((x , a) , f) = x , sup-W a f
+
+      branchSubV : El (NodeV A B ▹ B [ p ]Ty) → El (Γ ▹ WTyV A B)
+      branchSubV (((x , _) , f) , b) = x , f b
+
+      -- the type of the induction hypotheses at a node
+      IHTyV : (P : Ty (Γ ▹ WTyV A B))
+            → --------------------------
+              Ty (NodeV A B)
+      IHTyV P = ΠTy (B [ p ]Ty) (P [ branchSubV ]Ty)
+
+      -- the induction hypotheses provided by a term of the motive
+      ihV : {P : Ty (Γ ▹ WTyV A B)}
+          → Tm (Γ ▹ WTyV A B) P
+          → --------------------------
+            Tm (NodeV A B) (IHTyV P)
+      ihV s = ΠTmIso _ _ .Iso.inv (s [ branchSubV ]Tm)
+
+      -- the subtree at a branch is the subtree function applied, over `refl`
+      q[branchSubV] : {f' : Tm (NodeV A B) (ΠTy (B [ p {A = SubtreesTyV A B} ]Ty)
+                                                (WTyV A B [ p ]Ty [ p {A = B} ]Ty [ p {A = SubtreesTyV A B} ⁺ ]Ty))}
+                    → q {A = SubtreesTyV A B} ≡ f'
+                    → ------------------------------------------------------------
+                      q [ branchSubV ]Tm ≡ ΠTmIso _ _ .Iso.fun f'
+      q[branchSubV] e = cong (ΠTmIso _ _ .Iso.fun) e
+
+      module _ (P : Ty (Γ ▹ WTyV A B)) (m : Tm (NodeV A B ▹ IHTyV P) (P [ supSubV ]Ty [ p ]Ty)) where
+
+        -- the eliminator, by structural recursion on the tree
+        elimV : (x : El Γ) (w : El (WTyV A B x))
+              → ----------------------------------
+                El (P (x , w))
+        elimV x (sup-W a f) = m (((x , a) , f) , λ b → elimV x (f b))
+
+        -- `s` is `m` at every node: the record's `isWElim`, whose path `stepTy` is `refl` here
+        isWElimV : Tm (Γ ▹ WTyV A B) P → Type ℓHom
+        isWElimV s = s [ supSubV ]Tm ≡ m [ ⟨ ihV s ⟩ ]Tm
+
+        -- any eliminator is `elimV`, by induction on the tree
+        elimV-η : (s : Tm (Γ ▹ WTyV A B) P) → isWElimV s
+                → (x : El Γ) (w : El (WTyV A B x))
+                → ----------------------------------
+                  elimV x w ≡ s (x , w)
+        elimV-η s h x (sup-W a f) =
+            cong (λ ih → m (((x , a) , f) , ih)) (funExt λ b → elimV-η s h x (f b))
+          ∙ sym (funExt⁻ h ((x , a) , f))
+
+        -- `elimV` is the unique eliminator; β holds by definition
+        isContrWElimV : isContr (Σ[ s ∈ Tm (Γ ▹ WTyV A B) P ] isWElimV s)
+        isContrWElimV .fst = (λ (x , w) → elimV x w) , refl
+        isContrWElimV .snd (s , h) =
+          Σ≡Prop (λ _ → isSetTm _ _ _ _) (funExt λ (x , w) → elimV-η s h x w)
+
+    open W-Structure
+
+    V-W-Structure : W-Structure VCwF V-Π-Structure
+    V-W-Structure .WTy                  = WTyV
+    V-W-Structure .WTyNat _ _ _         = refl
+    V-W-Structure .wkW σ                = σ ⁺
+    V-W-Structure .wkW≡ _               = refl
+    V-W-Structure .supSub               = supSubV
+    V-W-Structure .p∘supSub             = refl
+    V-W-Structure .supSubNat _          = reindex⟶ {e = refl} refl
+    V-W-Structure .branchSub            = branchSubV
+    V-W-Structure .p∘branchSub          = refl
+    V-W-Structure .q[branchSub] e       = reindex {e = refl} (q[branchSubV] e)
+    V-W-Structure .isContrWElim _ _ P m = isContrWElimV P m

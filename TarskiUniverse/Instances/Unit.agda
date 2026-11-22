@@ -38,3 +38,4 @@ module _ (ℓ : Level) where
   hasPiUnit .hasPi.PiIso _ _ .Iso.sec _ _ _ = tt*
   hasPiUnit .hasPi.PiIso _ _ .Iso.ret tt* = refl
 
+  -- No `hasW`: W with one label and one branch is empty, not `Unit*`.

@@ -5,6 +5,7 @@ open import Cubical.Foundations.Isomorphism
 open import Cubical.Foundations.Function
 
 open import Cubical.Data.Sigma
+open import Cubical.Data.W.W using () renaming (W to 𝕎)
 open import Cubical.Data.Unit hiding (Unit)
 
 -- A "bare Tarski universe" is a set U of codes with a set-valued
@@ -104,6 +105,16 @@ module _ {ℓU ℓEl : Level} {U : Type ℓU} (TU : BareTarskiUniverse ℓEl U) 
       -- named like this to avoid clashing with Bool, I'm open to name suggestions
       Boo : U
       BooIso : Iso (El Boo) Bool
+
+  -- | W-types: a code for the type of well-founded trees with labels in `A`
+  -- and branching `B`, decoding to `W` (up to an iso, so that a universe whose
+  -- decoding is not literally `W` can still provide them; for V⁰ it is
+  -- `idIso`).
+  record hasW : Type (ℓ-max ℓU ℓEl) where
+    field
+      W    : (A : U) (B : El A → U) → U
+      WIso : (A : U) (B : El A → U)
+           → Iso (El (W A B)) (𝕎 (El A) (λ a → El (B a)))
 
 -- As we are only interested in Tarski universes with Unit and Sigma
 -- we use the name "Tarski universe" for these universes

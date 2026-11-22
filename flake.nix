@@ -45,13 +45,7 @@
           default = pkgs.agdaPackages.mkDerivation {
             pname = "fun-with-cwf";
             version = "0-unstable-${self.lastModifiedDate or "dirty"}";
-            src = lib.fileset.toSource {
-              root = ./.;
-              fileset = lib.fileset.unions [
-                ./funwithcwf.agda-lib
-                (lib.fileset.fileFilter (file: file.hasExt "agda") ./.)
-              ];
-            };
+            src = ./.;
             libraryName = "FunWithCwf";
             libraryFile = "funwithcwf.agda-lib";
             buildInputs = [ (cubicalFor system) ];

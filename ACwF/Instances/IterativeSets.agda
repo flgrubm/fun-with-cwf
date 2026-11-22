@@ -19,6 +19,7 @@ open import ACwF.Eq
 open import ACwF.Empty
 open import ACwF.Unit
 open import ACwF.Bool
+open import ACwF.Quotient
 
 open import Cubical.Data.IterativeSets.Base renaming (V⁰ to V ; El⁰ to El ; isSetEl⁰ to isSetEl)
 open import Utils.VCat
@@ -28,6 +29,8 @@ open import Cubical.Data.IterativeSets.Unit
 open import Cubical.Data.IterativeSets.Identity
 open import Cubical.Data.IterativeSets.Empty
 open import Cubical.Data.IterativeSets.Bool
+open import Cubical.Data.IterativeSets.Quotient
+open import Cubical.HITs.SetQuotients as SQ using ([_] ; eq/)
 
 open Category
 
@@ -154,3 +157,63 @@ module _ {ℓHom : Level} where
   V-Bool-Structure .Bool-Structure.Bool-elim      = V-Bool-elim
   V-Bool-Structure .Bool-Structure.Bool-elimβ     = V-Bool-elimβ
   V-Bool-Structure .Bool-Structure.Bool-elimNat   = V-Bool-elimNat
+
+  -- | Quotients of families: pointwise `_/⁰_`, which decodes to the set
+  -- quotient on the nose.  `σ ⁺²` is `(σ ⁺) ⁺`, so `⁺²≡` and `QTyNat` are
+  -- `refl`; elimination is set-quotient elimination in the fibre.
+  private
+    V-QTy : {Γ : V} (A : Ty Γ) (R : Ty (Γ ▹ A ▹ A [ p ]Ty))
+          → -------------------------------------------------
+            Ty Γ
+    V-QTy A R x = A x /⁰ (λ a b → El (R ((x , a) , b)))
+
+    V-classSub : {Γ : V} {A : Ty Γ} {R : Ty (Γ ▹ A ▹ A [ p ]Ty)}
+               → ---------------------------------------------
+                 El (Γ ▹ A) → El (Γ ▹ V-QTy A R)
+    V-classSub (x , a) = x , [ a ]
+
+    -- related elements have equal classes
+    V-classSubSound : {Γ : V} {A : Ty Γ} {R : Ty (Γ ▹ A ▹ A [ p ]Ty)}
+                    → ----------------------------------------------------------------------
+                      (λ (z : El (Γ ▹ A ▹ A [ p ]Ty ▹ R)) → V-classSub {R = R} (fst (fst z)))
+                    ≡ (λ z → V-classSub {R = R} (fst (fst (fst z)) , snd (fst z)))
+    V-classSubSound = funExt λ (((x , a) , b) , r) → cong (x ,_) (eq/ a b r)
+
+    module _ {Γ : V} {A : Ty Γ} {R : Ty (Γ ▹ A ▹ A [ p ]Ty)} (P : Ty (Γ ▹ V-QTy A R)) where
+
+      -- `m` respects `R` pointwise: its values at related elements lie over `eq/`
+      V-Respects : Tm (Γ ▹ A) (P [ V-classSub ]Ty) → Type ℓHom
+      V-Respects m = (x : El Γ) (a b : El (A x)) (r : El (R ((x , a) , b)))
+                   → PathP (λ i → El (P (x , eq/ a b r i))) (m (x , a)) (m (x , b))
+
+      -- the eliminator, by set-quotient elimination in the fibre
+      V-quotElim : (m : Tm (Γ ▹ A) (P [ V-classSub ]Ty)) → V-Respects m
+                 → --------------------------------------------------
+                   Tm (Γ ▹ V-QTy A R) P
+      V-quotElim m r (x , u) = SQ.elim (λ u → isSetEl (P (x , u))) (λ a → m (x , a)) (r x) u
+
+      -- the η-law: a term is the eliminator of its instance at classes
+      V-quotElim-η : (t : Tm (Γ ▹ V-QTy A R) P) (r : V-Respects (t [ V-classSub ]Tm))
+                   → -----------------------------------------------------------
+                     V-quotElim (t [ V-classSub ]Tm) r ≡ t
+      V-quotElim-η t r = funExt λ (x , u) →
+        SQ.elimProp {P = λ u → V-quotElim (t [ V-classSub ]Tm) r (x , u) ≡ t (x , u)}
+                    (λ u → isSetEl (P (x , u)) _ _) (λ a → refl) u
+
+  V-Quot-Structure : Quot-Structure VCwF
+  V-Quot-Structure .Quot-Structure.QTy                     = V-QTy
+  V-Quot-Structure .Quot-Structure._⁺² σ                   = (σ ⁺) ⁺
+  V-Quot-Structure .Quot-Structure.⁺²≡ σ                   = refl
+  V-Quot-Structure .Quot-Structure.QTyNat A R σ            = refl
+  V-Quot-Structure .Quot-Structure.classTm a x             = [ a x ]
+  V-Quot-Structure .Quot-Structure.classTmNat a σ          = refl
+  V-Quot-Structure .Quot-Structure.classSub                = V-classSub
+  V-Quot-Structure .Quot-Structure.p∘classSub              = refl
+  -- the two sides agree on the nose; `classSubTy` is a composite of `refl`s
+  V-Quot-Structure .Quot-Structure.q[classSub]             = reindex {e = refl} refl
+  V-Quot-Structure .Quot-Structure.classSubSound           = V-classSubSound
+  -- `respects` at `(((x , a) , b) , r)` is a path over `eq/ a b r`
+  V-Quot-Structure .Quot-Structure.isEquivQuotCases A R P  =
+    isEquivCases (V-quotElim P) (λ _ _ → refl) (V-quotElim-η P)
+      (λ _ → isOfHLevelPathP' 1 (isSetTm _ _) _ _)
+      (λ m r x a b rel i → reindex {e' = λ i z → P (V-classSubSound i z)} r i (((x , a) , b) , rel))

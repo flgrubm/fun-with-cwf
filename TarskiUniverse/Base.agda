@@ -5,6 +5,7 @@ open import Cubical.Foundations.Isomorphism
 open import Cubical.Foundations.Function
 
 open import Cubical.Data.Sigma
+open import Cubical.HITs.SetQuotients using (_/_ ; [_])
 open import Cubical.Data.Unit hiding (Unit)
 
 -- A "bare Tarski universe" is a set U of codes with a set-valued
@@ -63,6 +64,14 @@ module _ {ℓU ℓEl : Level} {U : Type ℓU} (TU : BareTarskiUniverse ℓEl U) 
     SigmaPathP {x = x} {y = y} fst≡ snd≡ =
       sym (ηSigma x) ∙∙ cong (uncurry pairSigma) (ΣPathP (fst≡ , snd≡)) ∙∙ ηSigma y
 
+    -- a canonical pair equals `p` if its components equal the projections of `p`
+    pairSigma≡ : {A : U} {B : El A → U} {x : El A} {y : El (B x)} {p : El (Sigma A B)}
+                 (fst≡ : x ≡ fstSigma p)
+               → PathP (λ i → El (B (fst≡ i))) y (sndSigma p) → pairSigma x y ≡ p
+    pairSigma≡ {B = B} fst≡ snd≡ =
+      SigmaPathP (fstPairSigma _ _ ∙ fst≡)
+                 (compPathP' {B = λ x → El (B x)} (sndPairSigma _ _) snd≡)
+
   record hasPi : Type (ℓ-max ℓU ℓEl) where
     field
       Pi : (A : U) (B : El A → U) → U
@@ -104,6 +113,17 @@ module _ {ℓU ℓEl : Level} {U : Type ℓU} (TU : BareTarskiUniverse ℓEl U) 
       -- named like this to avoid clashing with Bool, I'm open to name suggestions
       Boo : U
       BooIso : Iso (El Boo) Bool
+
+  -- | Set quotients: a code for the quotient of `A` by a relation `R`,
+  -- decoding to the set quotient (up to an iso; `idIso` for V⁰).
+  record hasQuotient : Type (ℓ-max ℓU ℓEl) where
+    field
+      Quot    : (A : U) (R : El A → El A → U) → U
+      QuotIso : (A : U) (R : El A → El A → U)
+              → Iso (El (Quot A R)) (El A / (λ a b → El (R a b)))
+
+    classQuot : {A : U} {R : El A → El A → U} → El A → El (Quot A R)
+    classQuot a = QuotIso _ _ .inv [ a ]
 
 -- As we are only interested in Tarski universes with Unit and Sigma
 -- we use the name "Tarski universe" for these universes

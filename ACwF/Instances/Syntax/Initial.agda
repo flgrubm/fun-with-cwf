@@ -22,8 +22,7 @@ module _ {ℓOb ℓHom ℓTy ℓTm : Level} {C : Category ℓOb ℓHom}
   open Rec M
 
   private
-    -- Opaque: only their types are used, and checking `Uniq.rec≡` would
-    -- otherwise unfold `HTm q i` through them into transports.
+    -- Opaque: only their types are used.
     opaque
       -- Dependent version of `_▷_`.
       ▷P : ∀ {ℓ ℓ'} {A : I → Type ℓ} {B : (i : I) → A i → Type ℓ'}
@@ -48,7 +47,7 @@ module _ {ℓOb ℓHom ℓTy ℓTm : Level} {C : Category ℓOb ℓHom}
               (isOfHLevelPathP' {A = λ i → 𝕄.Ty (c i)} 1 (𝕄.isSetTy _) _ _ _ _)
               (λ i → snd (P i))
 
-  module Uniq (F : CwFMorphism SynConCategory C Syn-CwF M) where
+  module Uniq (F : CwFMorphism SynCat C Syn-CwF M) where
 
     module F  = CwFMorphism F
     module F₀ = Functor F.ctxMorph
@@ -64,14 +63,9 @@ module _ {ℓOb ℓHom ℓTy ℓTm : Level} {C : Category ℓOb ℓHom}
     FΣ (A , a) = F.tyMorph A , F.tmMorph a
 
     -- `h` relates the object parts; `HTy`, `HSub`, `HTm` relate the rest over
-    -- it.  Each point constructor is handled by a non-recursive combinator
-    -- (`cTy[]`, `cid`, …) taking the results for its arguments, so that the
-    -- endpoints of the path-constructor cases can be written in terms of
-    -- recursive calls on subterms only (as for the library's `elimProp`s).
-    --
-    -- Types never mention `h (Γ ▹ A)` but its body `h▹ Γ A` (hence
-    -- `HSub▹T`): the termination checker also checks calls in types, and
-    -- cannot see that `π₁ τ ↦ h (Γ ▹ A) ↦ HTy A` decreases.
+    -- it.  Point constructors go through non-recursive combinators (`cTy[]`,
+    -- `cid`, …), and types say `h▹ Γ A` for `h (Γ ▹ A)`, both for the
+    -- termination checker.
 
     h     : (Γ : Con) → ⟦ Γ ⟧C ≡ F₀.F-ob Γ
     h▹    : (Γ : Con) (A : Ty Γ) → ⟦ Γ ▹ A ⟧C ≡ F₀.F-ob (Γ ▹ A)
@@ -276,14 +270,8 @@ module _ {ℓOb ℓHom ℓTy ℓTm : Level} {C : Category ℓOb ℓHom}
       (λ a → isProp→isSet (isPropHTm (HTy A) a))
       (HTm x) (HTm y) (cong HTm e) (cong HTm e') (trunc x y e e') i j
 
-    -- | Assembling the path `rec ≡ F`.
-    --
-    -- From here on the results above are only used through opaque copies:
-    -- `rec≡`'s field types mention `Syn-CwF`'s projections (`Syn-CwF .q`,
-    -- `Syn-CwF ._[_]Ty`, …) where we write `q`, `_[_]Ty`, …, and comparing,
-    -- say, `HTm (Syn-CwF .q) i` with `HTm q i` would unfold `HTm` before its
-    -- argument (did not finish in 4 min).  Opaque, they are compared by their
-    -- arguments, and their endpoints come from their types.
+    -- | Assembling the path `rec ≡ F`, through opaque copies of the above so
+    -- that Agda compares them by their arguments.
     opaque
       h° : (Γ : Con) → ⟦ Γ ⟧C ≡ F₀.F-ob Γ
       h° = h
@@ -307,9 +295,7 @@ module _ {ℓOb ℓHom ℓTy ℓTm : Level} {C : Category ℓOb ℓHom}
       S▹ Γ A i k = doubleWhiskFiller refl (λ i → h Γ i 𝕄.▹ HTy A i)
                                      (sym (F.preserves▹ Γ A)) (~ k) i
 
-    -- The remaining fields are propositions.  Opaque as well, so that their
-    -- endpoints come from their types rather than from unfolding
-    -- `isProp→PathP`.
+    -- The remaining fields are propositions; opaque for the same reason.
     opaque
       P[]Ty : PathP (λ i → ∀ {Γ Δ} {A : Ty Γ} (σ : Sub Δ Γ)
                          → HTy° (A [ σ ]Ty) i ≡ HTy° A i 𝕄.[ HSub° σ i ]Ty)
@@ -353,8 +339,8 @@ module _ {ℓOb ℓHom ℓTy ℓTm : Level} {C : Category ℓOb ℓHom}
     rec≡ i .CwFMorphism.preservesp      = Pp i
     rec≡ i .CwFMorphism.preservesq      = Pq i
 
-SynInitial : {ℓOb ℓHom ℓTy ℓTm : Level} {C : Category ℓOb ℓHom}
-             (M : Algebraic.CwF C ℓTy ℓTm)
-           → isContr (CwFMorphism SynConCategory C Syn-CwF M)
-SynInitial M .fst = Rec.rec M
-SynInitial M .snd F = Uniq.rec≡ M F
+isInitialSyn : {ℓOb ℓHom ℓTy ℓTm : Level} {C : Category ℓOb ℓHom}
+               (M : Algebraic.CwF C ℓTy ℓTm)
+             → isContr (CwFMorphism SynCat C Syn-CwF M)
+isInitialSyn M .fst = Rec.rec M
+isInitialSyn M .snd F = Uniq.rec≡ M F

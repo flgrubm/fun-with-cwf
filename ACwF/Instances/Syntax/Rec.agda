@@ -23,13 +23,13 @@ module ℂ = Category C
 module 𝕄 = Algebraic.CwF M
 module ℙ = ACwF.Comprehension M
 
-lvl : Sort Γ → Level
-lvl ty      = ℓTy
-lvl (sub _) = ℓHom
-lvl (tm _)  = ℓTm
+ℓSort : Sort Γ → Level
+ℓSort ty      = ℓTy
+ℓSort (sub _) = ℓHom
+ℓSort (tm _)  = ℓTm
 
 ⟦_⟧C  : Con → ℂ.ob
-El    : (s : Sort Γ) → Type (lvl s)
+El    : (s : Sort Γ) → Type (ℓSort s)
 isSetEl : (s : Sort Γ) → isSet (El s)
 ⟦_⟧   : {s : Sort Γ} → Syn Γ s → El s
 
@@ -78,13 +78,13 @@ isSetEl (tm _)  = 𝕄.isSetTm _ _
 ⟦q⟧ {Γ = Γ} {A = A} = 𝕄.reindex
   (ℙ.π₂≡q[] (ℂ.id {⟦ Γ ▹ A ⟧C}) 𝕄.∙Tm 𝕄.[id]Tm (𝕄.q {A = ⟦ A ⟧}))
 
-⟦_⟧F : Functor SynConCategory C
+⟦_⟧F : Functor SynCat C
 ⟦_⟧F .Functor.F-ob      = ⟦_⟧C
 ⟦_⟧F .Functor.F-hom     = ⟦_⟧
 ⟦_⟧F .Functor.F-id      = refl
 ⟦_⟧F .Functor.F-seq _ _ = refl
 
-rec : CwFMorphism SynConCategory C Syn-CwF M
+rec : CwFMorphism SynCat C Syn-CwF M
 rec .CwFMorphism.ctxMorph                = ⟦_⟧F
 rec .CwFMorphism.tyMorph                 = ⟦_⟧
 rec .CwFMorphism.tmMorph                 = ⟦_⟧

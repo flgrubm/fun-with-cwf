@@ -75,11 +75,8 @@ q = π₂ id
 
 -- Weakening along any type equal to `A [ ρ ]Ty`; `_⁺` is the case `refl`.
 -- The generality is what lets `∘⁺` and `id⁺` move along a path of contexts.
---
 -- `wk⁺` and `⟨_⟩` contain a transport, so they are opaque and used only
--- through their `π₁`/`π₂` lemmas.  Otherwise Agda unfolds them when comparing
--- types (the boundary of `∘⁺`, the field `p⁺∘⟨q⟩≡id`) and normalises the
--- transport instead of comparing arguments: neither finished in 2 min.
+-- through their `π₁`/`π₂` lemmas.
 opaque
   wk⁺ : {A : Ty Γ} {B : Ty Δ} (ρ : Sub Δ Γ) → A [ ρ ]Ty ≡ B → Sub (Δ ▹ B) (Γ ▹ A)
   wk⁺ {Δ = Δ} {A = A} {B} ρ e =
@@ -199,19 +196,19 @@ id⁺ {A = A} =
 
 -- `_⋆_` is diagrammatic, so that the record's `σ ∘ σ'` is definitionally the
 -- constructor `σ ∘ σ'`.
-SynConCategory : Category ℓ-zero ℓ-zero
-SynConCategory .Category.ob = Con
-SynConCategory .Category.Hom[_,_] = Sub
-SynConCategory .Category.id = id
-SynConCategory .Category._⋆_ f g = g ∘ f
-SynConCategory .Category.⋆IdL = idr
-SynConCategory .Category.⋆IdR = idl
-SynConCategory .Category.⋆Assoc = assoc
-SynConCategory .Category.isSetHom = trunc
+SynCat : Category ℓ-zero ℓ-zero
+SynCat .Category.ob = Con
+SynCat .Category.Hom[_,_] = Sub
+SynCat .Category.id = id
+SynCat .Category._⋆_ f g = g ∘ f
+SynCat .Category.⋆IdL = idr
+SynCat .Category.⋆IdR = idl
+SynCat .Category.⋆Assoc = assoc
+SynCat .Category.isSetHom = trunc
 
 -- Copatterns are qualified rather than opened: the record's projections share
 -- their names with the definitions above.
-Syn-CwF : Algebraic.CwF SynConCategory ℓ-zero ℓ-zero
+Syn-CwF : Algebraic.CwF SynCat ℓ-zero ℓ-zero
 Syn-CwF .Algebraic.CwF.⟨⟩ = ◇ , λ Γ → ε , εη
 Syn-CwF .Algebraic.CwF.Ty = Ty
 Syn-CwF .Algebraic.CwF.isSetTy Γ = trunc

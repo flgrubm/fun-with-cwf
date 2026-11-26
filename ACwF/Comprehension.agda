@@ -19,8 +19,7 @@ open Algebraic.CwF cwf
 private variable
   Θ Δ Γ : Ctx
 
--- Opaque: both contain a transport (via `⟨_⟩` resp. `subst⁻`), which Agda
--- would otherwise unfold when comparing types that mention them.
+-- Opaque: both contain a transport.
 opaque
   pair : {A : Ty Γ} (σ : Δ ⟶ Γ) → Tm Δ (A [ σ ]Ty) → Δ ⟶ Γ ▹ A
   pair σ t = σ ⁺ ∘ ⟨ t ⟩

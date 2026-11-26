@@ -79,23 +79,19 @@ isSetEl (tm _)  = 𝕄.isSetTm _ _
   (ℙ.π₂≡q[] (ℂ.id {⟦ Γ ▹ A ⟧C}) 𝕄.∙Tm 𝕄.[id]Tm (𝕄.q {A = ⟦ A ⟧}))
 
 ⟦_⟧F : Functor SynConCategory C
-⟦_⟧F = record
-  { F-ob  = ⟦_⟧C
-  ; F-hom = ⟦_⟧
-  ; F-id  = refl
-  ; F-seq = λ _ _ → refl
-  }
+⟦_⟧F .Functor.F-ob      = ⟦_⟧C
+⟦_⟧F .Functor.F-hom     = ⟦_⟧
+⟦_⟧F .Functor.F-id      = refl
+⟦_⟧F .Functor.F-seq _ _ = refl
 
 rec : CwFMorphism SynConCategory C Syn-CwF M
-rec = record
-  { ctxMorph      = ⟦_⟧F
-  ; tyMorph       = ⟦_⟧
-  ; tmMorph       = ⟦_⟧
-  ; preserves⟨⟩   = refl
-  ; preserves[]Ty = λ _ → refl
-  ; preserves[]Tm = λ _ → refl
-  ; preserves▹    = λ _ _ → refl
-  ; preservesp    = λ {Γ} {A} → ⟦p⟧ {Γ = Γ} {A = A}
-  ; preservesq    = λ {Γ} {A} → 𝕄.reindex (⟦q⟧ {Γ = Γ} {A = A})
-  }
+rec .CwFMorphism.ctxMorph                = ⟦_⟧F
+rec .CwFMorphism.tyMorph                 = ⟦_⟧
+rec .CwFMorphism.tmMorph                 = ⟦_⟧
+rec .CwFMorphism.preserves⟨⟩             = refl
+rec .CwFMorphism.preserves[]Ty _         = refl
+rec .CwFMorphism.preserves[]Tm _         = refl
+rec .CwFMorphism.preserves▹ _ _          = refl
+rec .CwFMorphism.preservesp {Γ} {A}      = ⟦p⟧ {Γ = Γ} {A = A}
+rec .CwFMorphism.preservesq {Γ} {A}      = 𝕄.reindex (⟦q⟧ {Γ = Γ} {A = A})
 

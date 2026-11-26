@@ -342,17 +342,16 @@ module _ {ℓOb ℓHom ℓTy ℓTm : Level} {C : Category ℓOb ℓHom}
                    (𝕄.isSetTm (h° Γ i 𝕄.▹ HTy° A i) (HTy° A i 𝕄.[ 𝕄.p ]Ty)) _ _) _ _
 
     rec≡ : rec ≡ F
-    rec≡ i = record
-      { ctxMorph      = Functor≡ {F = ⟦_⟧F} {G = F.ctxMorph} h° HSub° i
-      ; tyMorph       = λ A → HTy° A i
-      ; tmMorph       = λ a → HTm° a i
-      ; preserves⟨⟩   = S⟨⟩ i
-      ; preserves[]Ty = P[]Ty i
-      ; preserves[]Tm = P[]Tm i
-      ; preserves▹    = λ Γ A → S▹ Γ A i
-      ; preservesp    = Pp i
-      ; preservesq    = Pq i
-      }
+    rec≡ i .CwFMorphism.ctxMorph =
+      Functor≡ {F = ⟦_⟧F} {G = F.ctxMorph} h° HSub° i
+    rec≡ i .CwFMorphism.tyMorph A       = HTy° A i
+    rec≡ i .CwFMorphism.tmMorph a       = HTm° a i
+    rec≡ i .CwFMorphism.preserves⟨⟩     = S⟨⟩ i
+    rec≡ i .CwFMorphism.preserves[]Ty   = P[]Ty i
+    rec≡ i .CwFMorphism.preserves[]Tm   = P[]Tm i
+    rec≡ i .CwFMorphism.preserves▹ Γ A  = S▹ Γ A i
+    rec≡ i .CwFMorphism.preservesp      = Pp i
+    rec≡ i .CwFMorphism.preservesq      = Pq i
 
 SynInitial : {ℓOb ℓHom ℓTy ℓTm : Level} {C : Category ℓOb ℓHom}
              (M : Algebraic.CwF C ℓTy ℓTm)

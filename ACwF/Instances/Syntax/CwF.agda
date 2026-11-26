@@ -1,100 +1,18 @@
--- | The syntax of type theory as a quotient inductive-inductive type, following
--- Altenkirch–Kaposi, "Type theory in type theory using quotient inductive
--- types" (POPL 2016): substitutions are built from `ε` and `_,_` and taken
--- apart with `π₁`/`π₂`.  The Pitts-style operations of `ACwF.Base`
--- (`p`, `q`, `_⁺`, `⟨_⟩`) are defined, and their laws proved.
---
--- Agda checks each data definition as a whole, so constructors of distinct
--- sorts cannot refer to each other cyclically; yet the signature does
--- (`[][]Ty` uses `_∘_`, `_,_` uses `_[_]Ty`, `,∘` uses `_[_]Tm`).
--- Substitutions, types and terms are therefore one family `Syn` indexed by a
--- `Sort`, whose constructors may mention each other freely.
-module ACwF.Instances.Syntax where
+-- | The Pitts-style CwF structure of the syntax: `p`, `q`, `_⁺`, `⟨_⟩` are
+-- defined from Altenkirch–Kaposi's comprehension, and their laws proved.
+module ACwF.Instances.Syntax.CwF where
 
 open import Cubical.Foundations.Prelude hiding (Sub)
 open import Cubical.Foundations.Transport using (subst⁻)
 open import Cubical.Data.Sigma using (ΣPathP)
 open import Cubical.Categories.Category
-open import Cubical.Categories.Functor
 open import ACwF.Base
-open import ACwF.Morphism
-import ACwF.Comprehension
+open import ACwF.Instances.Syntax.Base
 
-data Con  : Type
-data Sort : Con → Type
-data Syn  : (Γ : Con) → Sort Γ → Type
-
-data Sort where
-  ty  : {Γ : Con} → Sort Γ
-  sub : {Δ : Con} (Γ : Con) → Sort Δ
-  tm  : {Γ : Con} → Syn Γ ty → Sort Γ
-
-Ty : Con → Type
-Ty Γ = Syn Γ ty
-
-Sub : Con → Con → Type
-Sub Δ Γ = Syn Δ (sub Γ)
-
-Tm : (Γ : Con) → Ty Γ → Type
-Tm Γ A = Syn Γ (tm A)
-
-data Con where
-  ◇   : Con
-  _▹_ : (Γ : Con) → Ty Γ → Con
-
-infixr 4  _,_
-infixl 30 _▹_
-infix  40 _[_]Ty _[_]Tm
-infixr 50 _∘_
-infix  60 _⁺
+infix 60 _⁺
 
 private variable
   Θ Δ Γ Ξ : Con
-
-data Syn where
-  -- | Category of substitutions
-  id     : Sub Γ Γ
-  _∘_    : Sub Δ Γ → Sub Θ Δ → Sub Θ Γ
-  idr    : (σ : Sub Δ Γ) → σ ∘ id ≡ σ
-  idl    : (σ : Sub Δ Γ) → id ∘ σ ≡ σ
-  assoc  : (ν : Sub Ξ Θ) (δ : Sub Θ Δ) (σ : Sub Δ Γ)
-         → σ ∘ (δ ∘ ν) ≡ (σ ∘ δ) ∘ ν
-
-  -- | Types
-  _[_]Ty : Ty Γ → Sub Δ Γ → Ty Δ
-  [id]Ty : (A : Ty Γ) → A [ id ]Ty ≡ A
-  [][]Ty : (A : Ty Γ) (σ' : Sub Θ Δ) (σ : Sub Δ Γ)
-         → A [ σ ∘ σ' ]Ty ≡ A [ σ ]Ty [ σ' ]Ty
-
-  -- | Terms
-  _[_]Tm : {A : Ty Γ} → Tm Γ A → (σ : Sub Δ Γ) → Tm Δ (A [ σ ]Ty)
-  [id]Tm : {A : Ty Γ} (a : Tm Γ A)
-         → PathP (λ i → Tm Γ ([id]Ty A i)) (a [ id ]Tm) a
-  [][]Tm : {A : Ty Γ} (a : Tm Γ A) (σ' : Sub Θ Δ) (σ : Sub Δ Γ)
-         → PathP (λ i → Tm Θ ([][]Ty A σ' σ i))
-                 (a [ σ ∘ σ' ]Tm) (a [ σ ]Tm [ σ' ]Tm)
-
-  -- | Substitutions as lists of terms
-  ε      : Sub Γ ◇
-  εη     : (σ : Sub Γ ◇) → ε ≡ σ
-  _,_    : {A : Ty Γ} (σ : Sub Δ Γ) → Tm Δ (A [ σ ]Ty) → Sub Δ (Γ ▹ A)
-  π₁     : {A : Ty Γ} → Sub Δ (Γ ▹ A) → Sub Δ Γ
-  π₂     : {A : Ty Γ} (σ : Sub Δ (Γ ▹ A)) → Tm Δ (A [ π₁ σ ]Ty)
-  π₁β    : {A : Ty Γ} (σ : Sub Δ Γ) (t : Tm Δ (A [ σ ]Ty)) → π₁ (σ , t) ≡ σ
-  π₂β    : {A : Ty Γ} (σ : Sub Δ Γ) (t : Tm Δ (A [ σ ]Ty))
-         → PathP (λ i → Tm Δ (A [ π₁β σ t i ]Ty)) (π₂ (σ , t)) t
-  πη     : {A : Ty Γ} (σ : Sub Δ (Γ ▹ A)) → (π₁ σ , π₂ σ) ≡ σ
-  -- AK's `,∘` has `subst⁻ (Tm Θ) ([][]Ty A ν σ) (t [ ν ]Tm)` in place of `t'`,
-  -- but a transport along a family built from `Syn` is not strictly positive.
-  -- Abstracting the transported term over its defining path is equivalent
-  -- (singletons are contractible) and transport-free.
-  ,∘     : {A : Ty Γ} (σ : Sub Δ Γ) (t : Tm Δ (A [ σ ]Ty)) (ν : Sub Θ Δ)
-           (t' : Tm Θ (A [ σ ∘ ν ]Ty))
-         → PathP (λ i → Tm Θ ([][]Ty A ν σ i)) t' (t [ ν ]Tm)
-         → (σ , t) ∘ ν ≡ (σ ∘ ν , t')
-
-  -- | Set-truncation, for all three sorts at once
-  trunc  : {s : Sort Γ} → isSet (Syn Γ s)
 
 -- | Term equations as paths in the total space `Σ (Ty Γ) (Tm Γ)`.
 -- These compose with plain `_∙_`; since `Ty Γ` is a set, they are converted
@@ -115,17 +33,19 @@ private
         → Path (Σ (Ty Γ) (Tm Γ)) (A , subst⁻ (Tm Γ) e x) (B , x)
   coe⁻∫ e x = ΣPathP (e , coe⁻P e x)
 
-  sub∫ : Sub Δ Γ → Σ (Ty Γ) (Tm Γ) → Σ (Ty Δ) (Tm Δ)
-  sub∫ σ (B , x) = B [ σ ]Ty , x [ σ ]Tm
+-- Used by `ACwF.Instances.Syntax.Initial`.
+sub∫ : Sub Δ Γ → Σ (Ty Γ) (Tm Γ) → Σ (Ty Δ) (Tm Δ)
+sub∫ σ (B , x) = B [ σ ]Ty , x [ σ ]Tm
 
-  -- The second projection, packed with its type.
-  π∫ : {A : Ty Γ} → Sub Δ (Γ ▹ A) → Σ (Ty Δ) (Tm Δ)
-  π∫ {A = A} τ = A [ π₁ τ ]Ty , π₂ τ
+-- The second projection, packed with its type.
+π∫ : {A : Ty Γ} → Sub Δ (Γ ▹ A) → Σ (Ty Δ) (Tm Δ)
+π∫ {A = A} τ = A [ π₁ τ ]Ty , π₂ τ
 
-  π₂β∫ : {A : Ty Γ} (σ : Sub Δ Γ) (t : Tm Δ (A [ σ ]Ty))
-       → π∫ (σ , t) ≡ (A [ σ ]Ty , t)
-  π₂β∫ {A = A} σ t = ΣPathP (cong (A [_]Ty) (π₁β σ t) , π₂β σ t)
+π₂β∫ : {A : Ty Γ} (σ : Sub Δ Γ) (t : Tm Δ (A [ σ ]Ty))
+     → π∫ (σ , t) ≡ (A [ σ ]Ty , t)
+π₂β∫ {A = A} σ t = ΣPathP (cong (A [_]Ty) (π₁β σ t) , π₂β σ t)
 
+private
   -- Extensionality of substitutions into an extended context.
   Sub▹≡ : {A : Ty Γ} {τ τ' : Sub Δ (Γ ▹ A)}
         → π₁ τ ≡ π₁ τ' → π∫ τ ≡ π∫ τ' → τ ≡ τ'
@@ -187,12 +107,12 @@ opaque
   ⟨⟩-π₂ : {A : Ty Γ} (a : Tm Γ A) → π∫ ⟨ a ⟩ ≡ (A , a)
   ⟨⟩-π₂ {A = A} a = π₂β∫ id _ ∙ coe⁻∫ ([id]Ty A) a
 
-private
-  p∘ : {A : Ty Γ} (τ : Sub Δ (Γ ▹ A)) → p ∘ τ ≡ π₁ τ
-  p∘ τ = π₁∘ id τ ∙ cong π₁ (idl τ)
+-- Used by `ACwF.Instances.Syntax.Initial`.
+p∘ : {A : Ty Γ} (τ : Sub Δ (Γ ▹ A)) → p ∘ τ ≡ π₁ τ
+p∘ τ = π₁∘ id τ ∙ cong π₁ (idl τ)
 
-  q[] : {A : Ty Γ} (τ : Sub Δ (Γ ▹ A)) → sub∫ τ (A [ p ]Ty , q) ≡ π∫ τ
-  q[] τ = π₂∘ id τ ∙ cong π∫ (idl τ)
+q[] : {A : Ty Γ} (τ : Sub Δ (Γ ▹ A)) → sub∫ τ (A [ p ]Ty , q) ≡ π∫ τ
+q[] τ = π₂∘ id τ ∙ cong π∫ (idl τ)
 
 -- | The Pitts-style laws
 
@@ -318,99 +238,3 @@ Syn-CwF .Algebraic.CwF.q[⁺]Tm = q[⁺]Tm
 Syn-CwF .Algebraic.CwF.p∘⟨⟩≡id = p∘⟨⟩≡id
 Syn-CwF .Algebraic.CwF.[p][⟨⟩]Ty = [p][⟨⟩]Ty
 Syn-CwF .Algebraic.CwF.q[⟨⟩]Tm = q[⟨⟩]Tm
-
--- | Initiality
-
--- The recursor into an arbitrary CwF `M`, by pattern matching on `Syn`.  The
--- meaning of a sort, `El`, is computed together with the interpretation
--- itself, since the meaning of `tm A` mentions the interpretation of `A`.
--- The substitution constructors go to the comprehension structure that
--- `ACwF.Comprehension` derives in `M`.
-module Rec {ℓOb ℓHom ℓTy ℓTm : Level} {C : Category ℓOb ℓHom}
-  (M : Algebraic.CwF C ℓTy ℓTm) where
-
-  module ℂ = Category C
-  module 𝕄 = Algebraic.CwF M
-  module ℙ = ACwF.Comprehension M
-
-  lvl : Sort Γ → Level
-  lvl ty      = ℓTy
-  lvl (sub _) = ℓHom
-  lvl (tm _)  = ℓTm
-
-  ⟦_⟧C  : Con → ℂ.ob
-  El    : (s : Sort Γ) → Type (lvl s)
-  isSetEl : (s : Sort Γ) → isSet (El s)
-  ⟦_⟧   : {s : Sort Γ} → Syn Γ s → El s
-
-  -- `El` first: its clauses only mention `⟦_⟧C`/`⟦_⟧`, while theirs need
-  -- `El` to compute.
-  El {Γ = Γ} ty      = 𝕄.Ty ⟦ Γ ⟧C
-  El {Γ = Γ} (sub Δ) = C [ ⟦ Γ ⟧C , ⟦ Δ ⟧C ]
-  El {Γ = Γ} (tm A)  = 𝕄.Tm ⟦ Γ ⟧C ⟦ A ⟧
-
-  isSetEl ty      = 𝕄.isSetTy _
-  isSetEl (sub _) = ℂ.isSetHom
-  isSetEl (tm _)  = 𝕄.isSetTm _ _
-
-  ⟦ ◇ ⟧C     = 𝕄.⟨⟩ .fst
-  ⟦ Γ ▹ A ⟧C = ⟦ Γ ⟧C 𝕄.▹ ⟦ A ⟧
-
-  ⟦ id ⟧               = ℂ.id
-  ⟦ σ ∘ δ ⟧            = ⟦ σ ⟧ ℂ.∘ ⟦ δ ⟧
-  ⟦ idr σ i ⟧          = ℂ.⋆IdL ⟦ σ ⟧ i
-  ⟦ idl σ i ⟧          = ℂ.⋆IdR ⟦ σ ⟧ i
-  ⟦ assoc ν δ σ i ⟧    = ℂ.⋆Assoc ⟦ ν ⟧ ⟦ δ ⟧ ⟦ σ ⟧ i
-  ⟦ A [ σ ]Ty ⟧        = ⟦ A ⟧ 𝕄.[ ⟦ σ ⟧ ]Ty
-  ⟦ [id]Ty A i ⟧       = 𝕄.[id]Ty ⟦ A ⟧ i
-  ⟦ [][]Ty A σ' σ i ⟧  = 𝕄.[][]Ty ⟦ A ⟧ ⟦ σ' ⟧ ⟦ σ ⟧ i
-  ⟦ a [ σ ]Tm ⟧        = ⟦ a ⟧ 𝕄.[ ⟦ σ ⟧ ]Tm
-  ⟦ [id]Tm a i ⟧       = 𝕄.[id]Tm ⟦ a ⟧ i
-  ⟦ [][]Tm a σ' σ i ⟧  = 𝕄.[][]Tm ⟦ a ⟧ ⟦ σ' ⟧ ⟦ σ ⟧ i
-  ⟦ ε ⟧                = 𝕄.⟨⟩ .snd _ .fst
-  ⟦ εη σ i ⟧           = 𝕄.⟨⟩ .snd _ .snd ⟦ σ ⟧ i
-  ⟦ σ , t ⟧            = ℙ.pair ⟦ σ ⟧ ⟦ t ⟧
-  ⟦ π₁ τ ⟧             = 𝕄.p ℂ.∘ ⟦ τ ⟧
-  ⟦ π₂ τ ⟧             = ℙ.π₂ ⟦ τ ⟧
-  ⟦ π₁β σ t i ⟧        = ℙ.π₁β ⟦ σ ⟧ ⟦ t ⟧ i
-  ⟦ π₂β σ t i ⟧        = ℙ.π₂β ⟦ σ ⟧ ⟦ t ⟧ i
-  ⟦ πη τ i ⟧           = ℙ.πη ⟦ τ ⟧ i
-  ⟦ ,∘ σ t ν t' P i ⟧  = ℙ.pair∘ ⟦ σ ⟧ ⟦ t ⟧ ⟦ ν ⟧ ⟦ t' ⟧ (λ j → ⟦ P j ⟧) i
-  ⟦ trunc {s = s} x y e e' i j ⟧ =
-    isSetEl s ⟦ x ⟧ ⟦ y ⟧ (cong ⟦_⟧ e) (cong ⟦_⟧ e') i j
-
-  -- `p = π₁ id` and `q = π₂ id` are interpreted up to `p ∘ id ≡ p`.
-  ⟦p⟧ : {A : Ty Γ} → ⟦ p {A = A} ⟧ ≡ 𝕄.p
-  ⟦p⟧ = ℂ.⋆IdL 𝕄.p
-
-  ⟦q⟧ : {A : Ty Γ}
-      → PathP (λ i → 𝕄.Tm ⟦ Γ ▹ A ⟧C (⟦ A ⟧ 𝕄.[ ⟦p⟧ {A = A} i ]Ty)) ⟦ q {A = A} ⟧ 𝕄.q
-  ⟦q⟧ {Γ = Γ} {A = A} = 𝕄.reindex
-    (ℙ.π₂≡q[] (ℂ.id {⟦ Γ ▹ A ⟧C}) 𝕄.∙Tm 𝕄.[id]Tm (𝕄.q {A = ⟦ A ⟧}))
-
-  ⟦_⟧F : Functor SynConCategory C
-  ⟦_⟧F = record
-    { F-ob  = ⟦_⟧C
-    ; F-hom = ⟦_⟧
-    ; F-id  = refl
-    ; F-seq = λ _ _ → refl
-    }
-
-  rec : CwFMorphism SynConCategory C Syn-CwF M
-  rec = record
-    { ctxMorph      = ⟦_⟧F
-    ; tyMorph       = ⟦_⟧
-    ; tmMorph       = ⟦_⟧
-    ; preserves⟨⟩   = refl
-    ; preserves[]Ty = λ _ → refl
-    ; preserves[]Tm = λ _ → refl
-    ; preserves▹    = λ _ _ → refl
-    ; preservesp    = λ {Γ} {A} → ⟦p⟧ {Γ = Γ} {A = A}
-    ; preservesq    = λ {Γ} {A} → 𝕄.reindex (⟦q⟧ {Γ = Γ} {A = A})
-    }
-
-SynInitial : {ℓOb ℓHom ℓTy ℓTm : Level} {C : Category ℓOb ℓHom}
-             (M : Algebraic.CwF C ℓTy ℓTm)
-           → isContr (CwFMorphism SynConCategory C Syn-CwF M)
-SynInitial M .fst = Rec.rec M
-SynInitial M .snd = {!!}

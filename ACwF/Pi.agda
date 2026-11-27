@@ -41,3 +41,10 @@ module _ {ℓOb ℓHom ℓTy ℓTm : Level} (C : Category ℓOb ℓHom) (cwf : A
                 → PathP (λ i → Tm Δ (ΠTyNat A B σ i))
                         (ΠTmIso A B .inv f [ σ ]Tm)
                         (ΠTmIso (A [ σ ]Ty) (B [ σ ⁺ ]Ty) .inv (f [ σ ⁺ ]Tm))
+
+    app : {A : Ty Γ} {B : Ty (Γ ▹ A)} → Tm Γ (ΠTy A B) → Tm (Γ ▹ A) B
+    app {A = A} {B} = ΠTmIso A B .fun
+
+    lam : {A : Ty Γ} {B : Ty (Γ ▹ A)} → Tm (Γ ▹ A) B → Tm Γ (ΠTy A B)
+    lam {A = A} {B} = ΠTmIso A B .inv
+
